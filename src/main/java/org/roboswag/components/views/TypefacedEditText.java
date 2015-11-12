@@ -23,7 +23,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
-import android.widget.TextView;
+import android.widget.EditText;
 
 import org.roboswag.components.R;
 
@@ -33,19 +33,19 @@ import org.roboswag.components.utils.Typefaces;
  * Created by Gavriil Sitnikov on 18/07/2014.
  * TextView that supports fonts from Typefaces class
  */
-public class TypefacedTextView extends TextView {
+public class TypefacedEditText extends EditText {
 
-    public TypefacedTextView(Context context) {
+    public TypefacedEditText(Context context) {
         super(context);
         initialize(context, null);
     }
 
-    public TypefacedTextView(Context context, AttributeSet attrs) {
+    public TypefacedEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
         initialize(context, attrs);
     }
 
-    public TypefacedTextView(Context context, AttributeSet attrs, int defStyle) {
+    public TypefacedEditText(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         initialize(context, attrs);
     }
