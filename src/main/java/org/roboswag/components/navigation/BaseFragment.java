@@ -26,13 +26,15 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
  * TODO: fill description
  */
-public abstract class BaseFragment<TViewHolder extends BaseFragment.ViewHolder> extends Fragment
+public abstract class BaseFragment<TViewHolder extends BaseFragment.ViewController> extends Fragment
         implements OnFragmentStartedListener {
 
     @Nullable
@@ -118,6 +120,11 @@ public abstract class BaseFragment<TViewHolder extends BaseFragment.ViewHolder> 
         return result;
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
     /* Raises when ActionBar home button pressed */
     public boolean onHomePressed() {
         FragmentManager fragmentManager = getChildFragmentManager();
@@ -178,7 +185,7 @@ public abstract class BaseFragment<TViewHolder extends BaseFragment.ViewHolder> 
         viewHolder.onDestroy();
     }
 
-    public class ViewHolder {
+    public class ViewController {
 
         private final Context context;
         private final Handler postHandler = new Handler();
@@ -194,7 +201,7 @@ public abstract class BaseFragment<TViewHolder extends BaseFragment.ViewHolder> 
             return context;
         }
 
-        public ViewHolder(@NonNull View view){
+        public ViewController(@NonNull View view) {
             context = view.getContext();
         }
 
