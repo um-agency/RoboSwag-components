@@ -38,7 +38,7 @@ dependencies {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
     provided 'com.squareup.okhttp:okhttp:2.5.0'
-    provided 'com.facebook.fresco:fbcore:0.7.0'
+    provided 'com.facebook.fresco:fbcore:0.8.1'
 }
 
 apply from: "${rootDir}/libraries/BuildScripts/gradle/staticAnalysis.gradle"
