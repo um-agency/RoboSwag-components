@@ -25,10 +25,9 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.view.View;
 
-import rx.functions.Func1;
+import org.roboswag.components.utils.UiUtils;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
@@ -103,32 +102,14 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         //do nothing
     }
 
-    private boolean tryForeachChild(final Func1<AbstractBaseFragment, Boolean> actionOnChild) {
-        final FragmentManager fragmentManager = getChildFragmentManager();
-
-        if (fragmentManager.getFragments() == null) {
-            return false;
-        }
-
-        boolean result = false;
-        for (@Nullable final Fragment fragment : fragmentManager.getFragments()) {
-            if (fragment != null
-                    && fragment.isResumed()
-                    && fragment instanceof AbstractBaseFragment) {
-                result = result || actionOnChild.call((AbstractBaseFragment) fragment);
-            }
-        }
-        return result;
-    }
-
     /* Raises when device back button pressed */
     public boolean onBackPressed() {
-        return tryForeachChild(AbstractBaseFragment::onBackPressed);
+        return UiUtils.tryForeachFragment(getFragmentManager(), AbstractBaseFragment::onBackPressed);
     }
 
     /* Raises when ActionBar home button pressed */
     public boolean onHomePressed() {
-        return tryForeachChild(AbstractBaseFragment::onHomePressed);
+        return UiUtils.tryForeachFragment(getFragmentManager(), AbstractBaseFragment::onHomePressed);
     }
 
     @Deprecated

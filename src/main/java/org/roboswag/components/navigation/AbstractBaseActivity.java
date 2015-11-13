@@ -30,7 +30,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
-import rx.functions.Func1;
+import org.roboswag.components.utils.UiUtils;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
@@ -63,7 +63,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onCreate(final @Nullable Bundle savedInstanceState) {
+    protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
     }
@@ -174,7 +174,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     /* Raises when device back button pressed */
     @Override
     public void onBackPressed() {
-        if (!tryForeachChild(AbstractBaseFragment::onBackPressed)) {
+        if (!UiUtils.tryForeachFragment(getSupportFragmentManager(), AbstractBaseFragment::onBackPressed)) {
             super.onBackPressed();
         }
     }
@@ -184,11 +184,12 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         switch (item.getItemId()) {
             case android.R.id.home:
 
-                if (tryForeachChild(AbstractBaseFragment::onHomePressed)) {
+                final FragmentManager fragmentManager = getSupportFragmentManager();
+
+                if (UiUtils.tryForeachFragment(fragmentManager, AbstractBaseFragment::onHomePressed)) {
                     return true;
                 }
 
-                final FragmentManager fragmentManager = getSupportFragmentManager();
                 final int stackSize = fragmentManager.getBackStackEntryCount();
 
                 switch (stackSize) {
@@ -219,24 +220,6 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
                 lastFragmentName = currentFragmentName;
             }
         }
-    }
-
-    private boolean tryForeachChild(final Func1<AbstractBaseFragment, Boolean> actionOnChild) {
-        final FragmentManager fragmentManager = getSupportFragmentManager();
-
-        if (fragmentManager.getFragments() == null) {
-            return false;
-        }
-
-        boolean result = false;
-        for (@Nullable final Fragment fragment : fragmentManager.getFragments()) {
-            if (fragment != null
-                    && fragment.isResumed()
-                    && fragment instanceof AbstractBaseFragment) {
-                result = result || actionOnChild.call((AbstractBaseFragment) fragment);
-            }
-        }
-        return result;
     }
 
     /* Hides device keyboard */

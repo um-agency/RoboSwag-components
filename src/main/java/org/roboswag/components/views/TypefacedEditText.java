@@ -47,13 +47,13 @@ public class TypefacedEditText extends EditText implements TypefacedText {
     }
 
     @Override
-    public void setTypeface(final String name, final int style) {
-        Typefaces.setTypeface(this, getContext(), name, style);
+    public void setTypeface(final String name) {
+        Typefaces.setTypeface(this, getContext(), name);
     }
 
     @Override
-    public void setTypeface(final String name) {
-        Typefaces.setTypeface(this, getContext(), name);
+    public void setTypeface(final String name, final int style) {
+        Typefaces.setTypeface(this, getContext(), name, style);
     }
 
 }
