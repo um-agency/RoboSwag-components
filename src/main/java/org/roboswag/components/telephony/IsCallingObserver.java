@@ -32,15 +32,17 @@ import rx.subjects.BehaviorSubject;
  * Created by Gavriil Sitnikov on 02/11/2015.
  * TODO: fill description
  */
-public class IsCallingObserver {
+public final class IsCallingObserver {
 
     @Nullable
     private static IsCallingObserver instance;
 
     @NonNull
-    public static synchronized IsCallingObserver getInstance(@NonNull Context context) {
-        if (instance == null) {
-            instance = new IsCallingObserver(context);
+    public static IsCallingObserver getInstance(@NonNull final Context context) {
+        synchronized (IsCallingObserver.class) {
+            if (instance == null) {
+                instance = new IsCallingObserver(context);
+            }
         }
         return instance;
     }
@@ -48,11 +50,11 @@ public class IsCallingObserver {
     private final BehaviorSubject<Boolean> isCallingSubject = BehaviorSubject.create();
     private final Observable<Boolean> isCallingObservable;
 
-    private IsCallingObserver(@NonNull Context context) {
-        TelephonyManager phoneStateManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+    private IsCallingObserver(@NonNull final Context context) {
+        final TelephonyManager phoneStateManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         phoneStateManager.listen(new PhoneStateListener() {
             @Override
-            public void onCallStateChanged(int state, String incomingNumber) {
+            public void onCallStateChanged(final int state, final String incomingNumber) {
                 super.onCallStateChanged(state, incomingNumber);
                 isCallingSubject.onNext(isCallingState(state));
             }
@@ -64,7 +66,7 @@ public class IsCallingObserver {
                 .refCount();
     }
 
-    private boolean isCallingState(int state) {
+    private boolean isCallingState(final int state) {
         return state != TelephonyManager.CALL_STATE_IDLE;
     }
 

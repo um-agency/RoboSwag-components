@@ -31,17 +31,17 @@ import org.roboswag.components.utils.Typefaces;
  */
 public class TypefacedEditText extends EditText implements TypefacedText {
 
-    public TypefacedEditText(Context context) {
+    public TypefacedEditText(final Context context) {
         super(context);
         Typefaces.initialize(this, context, null);
     }
 
-    public TypefacedEditText(Context context, AttributeSet attrs) {
+    public TypefacedEditText(final Context context, final AttributeSet attrs) {
         super(context, attrs);
         Typefaces.initialize(this, context, attrs);
     }
 
-    public TypefacedEditText(Context context, AttributeSet attrs, int defStyle) {
+    public TypefacedEditText(final Context context, final AttributeSet attrs, final int defStyle) {
         super(context, attrs, defStyle);
         Typefaces.initialize(this, context, attrs);
     }

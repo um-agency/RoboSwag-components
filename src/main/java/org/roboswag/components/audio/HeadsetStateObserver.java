@@ -15,15 +15,17 @@ import rx.subjects.BehaviorSubject;
  * Created by Gavriil Sitnikov on 02/11/2015.
  * TODO: fill description
  */
-public class HeadsetStateObserver {
+public final class HeadsetStateObserver {
 
     @Nullable
     private static HeadsetStateObserver instance;
 
     @NonNull
-    public static synchronized HeadsetStateObserver getInstance(@NonNull Context context) {
-        if (instance == null) {
-            instance = new HeadsetStateObserver(context);
+    public static HeadsetStateObserver getInstance(@NonNull final Context context) {
+        synchronized (HeadsetStateObserver.class) {
+            if (instance == null) {
+                instance = new HeadsetStateObserver(context);
+            }
         }
         return instance;
     }
@@ -32,27 +34,17 @@ public class HeadsetStateObserver {
     private final BehaviorSubject<Boolean> isPluggedInSubject;
     private final Observable<Boolean> isPluggedInObservable;
 
-    @Nullable
-    private IsPluggedInReceiver isPluggedInReceiver;
-
-    private HeadsetStateObserver(@NonNull Context context) {
+    private HeadsetStateObserver(@NonNull final Context context) {
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         isPluggedInSubject = BehaviorSubject.create();
+        final IsPluggedInReceiver isPluggedInReceiver = new IsPluggedInReceiver();
         isPluggedInObservable = isPluggedInSubject
                 .distinctUntilChanged()
                 .doOnSubscribe(() -> {
-                    isPluggedInReceiver = new IsPluggedInReceiver();
                     context.registerReceiver(isPluggedInReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
                     isPluggedInSubject.onNext(isPluggedIn());
                 })
-                .doOnUnsubscribe(() -> {
-                    if (isPluggedInReceiver == null) {
-                        throw new IllegalStateException("IsPluggedInReceiver is null on unsubscribe");
-                    }
-
-                    context.unregisterReceiver(isPluggedInReceiver);
-                    isPluggedInReceiver = null;
-                })
+                .doOnUnsubscribe(() -> context.unregisterReceiver(isPluggedInReceiver))
                 .replay(1)
                 .refCount();
     }
@@ -69,7 +61,7 @@ public class HeadsetStateObserver {
     private class IsPluggedInReceiver extends BroadcastReceiver {
 
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(final Context context, final Intent intent) {
             if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction())) {
                 isPluggedInSubject.onNext(intent.getExtras().getInt("state") != 0);
             }

@@ -21,6 +21,7 @@ package org.roboswag.components.navigation;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -28,6 +29,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+
+import rx.functions.Func1;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
@@ -39,7 +42,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
 
     private static final String TOP_FRAGMENT_TAG_MARK = "TOP_FRAGMENT";
 
-    private boolean isPaused = false;
+    private boolean isPaused;
 
     /* Returns id of main fragments container where navigation-node fragments should be */
     protected int getFragmentContainerId() {
@@ -48,19 +51,19 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
 
     /* Returns if last fragment in stack is top (added by setFragment) like fragment from sidebar menu */
     public boolean isCurrentFragmentTop() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
+        final FragmentManager fragmentManager = getSupportFragmentManager();
         if (fragmentManager.getBackStackEntryCount() == 0) {
             return true;
         }
 
-        String topFragmentTag = fragmentManager
+        final String topFragmentTag = fragmentManager
                 .getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1)
                 .getName();
         return topFragmentTag != null && topFragmentTag.contains(TOP_FRAGMENT_TAG_MARK);
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final @Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
     }
@@ -78,33 +81,44 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     @Override
-    public void onFragmentStarted(@NonNull AbstractBaseFragment fragment) {
+    public void onFragmentStarted(@NonNull final AbstractBaseFragment fragment) {
+        //do nothing
     }
 
     /* Raises when back stack changes */
     @Override
     public void onBackStackChanged() {
+        //do nothing
     }
 
     /* Setting fragment of special class as first in stack */
-    public Fragment setFirstFragment(Class<?> fragmentClass) {
+    public <T extends AbstractBaseFragment> T setFirstFragment(@NonNull final Class<T> fragmentClass) {
         return setFirstFragment(fragmentClass, null);
     }
 
     /* Setting fragment of special class as first in stack with args */
-    public Fragment setFirstFragment(Class<?> fragmentClass, Bundle args) {
+    @Nullable
+    @SuppressWarnings("unchecked")
+    public <T extends AbstractBaseFragment> T setFirstFragment(@NonNull final Class<T> fragmentClass,
+                                                               @Nullable final Bundle args) {
         if (isPaused) {
             //TODO: log
             return null;
         }
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
+        final FragmentManager fragmentManager = getSupportFragmentManager();
 
         if (fragmentManager.getBackStackEntryCount() > 0) {
             fragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
 
-        Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
+        final T fragment;
+        try {
+            fragment = (T) Fragment.instantiate(this, fragmentClass.getName(), args);
+        } catch (Exception ex) {
+            //TODO: log
+            return null;
+        }
         fragmentManager.beginTransaction()
                 .replace(getFragmentContainerId(), fragment, null)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
@@ -112,91 +126,79 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         return fragment;
     }
 
-    private Fragment addFragmentToStack(Class<?> fragmentClass, Bundle args, String backStackTag) {
+    @Nullable
+    @SuppressWarnings("unchecked")
+    private <T extends AbstractBaseFragment> T addFragmentToStack(@NonNull final Class<T> fragmentClass,
+                                                                  @Nullable final Bundle args,
+                                                                  @Nullable final String backStackTag) {
         if (isPaused) {
             //TODO: log
             return null;
         }
 
-        Fragment fragment = Fragment.instantiate(this, fragmentClass.getName(), args);
+        final T fragment;
+        try {
+            fragment = (T) Fragment.instantiate(this, fragmentClass.getName(), args);
+        } catch (Exception ex) {
+            //TODO: log
+            return null;
+        }
         getSupportFragmentManager().beginTransaction()
                 .replace(getFragmentContainerId(), fragment, backStackTag)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .addToBackStack(backStackTag)
                 .commit();
-        return fragment;
+        return (T) fragment;
     }
 
     /* Setting fragment of special class as top */
-    public Fragment setFragment(Class fragmentClass) {
+    public <T extends AbstractBaseFragment> T setFragment(@NonNull final Class<T> fragmentClass) {
         return setFragment(fragmentClass, null);
     }
 
     /* Setting fragment of special class as top with args */
-    public Fragment setFragment(Class fragmentClass, Bundle args) {
+    public <T extends AbstractBaseFragment> T setFragment(@NonNull final Class<T> fragmentClass, @Nullable final Bundle args) {
         return addFragmentToStack(fragmentClass, args, fragmentClass.getName() + ' ' + TOP_FRAGMENT_TAG_MARK);
     }
 
     /* Pushing fragment of special class to fragments stack */
-    public Fragment pushFragment(Class fragmentClass) {
+    public <T extends AbstractBaseFragment> T pushFragment(@NonNull final Class<T> fragmentClass) {
         return pushFragment(fragmentClass, null);
     }
 
     /* Pushing fragment of special class with args to fragments stack */
-    public Fragment pushFragment(Class fragmentClass, Bundle args) {
+    public <T extends AbstractBaseFragment> T pushFragment(@NonNull final Class<T> fragmentClass, @Nullable final Bundle args) {
         return addFragmentToStack(fragmentClass, args, fragmentClass.getName());
     }
 
     /* Raises when device back button pressed */
     @Override
     public void onBackPressed() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-
-        boolean backPressResult = false;
-        if (fragmentManager.getFragments() != null) {
-            for (Fragment fragment : fragmentManager.getFragments()) {
-                if (fragment != null && fragment.isResumed() && fragment instanceof AbstractBaseFragment) {
-                    backPressResult = backPressResult || ((AbstractBaseFragment) fragment).onBackPressed();
-                }
-            }
-        }
-
-        if (!backPressResult) {
+        if (!tryForeachChild(AbstractBaseFragment::onBackPressed)) {
             super.onBackPressed();
         }
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(final MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                FragmentManager fragmentManager = getSupportFragmentManager();
 
-                if (tryHomeOnChildren(fragmentManager)) {
+                if (tryForeachChild(AbstractBaseFragment::onHomePressed)) {
                     return true;
                 }
 
-                int stackSize = fragmentManager.getBackStackEntryCount();
+                final FragmentManager fragmentManager = getSupportFragmentManager();
+                final int stackSize = fragmentManager.getBackStackEntryCount();
 
                 switch (stackSize) {
                     case 0:
                         return false;
                     case 1:
-                        fragmentManager.popBackStack();
+                        getSupportFragmentManager().popBackStack();
                         return true;
                     default:
-                        String lastFragmentName = fragmentManager.getBackStackEntryAt(stackSize - 1).getName();
-                        for (int i = stackSize - 2; i >= 0; i--) {
-                            String currentFragmentName = fragmentManager.getBackStackEntryAt(i).getName();
-                            if (currentFragmentName == null || !currentFragmentName.equals(lastFragmentName)) {
-                                fragmentManager.popBackStackImmediate(currentFragmentName, 0);
-                                break;
-                            } else if (i == 0) {
-                                fragmentManager.popBackStackImmediate(currentFragmentName, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-                            } else {
-                                lastFragmentName = currentFragmentName;
-                            }
-                        }
+                        findTopFragmentAndPopBackStackToIt(fragmentManager, stackSize);
                         return true;
                 }
             default:
@@ -204,26 +206,45 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         }
     }
 
-    private boolean tryHomeOnChildren(@NonNull FragmentManager fragmentManager) {
-        boolean homePressResult = false;
-        if (fragmentManager.getFragments() != null) {
-            for (Fragment fragment : fragmentManager.getFragments()) {
-                if (fragment != null
-                        && fragment.isResumed()
-                        && fragment instanceof AbstractBaseFragment) {
-                    homePressResult = homePressResult || ((AbstractBaseFragment) fragment).onHomePressed();
-                }
+    private void findTopFragmentAndPopBackStackToIt(@NonNull final FragmentManager fragmentManager, final int stackSize) {
+        String lastFragmentName = fragmentManager.getBackStackEntryAt(stackSize - 1).getName();
+        for (int i = stackSize - 2; i >= 0; i--) {
+            final String currentFragmentName = fragmentManager.getBackStackEntryAt(i).getName();
+            if (currentFragmentName == null || !currentFragmentName.equals(lastFragmentName)) {
+                fragmentManager.popBackStackImmediate(currentFragmentName, 0);
+                break;
+            } else if (i == 0) {
+                fragmentManager.popBackStackImmediate(currentFragmentName, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            } else {
+                lastFragmentName = currentFragmentName;
             }
         }
-        return homePressResult;
+    }
+
+    private boolean tryForeachChild(final Func1<AbstractBaseFragment, Boolean> actionOnChild) {
+        final FragmentManager fragmentManager = getSupportFragmentManager();
+
+        if (fragmentManager.getFragments() == null) {
+            return false;
+        }
+
+        boolean result = false;
+        for (@Nullable final Fragment fragment : fragmentManager.getFragments()) {
+            if (fragment != null
+                    && fragment.isResumed()
+                    && fragment instanceof AbstractBaseFragment) {
+                result = result || actionOnChild.call((AbstractBaseFragment) fragment);
+            }
+        }
+        return result;
     }
 
     /* Hides device keyboard */
     public void hideSoftInput() {
         if (getCurrentFocus() != null) {
-            InputMethodManager inputManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            final InputMethodManager inputManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
             inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-            View mainFragmentContainer = findViewById(getFragmentContainerId());
+            final View mainFragmentContainer = findViewById(getFragmentContainerId());
             if (mainFragmentContainer != null) {
                 mainFragmentContainer.requestFocus();
             }
@@ -231,9 +252,9 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     /* Shows device keyboard */
-    public void showSoftInput(View view) {
-        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+    public void showSoftInput(@NonNull final View view) {
+        final InputMethodManager inputManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        inputManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
     }
 
 }

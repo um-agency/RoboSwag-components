@@ -26,7 +26,6 @@ import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 
@@ -39,15 +38,17 @@ import rx.subjects.BehaviorSubject;
  * Created by Gavriil Sitnikov on 02/11/2015.
  * TODO: fill description
  */
-public class VolumeController {
+public final class VolumeController {
 
     @Nullable
     private static VolumeController instance;
 
     @NonNull
-    public static synchronized VolumeController getInstance(@NonNull Context context) {
-        if (instance == null) {
-            instance = new VolumeController(context);
+    public static VolumeController getInstance(@NonNull final Context context) {
+        synchronized (VolumeController.class) {
+            if (instance == null) {
+                instance = new VolumeController(context);
+            }
         }
         return instance;
     }
@@ -58,8 +59,6 @@ public class VolumeController {
     private final Observable<Integer> volumeObservable;
 
     @Nullable
-    private VolumeObserver volumeObserver;
-    @Nullable
     private SeekBar seekBar;
     @Nullable
     private ImageView volumeDown;
@@ -68,26 +67,19 @@ public class VolumeController {
     @Nullable
     private Subscription seekBarSubscription;
 
-    private VolumeController(@NonNull Context context) {
+    private VolumeController(@NonNull final Context context) {
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         volumeSubject = BehaviorSubject.create();
+        final VolumeObserver volumeObserver = new VolumeObserver();
         volumeObservable = volumeSubject
                 .distinctUntilChanged()
                 .doOnSubscribe(() -> {
-                    volumeObserver = new VolumeObserver();
                     context.getContentResolver()
                             .registerContentObserver(Settings.System.CONTENT_URI, true, volumeObserver);
                     updateVolume();
                 })
-                .doOnUnsubscribe(() -> {
-                    if (volumeObserver == null) {
-                        throw new IllegalStateException("VolumeObserver is null on unsubscribe");
-                    }
-                    context.getContentResolver()
-                            .unregisterContentObserver(volumeObserver);
-                    volumeObserver = null;
-                })
+                .doOnUnsubscribe(() -> context.getContentResolver().unregisterContentObserver(volumeObserver))
                 .replay(1)
                 .refCount();
     }
@@ -96,7 +88,7 @@ public class VolumeController {
         volumeSubject.onNext(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
     }
 
-    public void setVolume(int value) {
+    public void setVolume(final int value) {
         if (value < 0 || value > maxVolume) {
             throw new IllegalStateException("Volume: " + value + " out of bounds [0," + maxVolume + "]");
         }
@@ -114,7 +106,7 @@ public class VolumeController {
         return volumeObservable;
     }
 
-    public void attachSeekBar(@NonNull SeekBar seekBar) {
+    public void attachSeekBar(@NonNull final SeekBar seekBar) {
         if (this.seekBar != null) {
             throw new IllegalArgumentException("Attached SeekBar is not null");
         }
@@ -124,16 +116,18 @@ public class VolumeController {
         this.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            public void onProgressChanged(final SeekBar seekBar, final int progress, final boolean fromUser) {
                 setVolume(progress);
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
+            public void onStartTrackingTouch(final SeekBar seekBar) {
+                //ignored
             }
 
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+            public void onStopTrackingTouch(final SeekBar seekBar) {
+                //ignored
             }
 
         });
@@ -143,7 +137,21 @@ public class VolumeController {
                 .subscribe(seekBar::setProgress);
     }
 
-    public void attachVolumeButtons(@NonNull ImageView volumeDown, @NonNull ImageView volumeUp) {
+    public void detachSeekBar(@NonNull final SeekBar seekBar) {
+        if (this.seekBar != seekBar) {
+            throw new IllegalArgumentException("Wrong SeekBar: " + seekBar + " != " + this.seekBar);
+        }
+        if (seekBarSubscription == null) {
+            throw new IllegalStateException("SeekBarSubscription is null on detach of SeekBar");
+        }
+
+        this.seekBar.setOnSeekBarChangeListener(null);
+        seekBarSubscription.unsubscribe();
+        seekBarSubscription = null;
+        this.seekBar = null;
+    }
+
+    public void attachVolumeButtons(@NonNull final ImageView volumeDown, @NonNull final ImageView volumeUp) {
         if (this.volumeDown != null && this.volumeUp != null) {
             throw new IllegalArgumentException("Attached volume buttons is not null");
         }
@@ -161,26 +169,9 @@ public class VolumeController {
                 setVolume(getVolume() - 1);
             }
         });
-        seekBarSubscription = observeVolume()
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .subscribe(seekBar::setProgress);
     }
 
-    public void detachSeekBar(@NonNull SeekBar seekBar) {
-        if (this.seekBar != seekBar) {
-            throw new IllegalArgumentException("Wrong SeekBar: " + seekBar + " != " + this.seekBar);
-        }
-        if (seekBarSubscription == null) {
-            throw new IllegalStateException("SeekBarSubscription is null on detach of SeekBar");
-        }
-
-        this.seekBar.setOnSeekBarChangeListener(null);
-        seekBarSubscription.unsubscribe();
-        seekBarSubscription = null;
-        this.seekBar = null;
-    }
-
-    public void detachVolumeButtons(@NonNull ImageView volumeDownImageView, @NonNull ImageView volumeUpImageView) {
+    public void detachVolumeButtons(@NonNull final ImageView volumeDownImageView, @NonNull final ImageView volumeUpImageView) {
         if (this.volumeDown != volumeDownImageView && this.volumeUp != volumeUpImageView) {
             throw new IllegalArgumentException("Wrong SeekBar: " + seekBar + " != " + this.seekBar);
         }
@@ -196,7 +187,7 @@ public class VolumeController {
         }
 
         @Override
-        public void onChange(boolean selfChange) {
+        public void onChange(final boolean selfChange) {
             updateVolume();
         }
 

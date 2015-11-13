@@ -26,8 +26,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.View;
 
 import rx.functions.Func1;
@@ -54,7 +52,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(final View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if (view == null) {
             throw new IllegalStateException("Background fragments are deprecated - view shouldn't be null");
@@ -63,10 +61,11 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
     }
 
     @NonNull
-    protected abstract TViewController createViewController(@NonNull View view, @Nullable Bundle savedInstanceState);
+    protected abstract TViewController createViewController(@NonNull final View view, @Nullable final Bundle savedInstanceState);
 
     @Override
-    public void onFragmentStarted(@NonNull AbstractBaseFragment fragment) {
+    public void onFragmentStarted(@NonNull final AbstractBaseFragment fragment) {
+        //do nothing
     }
 
     @Deprecated
@@ -79,14 +78,14 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         onStart(viewController, getBaseActivity());
     }
 
-    protected void onStart(@NonNull TViewController viewController, @NonNull AbstractBaseActivity baseActivity) {
-        Fragment parentFragment = getParentFragment();
-        if (parentFragment != null) {
+    protected void onStart(@NonNull final TViewController viewController, @NonNull final AbstractBaseActivity baseActivity) {
+        final Fragment parentFragment = getParentFragment();
+        if (parentFragment == null) {
+            baseActivity.onFragmentStarted(this);
+        } else {
             if (parentFragment instanceof OnFragmentStartedListener) {
                 ((OnFragmentStartedListener) parentFragment).onFragmentStarted(this);
             }
-        } else {
-            baseActivity.onFragmentStarted(this);
         }
     }
 
@@ -100,23 +99,19 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         onResume(viewController, getBaseActivity());
     }
 
-    protected void onResume(@NonNull TViewController viewController, @NonNull AbstractBaseActivity baseActivity) {
+    protected void onResume(@NonNull final TViewController viewController, @NonNull final AbstractBaseActivity baseActivity) {
+        //do nothing
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    private boolean tryForeachChild(Func1<AbstractBaseFragment, Boolean> actionOnChild) {
-        FragmentManager fragmentManager = getChildFragmentManager();
-        boolean result = false;
+    private boolean tryForeachChild(final Func1<AbstractBaseFragment, Boolean> actionOnChild) {
+        final FragmentManager fragmentManager = getChildFragmentManager();
 
         if (fragmentManager.getFragments() == null) {
             return false;
         }
 
-        for (Fragment fragment : fragmentManager.getFragments()) {
+        boolean result = false;
+        for (@Nullable final Fragment fragment : fragmentManager.getFragments()) {
             if (fragment != null
                     && fragment.isResumed()
                     && fragment instanceof AbstractBaseFragment) {
@@ -146,7 +141,8 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         super.onPause();
     }
 
-    protected void onPause(@NonNull TViewController viewController, @NonNull AbstractBaseActivity baseActivity) {
+    protected void onPause(@NonNull final TViewController viewController, @NonNull final AbstractBaseActivity baseActivity) {
+        //do nothing
     }
 
     @Deprecated
@@ -159,7 +155,8 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         super.onStop();
     }
 
-    protected void onStop(@NonNull TViewController viewController, @NonNull AbstractBaseActivity baseActivity) {
+    protected void onStop(@NonNull final TViewController viewController, @NonNull final AbstractBaseActivity baseActivity) {
+        //do nothing
     }
 
     @Deprecated
@@ -173,7 +170,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         this.viewController = null;
     }
 
-    protected void onDestroyView(@NonNull TViewController viewController) {
+    protected void onDestroyView(@NonNull final TViewController viewController) {
         viewController.onDestroy();
     }
 
@@ -193,7 +190,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
             return context;
         }
 
-        public ViewController(@NonNull View view) {
+        public ViewController(@NonNull final View view) {
             context = view.getContext();
         }
 

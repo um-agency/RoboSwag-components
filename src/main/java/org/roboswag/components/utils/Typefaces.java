@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Gavriil Sitnikov on 18/07/2014.
@@ -41,30 +42,32 @@ import java.util.List;
  */
 public final class Typefaces {
 
-    private static final HashMap<String, Typeface> TYPEFACES = new HashMap<>();
+    private static final Map<String, Typeface> TYPEFACES_MAP = new HashMap<>();
 
     /* Returns typeface by name from assets 'fonts' folder */
     @NonNull
-    public static synchronized Typeface getByName(@NonNull Context context, @NonNull String name) {
-        Typeface result = TYPEFACES.get(name);
-        if (result == null) {
-            AssetManager assetManager = context.getAssets();
-            try {
-                List<String> fonts = Arrays.asList(assetManager.list("fonts"));
-                if (fonts.contains(name + ".ttf")) {
-                    result = Typeface.createFromAsset(assetManager, "fonts/" + name + ".ttf");
-                } else if (fonts.contains(name + ".otf")) {
-                    result = Typeface.createFromAsset(assetManager, "fonts/" + name + ".otf");
-                } else {
-                    throw new IllegalStateException("Can't find .otf or .ttf file in folder 'fonts' with name: " + name);
+    public static Typeface getByName(@NonNull final Context context, @NonNull final String name) {
+        synchronized (TYPEFACES_MAP) {
+            Typeface result = TYPEFACES_MAP.get(name);
+            if (result == null) {
+                final AssetManager assetManager = context.getAssets();
+                try {
+                    final List<String> fonts = Arrays.asList(assetManager.list("fonts"));
+                    if (fonts.contains(name + ".ttf")) {
+                        result = Typeface.createFromAsset(assetManager, "fonts/" + name + ".ttf");
+                    } else if (fonts.contains(name + ".otf")) {
+                        result = Typeface.createFromAsset(assetManager, "fonts/" + name + ".otf");
+                    } else {
+                        throw new IllegalStateException("Can't find .otf or .ttf file in folder 'fonts' with name: " + name);
+                    }
+                } catch (IOException e) {
+                    throw new IllegalStateException("Typefaces files should be in folder named 'fonts'", e);
                 }
-            } catch (IOException e) {
-                throw new IllegalStateException("Typefaces files should be in folder named 'fonts'");
+                TYPEFACES_MAP.put(name, result);
             }
-            TYPEFACES.put(name, result);
-        }
 
-        return result;
+            return result;
+        }
     }
 
     public static <TTypefacedText extends TextView & TypefacedText> void initialize(final TTypefacedText typefacedText,

@@ -10,11 +10,14 @@ import android.view.ViewGroup;
  * Created by Gavriil Sitnikov on 13/11/2015.
  * TODO: fill description
  */
-public class UiUtils {
+public final class UiUtils {
 
     @NonNull
-    public static View inflate(@LayoutRes int layoutId, @NonNull ViewGroup parent) {
+    public static View inflate(@LayoutRes final int layoutId, @NonNull final ViewGroup parent) {
         return LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
+    }
+
+    private UiUtils() {
     }
 
 }

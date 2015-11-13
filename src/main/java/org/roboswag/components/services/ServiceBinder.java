@@ -32,7 +32,8 @@ public class ServiceBinder<TService extends Service> extends Binder {
     @NonNull
     private final TService service;
 
-    public ServiceBinder(@NonNull TService service) {
+    public ServiceBinder(@NonNull final TService service) {
+        super();
         this.service = service;
     }
 

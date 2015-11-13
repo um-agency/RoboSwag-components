@@ -31,17 +31,17 @@ import org.roboswag.components.utils.Typefaces;
  */
 public class TypefacedTextView extends TextView implements TypefacedText {
 
-    public TypefacedTextView(Context context) {
+    public TypefacedTextView(final Context context) {
         super(context);
         Typefaces.initialize(this, context, null);
     }
 
-    public TypefacedTextView(Context context, AttributeSet attrs) {
+    public TypefacedTextView(final Context context, final AttributeSet attrs) {
         super(context, attrs);
         Typefaces.initialize(this, context, attrs);
     }
 
-    public TypefacedTextView(Context context, AttributeSet attrs, int defStyle) {
+    public TypefacedTextView(final Context context, final AttributeSet attrs, final int defStyle) {
         super(context, attrs, defStyle);
         Typefaces.initialize(this, context, attrs);
     }
