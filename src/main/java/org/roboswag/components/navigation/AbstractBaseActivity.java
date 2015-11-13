@@ -20,6 +20,7 @@
 package org.roboswag.components.navigation;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -32,7 +33,7 @@ import android.view.inputmethod.InputMethodManager;
  * Created by Gavriil Sitnikov on 21/10/2015.
  * TODO: fill description
  */
-public abstract class BaseActivity extends AppCompatActivity
+public abstract class AbstractBaseActivity extends AppCompatActivity
         implements FragmentManager.OnBackStackChangedListener,
         OnFragmentStartedListener {
 
@@ -77,7 +78,7 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     @Override
-    public void onFragmentStarted(BaseFragment fragment) {
+    public void onFragmentStarted(@NonNull AbstractBaseFragment fragment) {
     }
 
     /* Raises when back stack changes */
@@ -154,8 +155,8 @@ public abstract class BaseActivity extends AppCompatActivity
         boolean backPressResult = false;
         if (fragmentManager.getFragments() != null) {
             for (Fragment fragment : fragmentManager.getFragments()) {
-                if (fragment != null && fragment.isResumed() && fragment instanceof BaseFragment) {
-                    backPressResult = backPressResult || ((BaseFragment) fragment).onBackPressed();
+                if (fragment != null && fragment.isResumed() && fragment instanceof AbstractBaseFragment) {
+                    backPressResult = backPressResult || ((AbstractBaseFragment) fragment).onBackPressed();
                 }
             }
         }
@@ -171,18 +172,7 @@ public abstract class BaseActivity extends AppCompatActivity
             case android.R.id.home:
                 FragmentManager fragmentManager = getSupportFragmentManager();
 
-                boolean homePressResult = false;
-                if (fragmentManager.getFragments() != null) {
-                    for (Fragment fragment : fragmentManager.getFragments()) {
-                        if (fragment != null
-                                && fragment.isResumed()
-                                && fragment instanceof BaseFragment) {
-                            homePressResult = homePressResult || ((BaseFragment) fragment).onHomePressed();
-                        }
-                    }
-                }
-
-                if (homePressResult) {
+                if (tryHomeOnChildren(fragmentManager)) {
                     return true;
                 }
 
@@ -209,8 +199,23 @@ public abstract class BaseActivity extends AppCompatActivity
                         }
                         return true;
                 }
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
+    }
+
+    private boolean tryHomeOnChildren(@NonNull FragmentManager fragmentManager) {
+        boolean homePressResult = false;
+        if (fragmentManager.getFragments() != null) {
+            for (Fragment fragment : fragmentManager.getFragments()) {
+                if (fragment != null
+                        && fragment.isResumed()
+                        && fragment instanceof AbstractBaseFragment) {
+                    homePressResult = homePressResult || ((AbstractBaseFragment) fragment).onHomePressed();
+                }
+            }
+        }
+        return homePressResult;
     }
 
     /* Hides device keyboard */

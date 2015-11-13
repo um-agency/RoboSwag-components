@@ -20,12 +20,8 @@
 package org.roboswag.components.views;
 
 import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.widget.TextView;
-
-import org.roboswag.components.R;
 
 import org.roboswag.components.utils.Typefaces;
 
@@ -33,44 +29,31 @@ import org.roboswag.components.utils.Typefaces;
  * Created by Gavriil Sitnikov on 18/07/2014.
  * TextView that supports fonts from Typefaces class
  */
-public class TypefacedTextView extends TextView {
+public class TypefacedTextView extends TextView implements TypefacedText {
 
     public TypefacedTextView(Context context) {
         super(context);
-        initialize(context, null);
+        Typefaces.initialize(this, context, null);
     }
 
     public TypefacedTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        initialize(context, attrs);
+        Typefaces.initialize(this, context, attrs);
     }
 
     public TypefacedTextView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-        initialize(context, attrs);
+        Typefaces.initialize(this, context, attrs);
     }
 
-    public void setTypeface(String name, int style) {
-        setTypeface(Typefaces.getByName(getContext(), name), style);
+    @Override
+    public void setTypeface(final String name, final int style) {
+        Typefaces.setTypeface(this, getContext(), name, style);
     }
 
-    public void setTypeface(String name) {
-        setTypeface(name, Typeface.NORMAL);
-    }
-
-    private void initialize(Context context, AttributeSet attrs) {
-        setIncludeFontPadding(false);
-        String customTypeface = null;
-        if (attrs != null) {
-            TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TypefacedTextView);
-            customTypeface = a.getString(R.styleable.TypefacedTextView_customTypeface);
-            a.recycle();
-        }
-
-        if (customTypeface != null && !isInEditMode()) {
-            Typeface typeface = getTypeface();
-            setTypeface(customTypeface, typeface != null ? typeface.getStyle() : Typeface.NORMAL);
-        }
+    @Override
+    public void setTypeface(final String name) {
+        Typefaces.setTypeface(this, getContext(), name);
     }
 
 }

@@ -38,7 +38,7 @@ public class IsCallingObserver {
     private static IsCallingObserver instance;
 
     @NonNull
-    public synchronized static IsCallingObserver getInstance(@NonNull Context context) {
+    public static synchronized IsCallingObserver getInstance(@NonNull Context context) {
         if (instance == null) {
             instance = new IsCallingObserver(context);
         }

@@ -45,7 +45,7 @@ public class VolumeController {
     private static VolumeController instance;
 
     @NonNull
-    public synchronized static VolumeController getInstance(@NonNull Context context) {
+    public static synchronized VolumeController getInstance(@NonNull Context context) {
         if (instance == null) {
             instance = new VolumeController(context);
         }

@@ -21,7 +21,7 @@ public class HeadsetStateObserver {
     private static HeadsetStateObserver instance;
 
     @NonNull
-    public synchronized static HeadsetStateObserver getInstance(@NonNull Context context) {
+    public static synchronized HeadsetStateObserver getInstance(@NonNull Context context) {
         if (instance == null) {
             instance = new HeadsetStateObserver(context);
         }

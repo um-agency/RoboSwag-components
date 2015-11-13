@@ -21,8 +21,14 @@ package org.roboswag.components.utils;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
+import android.util.AttributeSet;
+import android.widget.TextView;
+
+import org.roboswag.components.R;
+import org.roboswag.components.views.TypefacedText;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -33,15 +39,13 @@ import java.util.List;
  * Created by Gavriil Sitnikov on 18/07/2014.
  * Typefaces manager
  */
-public class Typefaces {
+public final class Typefaces {
 
     private static final HashMap<String, Typeface> TYPEFACES = new HashMap<>();
 
-    /**
-     * Returns typeface by name from assets 'fonts' folder
-     */
+    /* Returns typeface by name from assets 'fonts' folder */
     @NonNull
-    public synchronized static Typeface getByName(@NonNull Context context, @NonNull String name) {
+    public static synchronized Typeface getByName(@NonNull Context context, @NonNull String name) {
         Typeface result = TYPEFACES.get(name);
         if (result == null) {
             AssetManager assetManager = context.getAssets();
@@ -51,8 +55,9 @@ public class Typefaces {
                     result = Typeface.createFromAsset(assetManager, "fonts/" + name + ".ttf");
                 } else if (fonts.contains(name + ".otf")) {
                     result = Typeface.createFromAsset(assetManager, "fonts/" + name + ".otf");
-                } else
+                } else {
                     throw new IllegalStateException("Can't find .otf or .ttf file in folder 'fonts' with name: " + name);
+                }
             } catch (IOException e) {
                 throw new IllegalStateException("Typefaces files should be in folder named 'fonts'");
             }
@@ -61,4 +66,34 @@ public class Typefaces {
 
         return result;
     }
+
+    public static <TTypefacedText extends TextView & TypefacedText> void initialize(final TTypefacedText typefacedText,
+                                                                                    final Context context, final AttributeSet attrs) {
+        typefacedText.setIncludeFontPadding(false);
+        String customTypeface = null;
+        if (attrs != null) {
+            final TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.TypefacedTextView);
+            customTypeface = typedArray.getString(R.styleable.TypefacedTextView_customTypeface);
+            typedArray.recycle();
+        }
+
+        if (customTypeface != null && !typefacedText.isInEditMode()) {
+            final Typeface typeface = typefacedText.getTypeface();
+            typefacedText.setTypeface(customTypeface, typeface == null ? Typeface.NORMAL : typeface.getStyle());
+        }
+    }
+
+    public static <TTypefacedText extends TextView & TypefacedText> void setTypeface(final TTypefacedText typefacedText,
+                                                                                     final Context context, final String name, final int style) {
+        typefacedText.setTypeface(Typefaces.getByName(context, name), style);
+    }
+
+    public static <TTypefacedText extends TextView & TypefacedText> void setTypeface(final TTypefacedText typefacedText,
+                                                                                     final Context context, final String name) {
+        setTypeface(typefacedText, context, name, Typeface.NORMAL);
+    }
+
+    private Typefaces() {
+    }
+
 }

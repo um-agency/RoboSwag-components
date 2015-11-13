@@ -30,25 +30,27 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 
+import rx.functions.Func1;
+
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
  * TODO: fill description
  */
-public abstract class BaseFragment<TViewHolder extends BaseFragment.ViewController> extends Fragment
+public abstract class AbstractBaseFragment<TViewController extends AbstractBaseFragment.ViewController> extends Fragment
         implements OnFragmentStartedListener {
 
     @Nullable
-    private TViewHolder viewHolder;
+    private TViewController viewController;
 
     /* Returns base activity */
     @Nullable
-    protected BaseActivity getBaseActivity() {
-        return (BaseActivity) getActivity();
+    protected AbstractBaseActivity getBaseActivity() {
+        return (AbstractBaseActivity) getActivity();
     }
 
     @Nullable
-    protected TViewHolder getViewHolder() {
-        return viewHolder;
+    protected TViewController getViewController() {
+        return viewController;
     }
 
     @Override
@@ -57,27 +59,27 @@ public abstract class BaseFragment<TViewHolder extends BaseFragment.ViewControll
         if (view == null) {
             throw new IllegalStateException("Background fragments are deprecated - view shouldn't be null");
         }
-        viewHolder = createViewHolder(view, savedInstanceState);
+        viewController = createViewController(view, savedInstanceState);
     }
 
     @NonNull
-    protected abstract TViewHolder createViewHolder(@NonNull View view, @Nullable Bundle savedInstanceState);
+    protected abstract TViewController createViewController(@NonNull View view, @Nullable Bundle savedInstanceState);
 
     @Override
-    public void onFragmentStarted(BaseFragment fragment) {
+    public void onFragmentStarted(@NonNull AbstractBaseFragment fragment) {
     }
 
     @Deprecated
     @Override
     public void onStart() {
         super.onStart();
-        if (viewHolder == null || getBaseActivity() == null) {
-            throw new IllegalStateException("ViewHolder or BaseActivity is null at onStart point");
+        if (viewController == null || getBaseActivity() == null) {
+            throw new IllegalStateException("ViewController or BaseActivity is null at onStart point");
         }
-        onStart(viewHolder, getBaseActivity());
+        onStart(viewController, getBaseActivity());
     }
 
-    protected void onStart(@NonNull TViewHolder viewHolder, @NonNull BaseActivity baseActivity) {
+    protected void onStart(@NonNull TViewController viewController, @NonNull AbstractBaseActivity baseActivity) {
         Fragment parentFragment = getParentFragment();
         if (parentFragment != null) {
             if (parentFragment instanceof OnFragmentStartedListener) {
@@ -92,32 +94,13 @@ public abstract class BaseFragment<TViewHolder extends BaseFragment.ViewControll
     @Override
     public void onResume() {
         super.onResume();
-        if (viewHolder == null || getBaseActivity() == null) {
-            throw new IllegalStateException("ViewHolder or BaseActivity is null at onResume point");
+        if (viewController == null || getBaseActivity() == null) {
+            throw new IllegalStateException("ViewController or BaseActivity is null at onResume point");
         }
-        onResume(viewHolder, getBaseActivity());
+        onResume(viewController, getBaseActivity());
     }
 
-    protected void onResume(@NonNull TViewHolder viewHolder, @NonNull BaseActivity baseActivity) {
-    }
-
-    /* Raises when device back button pressed */
-    public boolean onBackPressed() {
-        FragmentManager fragmentManager = getChildFragmentManager();
-        boolean result = false;
-
-        if (fragmentManager.getFragments() == null) {
-            return false;
-        }
-
-        for (Fragment fragment : fragmentManager.getFragments()) {
-            if (fragment != null
-                    && fragment.isResumed()
-                    && fragment instanceof BaseFragment) {
-                result = result || ((BaseFragment) fragment).onBackPressed();
-            }
-        }
-        return result;
+    protected void onResume(@NonNull TViewController viewController, @NonNull AbstractBaseActivity baseActivity) {
     }
 
     @Override
@@ -125,8 +108,7 @@ public abstract class BaseFragment<TViewHolder extends BaseFragment.ViewControll
         super.onCreateOptionsMenu(menu, inflater);
     }
 
-    /* Raises when ActionBar home button pressed */
-    public boolean onHomePressed() {
+    private boolean tryForeachChild(Func1<AbstractBaseFragment, Boolean> actionOnChild) {
         FragmentManager fragmentManager = getChildFragmentManager();
         boolean result = false;
 
@@ -137,52 +119,62 @@ public abstract class BaseFragment<TViewHolder extends BaseFragment.ViewControll
         for (Fragment fragment : fragmentManager.getFragments()) {
             if (fragment != null
                     && fragment.isResumed()
-                    && fragment instanceof BaseFragment) {
-                result = result || ((BaseFragment) fragment).onHomePressed();
+                    && fragment instanceof AbstractBaseFragment) {
+                result = result || actionOnChild.call((AbstractBaseFragment) fragment);
             }
         }
         return result;
     }
 
+    /* Raises when device back button pressed */
+    public boolean onBackPressed() {
+        return tryForeachChild(AbstractBaseFragment::onBackPressed);
+    }
+
+    /* Raises when ActionBar home button pressed */
+    public boolean onHomePressed() {
+        return tryForeachChild(AbstractBaseFragment::onHomePressed);
+    }
+
     @Deprecated
     @Override
     public void onPause() {
-        if (viewHolder == null || getBaseActivity() == null) {
-            throw new IllegalStateException("ViewHolder or BaseActivity is null at onPause point");
+        if (viewController == null || getBaseActivity() == null) {
+            throw new IllegalStateException("ViewController or BaseActivity is null at onPause point");
         }
-        onPause(viewHolder, getBaseActivity());
+        onPause(viewController, getBaseActivity());
         super.onPause();
     }
 
-    protected void onPause(@NonNull TViewHolder viewHolder, @NonNull BaseActivity baseActivity) {
+    protected void onPause(@NonNull TViewController viewController, @NonNull AbstractBaseActivity baseActivity) {
     }
 
     @Deprecated
     @Override
     public void onStop() {
-        if (viewHolder == null || getBaseActivity() == null) {
-            throw new IllegalStateException("ViewHolder or BaseActivity is null at onStop point");
+        if (viewController == null || getBaseActivity() == null) {
+            throw new IllegalStateException("ViewController or BaseActivity is null at onStop point");
         }
-        onStop(viewHolder, getBaseActivity());
+        onStop(viewController, getBaseActivity());
         super.onStop();
     }
 
-    protected void onStop(@NonNull TViewHolder viewHolder, @NonNull BaseActivity baseActivity) {
+    protected void onStop(@NonNull TViewController viewController, @NonNull AbstractBaseActivity baseActivity) {
     }
 
     @Deprecated
     @Override
     public void onDestroyView() {
-        if (viewHolder == null) {
-            throw new IllegalStateException("ViewHolder is null at onStop point");
+        if (viewController == null) {
+            throw new IllegalStateException("ViewController is null at onStop point");
         }
-        onDestroyView(viewHolder);
+        onDestroyView(viewController);
         super.onDestroyView();
-        this.viewHolder = null;
+        this.viewController = null;
     }
 
-    protected void onDestroyView(@NonNull TViewHolder viewHolder) {
-        viewHolder.onDestroy();
+    protected void onDestroyView(@NonNull TViewController viewController) {
+        viewController.onDestroy();
     }
 
     public class ViewController {

@@ -17,14 +17,16 @@
  *
  */
 
-package org.roboswag.components.navigation;
+package org.roboswag.components.views;
 
 /**
- * Created by Gavriil Sitnikov on 08/10/2014.
- * Base interface to listen fragment changing
+ * Created by Vsevolod Ivanov on 18/07/2014.
+ * Interface for TextViews
  */
-public interface OnFragmentStartedListener {
+public interface TypefacedText {
 
-    /* Raises by fragment to notify that it is started */
-    void onFragmentStarted(AbstractBaseFragment fragment);
+    void setTypeface(String name, int style);
+
+    void setTypeface(String name);
+
 }
