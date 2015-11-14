@@ -22,22 +22,34 @@ package org.roboswag.components.navigation;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.view.Menu;
 import android.view.View;
 
+import org.roboswag.components.savestate.AbstractSavedStateController;
 import org.roboswag.components.utils.UiUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
  * TODO: fill description
  */
+// Yes, it's a God class with a lot of methods. Deal with it
+@SuppressWarnings({"PMD.GodClass","PMD.TooManyMethods"})
 public abstract class AbstractBaseFragment<TViewController extends AbstractBaseFragment.ViewController> extends Fragment
         implements OnFragmentStartedListener {
 
     @Nullable
     private TViewController viewController;
+    @Nullable
+    private Map<String, Parcelable> tempSavedStates;
 
     /* Returns base activity */
     @Nullable
@@ -50,6 +62,28 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         return viewController;
     }
 
+    public boolean isNestedFragment() {
+        return getParentFragment() != null || getTargetFragment() != null;
+    }
+
+    @Override
+    public void onCreate(@Nullable final Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(!isNestedFragment());
+    }
+
+    protected void configureActionBar(@NonNull final AbstractBaseActivity baseActivity) {
+        //do nothing
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(final Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        if (getBaseActivity() != null) {
+            configureActionBar(getBaseActivity());
+        }
+    }
+
     @Override
     public void onViewCreated(final View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -57,6 +91,9 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
             throw new IllegalStateException("Background fragments are deprecated - view shouldn't be null");
         }
         viewController = createViewController(view, savedInstanceState);
+        if (viewController.restoreStateOnCreate()) {
+            viewController.restoreState();
+        }
     }
 
     @NonNull
@@ -122,8 +159,19 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         super.onPause();
     }
 
+    @SuppressWarnings("unchecked")
     protected void onPause(@NonNull final TViewController viewController, @NonNull final AbstractBaseActivity baseActivity) {
-        //do nothing
+        tempSavedStates = viewController.getSavedStates();
+    }
+
+    @Override
+    public void onSaveInstanceState(final Bundle stateToSave) {
+        super.onSaveInstanceState(stateToSave);
+        if (tempSavedStates != null) {
+            for (final Map.Entry<String, Parcelable> entry : tempSavedStates.entrySet()) {
+                stateToSave.putParcelable(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     @Deprecated
@@ -155,10 +203,53 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         viewController.onDestroy();
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        tempSavedStates = null;
+    }
+
     public class ViewController {
 
         private final Context context;
+        @Nullable
+        private final Bundle savedInstanceState;
         private final Handler postHandler = new Handler();
+        private final List<AbstractSavedStateController> savedStateControllers = new ArrayList<>();
+
+        public ViewController(@NonNull final View view, @Nullable final Bundle savedInstanceState) {
+            context = view.getContext();
+            this.savedInstanceState = savedInstanceState;
+        }
+
+        @NonNull
+        public Map<String, Parcelable> getSavedStates() {
+            final Map<String, Parcelable> result = new HashMap<>();
+            for (final AbstractSavedStateController savedStateController : savedStateControllers) {
+                result.put(String.valueOf(savedStateController.getId()), savedStateController.getState());
+            }
+            return result;
+        }
+
+        protected void attachSavedStateController(@NonNull final AbstractSavedStateController savedStateController) {
+            savedStateControllers.add(savedStateController);
+        }
+
+        public void restoreState() {
+            if (savedInstanceState == null && tempSavedStates == null) {
+                return;
+            }
+            for (final AbstractSavedStateController savedStateController : savedStateControllers) {
+                final String key = String.valueOf(savedStateController.getId());
+                final Parcelable savedState = tempSavedStates != null
+                        ? tempSavedStates.get(key)
+                        : (savedInstanceState != null ? savedInstanceState.getParcelable(key) : null);
+                if (savedState != null) {
+                    savedStateController.restoreState(savedState);
+                }
+            }
+            tempSavedStates = null;
+        }
 
         /* Returns post handler to executes code on UI thread */
         @NonNull
@@ -171,8 +262,8 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
             return context;
         }
 
-        public ViewController(@NonNull final View view) {
-            context = view.getContext();
+        protected boolean restoreStateOnCreate() {
+            return true;
         }
 
         protected void onDestroy() {
