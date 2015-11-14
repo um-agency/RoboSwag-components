@@ -136,7 +136,9 @@ public abstract class AbstractHttpRequest<T> {
             } catch (Exception e) {
                 subscriber.onError(e);
             }
-        }).subscribeOn(Schedulers.io());
+        }).subscribeOn(Schedulers.io())
+                .unsubscribeOn(Schedulers.io())
+                .doOnUnsubscribe(this::cancel);
     }
 
     @NonNull
