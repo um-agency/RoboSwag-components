@@ -104,12 +104,12 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
 
     /* Raises when device back button pressed */
     public boolean onBackPressed() {
-        return UiUtils.tryForeachFragment(getFragmentManager(), AbstractBaseFragment::onBackPressed);
+        return UiUtils.tryForeachFragment(getChildFragmentManager(), AbstractBaseFragment::onBackPressed);
     }
 
     /* Raises when ActionBar home button pressed */
     public boolean onHomePressed() {
-        return UiUtils.tryForeachFragment(getFragmentManager(), AbstractBaseFragment::onHomePressed);
+        return UiUtils.tryForeachFragment(getChildFragmentManager(), AbstractBaseFragment::onHomePressed);
     }
 
     @Deprecated
