@@ -1,0 +1,42 @@
+package org.roboswag.components.telephony;
+
+import android.content.Intent;
+import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.text.TextPaint;
+import android.text.style.URLSpan;
+import android.view.View;
+
+import org.roboswag.core.log.Lc;
+
+/**
+ * Created by Gavriil Sitnikov on 14/11/2015.
+ * TODO: fill description
+ */
+public class PhoneSpan extends URLSpan {
+
+    public PhoneSpan(@NonNull final String phoneNumber) {
+        super(phoneNumber);
+    }
+
+    @SuppressWarnings("PMD.AvoidCatchingThrowable")
+    @Override
+    public void onClick(final View widget) {
+        super.onClick(widget);
+        try {
+            final Intent intent = new Intent(Intent.ACTION_DIAL);
+            intent.setData(Uri.parse(getURL()));
+            widget.getContext().startActivity(intent);
+            // it should catch throwable to not crash in production if there are problems with startActivity()
+        } catch (Throwable throwable) {
+            Lc.fatalException(throwable);
+        }
+    }
+
+    @Override
+    public void updateDrawState(final TextPaint ds) {
+        super.updateDrawState(ds);
+        ds.setUnderlineText(false);
+    }
+
+}

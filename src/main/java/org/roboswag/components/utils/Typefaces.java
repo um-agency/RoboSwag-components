@@ -29,6 +29,8 @@ import android.widget.TextView;
 
 import org.roboswag.components.R;
 import org.roboswag.components.views.TypefacedText;
+import org.roboswag.core.log.Lc;
+import org.roboswag.core.utils.ShouldNotHappenException;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -43,6 +45,12 @@ import java.util.Map;
 public final class Typefaces {
 
     private static final Map<String, Typeface> TYPEFACES_MAP = new HashMap<>();
+
+    private static boolean allowEmptyCustomTypeface = true;
+
+    public static void setAllowEmptyCustomTypeface(final boolean allowDefaultTypefacedText) {
+        Typefaces.allowEmptyCustomTypeface = allowDefaultTypefacedText;
+    }
 
     /* Returns typeface by name from assets 'fonts' folder */
     @NonNull
@@ -80,9 +88,13 @@ public final class Typefaces {
             typedArray.recycle();
         }
 
-        if (customTypeface != null && !typefacedText.isInEditMode()) {
-            final Typeface typeface = typefacedText.getTypeface();
-            typefacedText.setTypeface(customTypeface, typeface == null ? Typeface.NORMAL : typeface.getStyle());
+        if (customTypeface != null) {
+            if (!typefacedText.isInEditMode()) {
+                final Typeface typeface = typefacedText.getTypeface();
+                typefacedText.setTypeface(customTypeface, typeface == null ? Typeface.NORMAL : typeface.getStyle());
+            }
+        } else if (!allowEmptyCustomTypeface) {
+            Lc.fatalException(new ShouldNotHappenException("TypefacedText has no customTypeface attribute: " + typefacedText));
         }
     }
 
