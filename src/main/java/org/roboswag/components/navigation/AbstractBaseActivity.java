@@ -82,7 +82,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
 
     @Override
     public void onFragmentStarted(@NonNull final AbstractBaseFragment fragment) {
-        //do nothing
+        hideSoftInput();
     }
 
     /* Raises when back stack changes */
