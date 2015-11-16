@@ -22,6 +22,7 @@ package org.roboswag.components.requests;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.util.Charsets;
 import com.google.api.client.util.ObjectParser;
@@ -122,7 +123,15 @@ public abstract class AbstractHttpRequest<T> {
             Lc.d("Response for: %s has code %s and content: %s", request.url(), response.code(), new String(bytes, charset));
         }
         final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-        T result = getParser().parseAndClose(byteArrayInputStream, charset, responseResultType);
+        T result;
+        try {
+            result = getParser().parseAndClose(byteArrayInputStream, charset, responseResultType);
+        } catch (JsonProcessingException ex) {
+            throw new ShouldNotHappenException("Invalid response for request " + getUrl(), ex);
+        }
+        if (result == null) {
+            throw new ShouldNotHappenException("Response is null for request " + getUrl());
+        }
         result = handleResponse(result);
         return result;
     }
@@ -159,7 +168,7 @@ public abstract class AbstractHttpRequest<T> {
 
     /* Handle response. Use it to do something after request successfully executes */
     @NonNull
-    protected T handleResponse(final T response) throws Exception {
+    protected T handleResponse(@NonNull final T response) throws Exception {
         return response;
     }
 
