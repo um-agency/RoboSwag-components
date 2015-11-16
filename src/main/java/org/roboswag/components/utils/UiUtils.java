@@ -28,6 +28,11 @@ public final class UiUtils {
         return LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
     }
 
+    @NonNull
+    public static View inflateAndAdd(@LayoutRes final int layoutId, @NonNull final ViewGroup parent) {
+        return LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, true);
+    }
+
     public static boolean tryForeachFragment(@NonNull final FragmentManager fragmentManager,
                                              @NonNull final Func1<AbstractBaseFragment, Boolean> actionOnChild) {
         if (fragmentManager.getFragments() == null) {

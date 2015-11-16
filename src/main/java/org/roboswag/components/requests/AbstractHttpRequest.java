@@ -137,8 +137,8 @@ public abstract class AbstractHttpRequest<T> {
                 subscriber.onError(e);
             }
         }).subscribeOn(Schedulers.io())
-                .unsubscribeOn(Schedulers.io())
-                .doOnUnsubscribe(this::cancel);
+                .doOnUnsubscribe(this::cancel)
+                .unsubscribeOn(Schedulers.io());
     }
 
     @NonNull
