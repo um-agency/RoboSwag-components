@@ -126,8 +126,10 @@ public abstract class AbstractHttpRequest<T> {
         T result;
         try {
             result = getParser().parseAndClose(byteArrayInputStream, charset, responseResultType);
+        } catch (RuntimeException throwable) {
+            throw new ShouldNotHappenException("Runtime exception during response parsing " + getUrl(), throwable);
         } catch (JsonProcessingException ex) {
-            throw new ShouldNotHappenException("Invalid response for request " + getUrl(), ex);
+            throw new ShouldNotHappenException("Parsing exception during response parsing " + getUrl(), ex);
         }
         if (result == null) {
             throw new ShouldNotHappenException("Response is null for request " + getUrl());
