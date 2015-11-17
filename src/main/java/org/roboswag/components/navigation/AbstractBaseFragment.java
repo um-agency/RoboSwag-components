@@ -91,7 +91,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
             throw new IllegalStateException("Background fragments are deprecated - view shouldn't be null");
         }
         viewController = createViewController(view, savedInstanceState);
-        if (viewController.restoreStateOnCreate()) {
+        if (viewController.doRestoreStateOnCreate()) {
             viewController.restoreState();
         }
     }
@@ -262,7 +262,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
             return context;
         }
 
-        protected boolean restoreStateOnCreate() {
+        protected boolean doRestoreStateOnCreate() {
             return true;
         }
 
