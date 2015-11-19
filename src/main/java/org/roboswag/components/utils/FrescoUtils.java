@@ -32,7 +32,7 @@ import com.facebook.common.util.UriUtil;
 public final class FrescoUtils {
 
     @NonNull
-    public static Uri getResourceUri(@DrawableRes final int resourceId) {
+    public static Uri getResourceUri(final int resourceId) {
         return new Uri.Builder().scheme(UriUtil.LOCAL_RESOURCE_SCHEME).path(String.valueOf(resourceId)).build();
     }
 
