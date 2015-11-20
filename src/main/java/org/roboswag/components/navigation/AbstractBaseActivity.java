@@ -112,18 +112,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
             fragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
 
-        final T fragment;
-        try {
-            fragment = (T) Fragment.instantiate(this, fragmentClass.getName(), args);
-        } catch (Exception ex) {
-            //TODO: log
-            return null;
-        }
-        fragmentManager.beginTransaction()
-                .replace(getFragmentContainerId(), fragment, null)
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .commit();
-        return fragment;
+        return setFragment(fragmentClass);
     }
 
     @Nullable
@@ -148,7 +137,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .addToBackStack(backStackTag)
                 .commit();
-        return (T) fragment;
+        return fragment;
     }
 
     /* Setting fragment of special class as top */
@@ -172,10 +161,16 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     /* Raises when device back button pressed */
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
+    //TODO: wait for 1 to be ignored
     @Override
     public void onBackPressed() {
-        if (!UiUtils.tryForeachFragment(getSupportFragmentManager(), AbstractBaseFragment::onBackPressed)) {
-            super.onBackPressed();
+        if (!UiUtils.tryForeachFragment(getSupportFragmentManager(), fragment -> fragment.onBackPressed(this))) {
+            if (getSupportFragmentManager().getBackStackEntryCount() <= 1) {
+                supportFinishAfterTransition();
+            } else {
+                getSupportFragmentManager().popBackStackImmediate();
+            }
         }
     }
 
@@ -186,7 +181,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
 
                 final FragmentManager fragmentManager = getSupportFragmentManager();
 
-                if (UiUtils.tryForeachFragment(fragmentManager, AbstractBaseFragment::onHomePressed)) {
+                if (UiUtils.tryForeachFragment(fragmentManager, fragment -> fragment.onHomePressed(this))) {
                     return true;
                 }
 
@@ -232,6 +227,19 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
                 mainFragmentContainer.requestFocus();
             }
         }
+    }
+
+    public void popBackStackToTopFragment() {
+        final FragmentManager fragmentManager = getSupportFragmentManager();
+        final int stackSize = fragmentManager.getBackStackEntryCount();
+        String currentFragmentName = null;
+        for (int i = stackSize - 2; i >= 0; i--) {
+            currentFragmentName = fragmentManager.getBackStackEntryAt(i).getName();
+            if (currentFragmentName.endsWith(TOP_FRAGMENT_TAG_MARK)) {
+                break;
+            }
+        }
+        fragmentManager.popBackStackImmediate(currentFragmentName, 0);
     }
 
     /* Shows device keyboard */

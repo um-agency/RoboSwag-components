@@ -42,7 +42,7 @@ import java.util.Map;
  * TODO: fill description
  */
 // Yes, it's a God class with a lot of methods. Deal with it
-@SuppressWarnings({"PMD.GodClass","PMD.TooManyMethods"})
+@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods"})
 public abstract class AbstractBaseFragment<TViewController extends AbstractBaseFragment.ViewController> extends Fragment
         implements OnFragmentStartedListener {
 
@@ -140,13 +140,13 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
     }
 
     /* Raises when device back button pressed */
-    public boolean onBackPressed() {
-        return UiUtils.tryForeachFragment(getChildFragmentManager(), AbstractBaseFragment::onBackPressed);
+    public boolean onBackPressed(@NonNull final AbstractBaseActivity baseActivity) {
+        return UiUtils.tryForeachFragment(getChildFragmentManager(), fragment -> fragment.onBackPressed(baseActivity));
     }
 
     /* Raises when ActionBar home button pressed */
-    public boolean onHomePressed() {
-        return UiUtils.tryForeachFragment(getChildFragmentManager(), AbstractBaseFragment::onHomePressed);
+    public boolean onHomePressed(@NonNull final AbstractBaseActivity baseActivity) {
+        return UiUtils.tryForeachFragment(getChildFragmentManager(), fragment -> fragment.onHomePressed(baseActivity));
     }
 
     @Deprecated
