@@ -33,10 +33,10 @@ dependencies {
 
     provided 'io.reactivex:rxandroid:1.0.1'
 
-    provided('com.google.http-client:google-http-client-android:1.20.0') {
+    provided('com.google.http-client:google-http-client-android:1.21.0') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
-    provided('com.google.http-client:google-http-client-jackson2:1.20.0') {
+    provided('com.google.http-client:google-http-client-jackson2:1.21.0') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
     provided 'com.squareup.okhttp:okhttp:2.5.0'
