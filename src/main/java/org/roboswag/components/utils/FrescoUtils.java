@@ -20,7 +20,6 @@
 package org.roboswag.components.utils;
 
 import android.net.Uri;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 
 import com.facebook.common.util.UriUtil;
