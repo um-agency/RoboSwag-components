@@ -20,6 +20,7 @@
 package org.roboswag.components.requests;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -108,7 +109,7 @@ public abstract class AbstractHttpRequest<T> {
         }
     }
 
-    @NonNull
+    @Nullable
     public T executeSync() throws Exception {
         final Request request = getRequest();
         if (LcHelper.getLogLevel() <= Log.DEBUG) {
@@ -123,7 +124,7 @@ public abstract class AbstractHttpRequest<T> {
             Lc.d("Response for: %s has code %s and content: %s", request.url(), response.code(), new String(bytes, charset));
         }
         final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-        T result;
+        final T result;
         try {
             result = getParser().parseAndClose(byteArrayInputStream, charset, responseResultType);
         } catch (RuntimeException throwable) {
@@ -132,10 +133,14 @@ public abstract class AbstractHttpRequest<T> {
             throw new ShouldNotHappenException("Parsing exception during response parsing " + getUrl(), ex);
         }
         if (result == null) {
-            throw new ShouldNotHappenException("Response is null for request " + getUrl());
+            if (getResponseResultType() != Void.class) {
+                throw new ShouldNotHappenException("Response is null for request " + getUrl());
+            } else {
+                return null;
+            }
+        } else {
+            return handleResponse(result);
         }
-        result = handleResponse(result);
-        return result;
     }
 
     @NonNull
