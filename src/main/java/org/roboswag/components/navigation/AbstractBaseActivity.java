@@ -19,6 +19,9 @@
 
 package org.roboswag.components.navigation;
 
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -60,6 +63,22 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
                 .getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1)
                 .getName();
         return topFragmentTag != null && topFragmentTag.contains(TOP_FRAGMENT_TAG_MARK);
+    }
+
+    // https://code.google.com/p/android/issues/detail?id=2373
+    // https://github.com/cleverua/android_startup_activity
+    // http://stackoverflow.com/questions/4341600/how-to-prevent-multiple-instances-of-an-activity-when-it-is-launched-with-differ
+    @SuppressWarnings("deprecation")
+    public boolean isLaunchedManyTimes() {
+        final ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (final ActivityManager.RunningTaskInfo taskInfo : activityManager.getRunningTasks(Integer.MAX_VALUE)) {
+            if (getPackageName().equals(taskInfo.baseActivity.getPackageName())
+                    && taskInfo.numActivities > 1
+                    && Intent.ACTION_MAIN.equals(getIntent().getAction())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

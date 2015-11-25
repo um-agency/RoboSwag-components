@@ -26,8 +26,16 @@ import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.widget.ImageView;
+import android.view.View;
 import android.widget.SeekBar;
+
+import org.roboswag.core.log.Lc;
+import org.roboswag.core.utils.ShouldNotHappenException;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import rx.Observable;
 import rx.Subscription;
@@ -58,14 +66,8 @@ public final class VolumeController {
     private final BehaviorSubject<Integer> volumeSubject;
     private final Observable<Integer> volumeObservable;
 
-    @Nullable
-    private SeekBar seekBar;
-    @Nullable
-    private ImageView volumeDown;
-    @Nullable
-    private ImageView volumeUp;
-    @Nullable
-    private Subscription seekBarSubscription;
+    private final Map<SeekBar, Subscription> seekBars = new HashMap<>();
+    private final Set<VolumeButtons> volumeButtonsSet = new HashSet<>();
 
     private VolumeController(@NonNull final Context context) {
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
@@ -85,15 +87,17 @@ public final class VolumeController {
     }
 
     private void updateVolume() {
-        volumeSubject.onNext(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
+        volumeSubject.onNext(getVolume());
     }
 
     public void setVolume(final int value) {
         if (value < 0 || value > maxVolume) {
-            throw new IllegalStateException("Volume: " + value + " out of bounds [0," + maxVolume + "]");
+            Lc.fatalException(new ShouldNotHappenException("Volume: " + value + " out of bounds [0," + maxVolume + "]"));
+            return;
         }
         if (getVolume() != value) {
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, value, 0);
+            updateVolume();
         }
     }
 
@@ -107,13 +111,13 @@ public final class VolumeController {
     }
 
     public void attachSeekBar(@NonNull final SeekBar seekBar) {
-        if (this.seekBar != null) {
-            throw new IllegalArgumentException("Attached SeekBar is not null");
+        if (seekBars.containsKey(seekBar)) {
+            Lc.fatalException(new ShouldNotHappenException("SeekBar already attached"));
+            return;
         }
-        this.seekBar = seekBar;
-        this.seekBar.setMax(maxVolume);
-        this.seekBar.setProgress(getVolume());
-        this.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        seekBar.setMax(maxVolume);
+        seekBar.setProgress(getVolume());
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             @Override
             public void onProgressChanged(final SeekBar seekBar, final int progress, final boolean fromUser) {
@@ -132,52 +136,81 @@ public final class VolumeController {
 
         });
 
-        seekBarSubscription = observeVolume()
+        seekBars.put(seekBar, observeVolume()
                 .subscribeOn(AndroidSchedulers.mainThread())
-                .subscribe(seekBar::setProgress);
+                .subscribe(seekBar::setProgress));
     }
 
     public void detachSeekBar(@NonNull final SeekBar seekBar) {
-        if (this.seekBar != seekBar) {
-            throw new IllegalArgumentException("Wrong SeekBar: " + seekBar + " != " + this.seekBar);
+        final Subscription subscription = seekBars.get(seekBar);
+        if (subscription == null) {
+            Lc.fatalException(new ShouldNotHappenException("SeekBar not attached yet"));
+            return;
         }
-        if (seekBarSubscription == null) {
-            throw new IllegalStateException("SeekBarSubscription is null on detach of SeekBar");
-        }
-
-        this.seekBar.setOnSeekBarChangeListener(null);
-        seekBarSubscription.unsubscribe();
-        seekBarSubscription = null;
-        this.seekBar = null;
+        seekBar.setOnSeekBarChangeListener(null);
+        subscription.unsubscribe();
+        seekBars.remove(seekBar);
     }
 
-    public void attachVolumeButtons(@NonNull final ImageView volumeDown, @NonNull final ImageView volumeUp) {
-        if (this.volumeDown != null && this.volumeUp != null) {
-            throw new IllegalArgumentException("Attached volume buttons is not null");
+    @SuppressWarnings("PMD.AccessorClassGeneration")
+    public void attachVolumeButtons(@NonNull final View volumeUpButton, @NonNull final View volumeDownButton) {
+        final VolumeButtons volumeButtons = new VolumeButtons(volumeUpButton, volumeDownButton);
+        if (volumeButtonsSet.contains(volumeButtons)) {
+            Lc.fatalException(new ShouldNotHappenException("VolumeButtons already attached"));
+            return;
         }
-        this.volumeDown = volumeDown;
-        this.volumeUp = volumeUp;
 
-        volumeUp.setOnClickListener(v -> {
+        volumeButtons.volumeUpButton.setOnClickListener(v -> {
             if (getVolume() != maxVolume) {
                 setVolume(getVolume() + 1);
             }
         });
 
-        volumeDown.setOnClickListener(v -> {
+        volumeButtons.volumeDownButton.setOnClickListener(v -> {
             if (getVolume() != 0) {
                 setVolume(getVolume() - 1);
             }
         });
+        volumeButtonsSet.add(volumeButtons);
     }
 
-    public void detachVolumeButtons(@NonNull final ImageView volumeDownImageView, @NonNull final ImageView volumeUpImageView) {
-        if (this.volumeDown != volumeDownImageView && this.volumeUp != volumeUpImageView) {
-            throw new IllegalArgumentException("Wrong SeekBar: " + seekBar + " != " + this.seekBar);
+    @SuppressWarnings("PMD.AccessorClassGeneration")
+    public void detachVolumeButtons(@NonNull final View volumeUpButton, @NonNull final View volumeDownButton) {
+        final VolumeButtons volumeButtons = new VolumeButtons(volumeUpButton, volumeDownButton);
+        if (!volumeButtonsSet.contains(volumeButtons)) {
+            Lc.fatalException(new ShouldNotHappenException("VolumeButtons not attached yet"));
+            return;
         }
 
-        this.volumeDown = null;
-        this.volumeUp = null;
+        volumeButtons.volumeUpButton.setOnClickListener(null);
+        volumeButtons.volumeDownButton.setOnClickListener(null);
+        volumeButtonsSet.remove(volumeButtons);
+    }
+
+    private static class VolumeButtons {
+
+        @NonNull
+        private final View volumeUpButton;
+        @NonNull
+        private final View volumeDownButton;
+
+        private VolumeButtons(@NonNull final View volumeUpButton, @NonNull final View volumeDownButton) {
+            this.volumeUpButton = volumeUpButton;
+            this.volumeDownButton = volumeDownButton;
+        }
+
+        @Override
+        public boolean equals(final Object object) {
+            return object instanceof VolumeButtons
+                    && ((VolumeButtons) object).volumeDownButton == volumeDownButton
+                    && ((VolumeButtons) object).volumeUpButton == volumeUpButton;
+        }
+
+        @Override
+        public int hashCode() {
+            return volumeDownButton.hashCode() + volumeUpButton.hashCode();
+        }
+
     }
 
     private class VolumeObserver extends ContentObserver {
