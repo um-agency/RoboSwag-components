@@ -79,6 +79,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
     @Override
     public void onPrepareOptionsMenu(final Menu menu) {
         super.onPrepareOptionsMenu(menu);
+        // activity could be null if fragment has added as child but not attached to activity yet
         if (getBaseActivity() != null) {
             configureActionBar(getBaseActivity());
         }
