@@ -27,6 +27,7 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.util.Charsets;
 import com.google.api.client.util.ObjectParser;
 import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -43,6 +44,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
 
 import okio.Buffer;
 import rx.Observable;
@@ -82,6 +85,10 @@ public abstract class AbstractHttpRequest<T> {
         // to be overridden. default does nothing
     }
 
+    protected void setupHeaders(@NonNull final Map<String, String> headers) {
+        // to be overridden. default does nothing
+    }
+
     @NonNull
     protected OkHttpClient createHttpClient() {
         return new OkHttpClient();
@@ -90,8 +97,10 @@ public abstract class AbstractHttpRequest<T> {
     @NonNull
     protected Request.Builder createHttpRequest() throws IOException {
         final GenericUrl genericUrl = new GenericUrl(getUrl());
+        final Map<String, String> headers = new HashMap<>();
+        setupHeaders(headers);
         setupUrlParameters(genericUrl);
-        return new Request.Builder().url(genericUrl.build());
+        return new Request.Builder().url(genericUrl.build()).headers(Headers.of(headers));
     }
 
     @NonNull
