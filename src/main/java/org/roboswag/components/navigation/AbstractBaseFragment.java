@@ -72,7 +72,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         setHasOptionsMenu(!isNestedFragment());
     }
 
-    protected void configureActionBar(@NonNull final AbstractBaseActivity baseActivity) {
+    protected void onConfigureActionBar(@NonNull final AbstractBaseActivity baseActivity) {
         //do nothing
     }
 
@@ -81,7 +81,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         super.onPrepareOptionsMenu(menu);
         // activity could be null if fragment has added as child but not attached to activity yet
         if (getBaseActivity() != null) {
-            configureActionBar(getBaseActivity());
+            onConfigureActionBar(getBaseActivity());
         }
     }
 
