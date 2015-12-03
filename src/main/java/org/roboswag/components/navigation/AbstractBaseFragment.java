@@ -212,14 +212,15 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
 
     public class ViewController {
 
-        private final Context context;
+        @NonNull
+        private final View view;
         @Nullable
         private final Bundle savedInstanceState;
         private final Handler postHandler = new Handler();
         private final List<AbstractSavedStateController> savedStateControllers = new ArrayList<>();
 
         public ViewController(@NonNull final View view, @Nullable final Bundle savedInstanceState) {
-            context = view.getContext();
+            this.view = view;
             this.savedInstanceState = savedInstanceState;
         }
 
@@ -259,8 +260,13 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         }
 
         @NonNull
+        public View getView() {
+            return view;
+        }
+
+        @NonNull
         protected Context getContext() {
-            return context;
+            return view.getContext();
         }
 
         protected boolean doRestoreStateOnCreate() {
