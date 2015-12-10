@@ -105,6 +105,15 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         //do nothing
     }
 
+    @Override
+    public void onActivityCreated(@Nullable final Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (viewController == null || getBaseActivity() == null) {
+            throw new IllegalStateException("ViewController or BaseActivity is null at onActivityCreated point");
+        }
+        viewController.onActivityCreated(getBaseActivity());
+    }
+
     @Deprecated
     @Override
     public void onStart() {
@@ -137,7 +146,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
     }
 
     protected void onResume(@NonNull final TViewController viewController, @NonNull final AbstractBaseActivity baseActivity) {
-        //do nothing
+        viewController.setTempSavedStates(tempSavedStates);
     }
 
     /* Raises when device back button pressed */
@@ -162,7 +171,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
 
     @SuppressWarnings("unchecked")
     protected void onPause(@NonNull final TViewController viewController, @NonNull final AbstractBaseActivity baseActivity) {
-        tempSavedStates = viewController.getSavedStates();
+        tempSavedStates = viewController.getActualSavedStates();
     }
 
     @Override
@@ -210,7 +219,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         tempSavedStates = null;
     }
 
-    public class ViewController {
+    public static class ViewController {
 
         @NonNull
         private final View view;
@@ -218,19 +227,29 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         private final Bundle savedInstanceState;
         private final Handler postHandler = new Handler();
         private final List<AbstractSavedStateController> savedStateControllers = new ArrayList<>();
+        @Nullable
+        private Map<String, Parcelable> tempSavedStates;
 
         public ViewController(@NonNull final View view, @Nullable final Bundle savedInstanceState) {
             this.view = view;
             this.savedInstanceState = savedInstanceState;
         }
 
+        protected void onActivityCreated(@NonNull final AbstractBaseActivity baseActivity) {
+            //do nothing
+        }
+
         @NonNull
-        public Map<String, Parcelable> getSavedStates() {
+        public Map<String, Parcelable> getActualSavedStates() {
             final Map<String, Parcelable> result = new HashMap<>();
             for (final AbstractSavedStateController savedStateController : savedStateControllers) {
                 result.put(String.valueOf(savedStateController.getId()), savedStateController.getState());
             }
             return result;
+        }
+
+        public void setTempSavedStates(@Nullable final Map<String,Parcelable> tempSavedStates) {
+            this.tempSavedStates = tempSavedStates;
         }
 
         protected void attachSavedStateController(@NonNull final AbstractSavedStateController savedStateController) {

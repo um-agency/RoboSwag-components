@@ -31,7 +31,7 @@ dependencies {
     provided 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.android.support:recyclerview-v7:23.1.1'
 
-    provided 'io.reactivex:rxandroid:1.0.1'
+    provided 'io.reactivex:rxandroid:1.1.0'
 
     provided('com.google.http-client:google-http-client-android:1.21.0') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')

@@ -1,6 +1,7 @@
 package org.roboswag.components.utils;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.ColorRes;
@@ -9,6 +10,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +24,15 @@ import rx.functions.Func1;
  * TODO: fill description
  */
 public final class UiUtils {
+
+    public static int getActionBarHeight(@NonNull final Resources resources) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 56, resources.getDisplayMetrics());
+    }
+
+    public static int getStatusBarHeight(@NonNull final Resources resources) {
+        final int resourceId = resources.getIdentifier("status_bar_height", "dimen", "android");
+        return resourceId > 0 ? resources.getDimensionPixelSize(resourceId) : 0;
+    }
 
     @NonNull
     public static View inflate(@LayoutRes final int layoutId, @NonNull final ViewGroup parent) {
