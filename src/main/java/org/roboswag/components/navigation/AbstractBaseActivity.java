@@ -22,12 +22,15 @@ package org.roboswag.components.navigation;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,17 +38,32 @@ import android.view.inputmethod.InputMethodManager;
 
 import org.roboswag.components.utils.UiUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import rx.Observable;
+import rx.subjects.PublishSubject;
+
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
  * TODO: fill description
  */
+@SuppressWarnings("PMD.GodClass")
 public abstract class AbstractBaseActivity extends AppCompatActivity
         implements FragmentManager.OnBackStackChangedListener,
         OnFragmentStartedListener {
 
     private static final String TOP_FRAGMENT_TAG_MARK = "TOP_FRAGMENT";
 
+    private static final String REQUESTED_PERMISSION_EXTRA = "REQUESTED_PERMISSION_EXTRA";
+    private static final int REQUESTED_PERMISSION_REQUEST_CODE = 17;
+
+    private final Map<String, Boolean> permissionsMap = new HashMap<>();
+
     private boolean isPaused;
+    @Nullable
+    private String requestedPermission;
+    private final PublishSubject<Boolean> requestPermissionsEvent = PublishSubject.create();
 
     /* Returns id of main fragments container where navigation-node fragments should be */
     protected int getFragmentContainerId() {
@@ -81,10 +99,39 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         return false;
     }
 
+    @NonNull
+    public Observable<Boolean> requestPermission(@NonNull final String permission) {
+        final Boolean isPermissionGrantedCache = permissionsMap.get(permission);
+        if (isPermissionGrantedCache != null) {
+            return Observable.just(isPermissionGrantedCache);
+        } else if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
+            permissionsMap.put(permission, true);
+            return Observable.just(true);
+        }
+        requestedPermission = permission;
+        ActivityCompat.requestPermissions(this, new String[]{permission}, REQUESTED_PERMISSION_REQUEST_CODE);
+        return requestPermissionsEvent;
+    }
+
+    @SuppressWarnings("PMD.UseVarargs")
+    @Override
+    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUESTED_PERMISSION_REQUEST_CODE) {
+            final boolean isGranted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            permissionsMap.put(requestedPermission, isGranted);
+            requestedPermission = null;
+            requestPermissionsEvent.onNext(isGranted);
+        }
+    }
+
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
+        if (savedInstanceState != null) {
+            requestedPermission = savedInstanceState.getString(REQUESTED_PERMISSION_EXTRA);
+        }
     }
 
     @Override
@@ -100,6 +147,12 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     @Override
+    public void onSaveInstanceState(final Bundle stateToSave) {
+        super.onSaveInstanceState(stateToSave);
+        stateToSave.putString(REQUESTED_PERMISSION_EXTRA, requestedPermission);
+    }
+
+    @Override
     public void onFragmentStarted(@NonNull final AbstractBaseFragment fragment) {
         hideSoftInput();
     }
@@ -111,6 +164,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     /* Setting fragment of special class as first in stack */
+
     public <T extends AbstractBaseFragment> T setFirstFragment(@NonNull final Class<T> fragmentClass) {
         return setFirstFragment(fragmentClass, null);
     }
@@ -165,7 +219,8 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     /* Setting fragment of special class as top with args */
-    public <T extends AbstractBaseFragment> T setFragment(@NonNull final Class<T> fragmentClass, @Nullable final Bundle args) {
+    public <T extends AbstractBaseFragment> T setFragment(@NonNull final Class<T> fragmentClass,
+                                                          @Nullable final Bundle args) {
         return addFragmentToStack(fragmentClass, args, fragmentClass.getName() + ' ' + TOP_FRAGMENT_TAG_MARK);
     }
 
@@ -175,7 +230,8 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     /* Pushing fragment of special class with args to fragments stack */
-    public <T extends AbstractBaseFragment> T pushFragment(@NonNull final Class<T> fragmentClass, @Nullable final Bundle args) {
+    public <T extends AbstractBaseFragment> T pushFragment(@NonNull final Class<T> fragmentClass,
+                                                           @Nullable final Bundle args) {
         return addFragmentToStack(fragmentClass, args, fragmentClass.getName());
     }
 
@@ -221,7 +277,8 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         }
     }
 
-    private void findTopFragmentAndPopBackStackToIt(@NonNull final FragmentManager fragmentManager, final int stackSize) {
+    private void findTopFragmentAndPopBackStackToIt(@NonNull final FragmentManager fragmentManager,
+                                                    final int stackSize) {
         String lastFragmentName = fragmentManager.getBackStackEntryAt(stackSize - 1).getName();
         for (int i = stackSize - 2; i >= 0; i--) {
             final String currentFragmentName = fragmentManager.getBackStackEntryAt(i).getName();
