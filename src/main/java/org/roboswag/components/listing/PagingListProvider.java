@@ -53,6 +53,8 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
     @Nullable
     private Integer totalCount;
 
+    private final Object lock = new Object();
+
     public PagingListProvider(@NonNull final PageRequestCreator<T> pageRequestCreator) {
         this.pageRequestCreator = pageRequestCreator;
     }
@@ -60,60 +62,67 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
     @Nullable
     @Override
     public T getItem(final int position) {
-        final List<T> page = loadedPages.get(position / PAGE_SIZE);
-        return page != null ? page.get(position % PAGE_SIZE) : null;
+        synchronized (lock) {
+            final List<T> page = loadedPages.get(position / PAGE_SIZE);
+            return page != null ? page.get(position % PAGE_SIZE) : null;
+        }
     }
 
     @Override
     public int getSize() {
-        return isInitialized && maxLoadedPage != null
-                ? maxLoadedPage * PAGE_SIZE + loadedPages.get(maxLoadedPage).size() + (isLastPageLoaded ? 0 : 1)
-                : 0;
+        synchronized (lock) {
+            return maxLoadedPage != null
+                    ? maxLoadedPage * PAGE_SIZE + loadedPages.get(maxLoadedPage).size() + (isLastPageLoaded ? 0 : 1)
+                    : 0;
+        }
     }
 
     public Observable<Integer> initialize() {
-        isInitialized = false;
+        synchronized (lock) {
+            isInitialized = false;
+        }
         return initialize(0);
     }
 
     @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     public Observable<Integer> initialize(final int loadToPosition) {
-        if (isInitialized) {
-            return Observable.just(isLastPageLoaded ? getSize() : getSize() - 1);
+        synchronized (lock) {
+            if (isInitialized) {
+                return Observable.just(isLastPageLoaded ? getSize() : getSize() - 1);
+            }
         }
-        totalCount = null;
-        loadedPages.clear();
-        maxLoadedPage = null;
-        isLastPageLoaded = false;
 
         final int itemsToLoad = loadToPosition / PAGE_SIZE + PAGE_SIZE;
         return pageRequestCreator.call(0, itemsToLoad)
                 .first()
                 .subscribeOn(Schedulers.io())
                 .map(page -> {
-                    isInitialized = true;
-                    totalCount = page.getTotalCount();
-                    final Iterator<T> iterator = page.getItems().iterator();
-                    int index = 0;
-                    ArrayList<T> pageToAdd = new ArrayList<>(PAGE_SIZE);
-                    while (iterator.hasNext()) {
-                        pageToAdd.add(iterator.next());
-                        index++;
-                        if (index % PAGE_SIZE == 0) {
-                            loadedPages.put((index - 1) / PAGE_SIZE, pageToAdd);
-                            pageToAdd = new ArrayList<>(PAGE_SIZE);
+                    synchronized (lock) {
+                        loadedPages.clear();
+                        isInitialized = true;
+                        totalCount = page.getTotalCount();
+                        final Iterator<T> iterator = page.getItems().iterator();
+                        int index = 0;
+                        ArrayList<T> pageToAdd = new ArrayList<>(PAGE_SIZE);
+                        while (iterator.hasNext()) {
+                            pageToAdd.add(iterator.next());
+                            index++;
+                            if (index % PAGE_SIZE == 0) {
+                                loadedPages.put((index - 1) / PAGE_SIZE, pageToAdd);
+                                pageToAdd = new ArrayList<>(PAGE_SIZE);
+                            }
                         }
-                    }
 
-                    maxLoadedPage = (index - 1) / PAGE_SIZE;
-                    if (!pageToAdd.isEmpty()) {
-                        loadedPages.put(maxLoadedPage, pageToAdd);
-                        isLastPageLoaded = pageToAdd.size() < PAGE_SIZE;
-                    } else {
-                        maxLoadedPage--;
-                        isLastPageLoaded = true;
+                        maxLoadedPage = (index - 1) / PAGE_SIZE;
+                        if (!pageToAdd.isEmpty()) {
+                            loadedPages.put(maxLoadedPage, pageToAdd);
+                            isLastPageLoaded = pageToAdd.size() < PAGE_SIZE;
+                        } else {
+                            maxLoadedPage--;
+                            isLastPageLoaded = true;
+                        }
+                        return isLastPageLoaded ? getSize() : getSize() - 1;
                     }
-                    return isLastPageLoaded ? getSize() : getSize() - 1;
                 });
     }
 
@@ -128,7 +137,10 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
     }
 
     private Observable loadPage(final int index) {
-        final List<T> loadedPage = loadedPages.get(index);
+        final List<T> loadedPage;
+        synchronized (lock) {
+            loadedPage = loadedPages.get(index);
+        }
         if (loadedPage != null) {
             return Observable.just(loadedPage);
         } else {
@@ -141,20 +153,22 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
 
     //TODO: if something loaded or if loaded emty with index=999
     private Collection<T> onPageLoaded(final int index, @NonNull final Page<T> page) {
-        if (maxLoadedPage == null || maxLoadedPage != index - 1) {
-            throw new ShouldNotHappenException("Loaded page index is illegal: " + index + " but not " + maxLoadedPage + 1);
-        }
+        synchronized (lock) {
+            if (maxLoadedPage == null || maxLoadedPage != index - 1) {
+                throw new ShouldNotHappenException("Loaded page index is illegal: " + index + " but not " + maxLoadedPage + 1);
+            }
 
-        final List<T> pageItems = page.getItems().size() <= PAGE_SIZE
-                ? new ArrayList<>(page.getItems())
-                : new ArrayList<>(page.getItems()).subList(0, PAGE_SIZE);
-        maxLoadedPage++;
-        loadedPages.put(index, pageItems);
-        if (pageItems.size() < PAGE_SIZE
-                || (maxLoadedPage != null && totalCount != null && maxLoadedPage * PAGE_SIZE + pageItems.size() >= totalCount)) {
-            isLastPageLoaded = true;
+            final List<T> pageItems = page.getItems().size() <= PAGE_SIZE
+                    ? new ArrayList<>(page.getItems())
+                    : new ArrayList<>(page.getItems()).subList(0, PAGE_SIZE);
+            maxLoadedPage++;
+            loadedPages.put(index, pageItems);
+            if (pageItems.size() < PAGE_SIZE
+                    || (maxLoadedPage != null && totalCount != null && maxLoadedPage * PAGE_SIZE + pageItems.size() >= totalCount)) {
+                isLastPageLoaded = true;
+            }
+            return pageItems;
         }
-        return pageItems;
     }
 
     public interface PageRequestCreator<T> extends Function {
