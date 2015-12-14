@@ -29,7 +29,7 @@ public class PhoneSpan extends URLSpan {
             widget.getContext().startActivity(intent);
             // it should catch throwable to not crash in production if there are problems with startActivity()
         } catch (Throwable throwable) {
-            Lc.asserted(throwable);
+            Lc.assertion(throwable);
         }
     }
 

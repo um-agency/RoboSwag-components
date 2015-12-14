@@ -130,7 +130,7 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
     @Override
     public Observable loadItem(final int position) {
         if (!isInitialized) {
-            Lc.asserted(new ShouldNotHappenException("Provider should be initialized first"));
+            Lc.assertion(new ShouldNotHappenException("Provider should be initialized first"));
             return Observable.empty();
         }
         return loadPage(position / PAGE_SIZE);

@@ -94,7 +94,7 @@ public final class Typefaces {
                 typefacedText.setTypeface(customTypeface, typeface == null ? Typeface.NORMAL : typeface.getStyle());
             }
         } else if (!allowEmptyCustomTypeface) {
-            Lc.asserted(new ShouldNotHappenException("TypefacedText has no customTypeface attribute: " + typefacedText));
+            Lc.assertion(new ShouldNotHappenException("TypefacedText has no customTypeface attribute: " + typefacedText));
         }
     }
 
