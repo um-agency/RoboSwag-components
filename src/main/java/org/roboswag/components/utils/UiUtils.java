@@ -1,7 +1,6 @@
 package org.roboswag.components.utils;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.ColorRes;
@@ -10,6 +9,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,13 +25,32 @@ import rx.functions.Func1;
  */
 public final class UiUtils {
 
-    public static int getActionBarHeight(@NonNull final Resources resources) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 56, resources.getDisplayMetrics());
+    private static final int MAX_METRICS_TRIES_COUNT = 5;
+
+    @NonNull
+    public static DisplayMetrics getDisplayMetrics(@NonNull final Context context) {
+        DisplayMetrics result = context.getResources().getDisplayMetrics();
+        // it is needed to avoid bug with invalid metrics when user restore application from other application
+        int metricsTryNumber = 0;
+        while (metricsTryNumber < MAX_METRICS_TRIES_COUNT && (result.heightPixels <= 0 || result.widthPixels <= 0)) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                return result;
+            }
+            result = context.getResources().getDisplayMetrics();
+            metricsTryNumber++;
+        }
+        return result;
     }
 
-    public static int getStatusBarHeight(@NonNull final Resources resources) {
-        final int resourceId = resources.getIdentifier("status_bar_height", "dimen", "android");
-        return resourceId > 0 ? resources.getDimensionPixelSize(resourceId) : 0;
+    public static int getActionBarHeight(@NonNull final Context context) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 56, getDisplayMetrics(context));
+    }
+
+    public static int getStatusBarHeight(@NonNull final Context context) {
+        final int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        return resourceId > 0 ? context.getResources().getDimensionPixelSize(resourceId) : 0;
     }
 
     @NonNull
