@@ -87,13 +87,13 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
         final TItem item = getItem(position);
         if (holder instanceof NotLoadedItemViewHolder) {
             if (itemsProvider == null) {
-                Lc.fatalException(new ShouldNotHappenException("This adapter shouldn't work without provider"));
+                Lc.asserted(new ShouldNotHappenException("This adapter shouldn't work without provider"));
                 return;
             }
             ((NotLoadedItemViewHolder) holder).bindItem(position, itemsProvider);
         } else {
             if (item == null) {
-                Lc.fatalException(new ShouldNotHappenException("Item at" + position + " should not be null"));
+                Lc.asserted(new ShouldNotHappenException("Item at" + position + " should not be null"));
                 return;
             }
             onBindItemToViewHolder((TViewHolder) holder, position, item);

@@ -92,7 +92,7 @@ public final class VolumeController {
 
     public void setVolume(final int value) {
         if (value < 0 || value > maxVolume) {
-            Lc.fatalException(new ShouldNotHappenException("Volume: " + value + " out of bounds [0," + maxVolume + "]"));
+            Lc.asserted(new ShouldNotHappenException("Volume: " + value + " out of bounds [0," + maxVolume + "]"));
             return;
         }
         if (getVolume() != value) {
@@ -112,7 +112,7 @@ public final class VolumeController {
 
     public void attachSeekBar(@NonNull final SeekBar seekBar) {
         if (seekBars.containsKey(seekBar)) {
-            Lc.fatalException(new ShouldNotHappenException("SeekBar already attached"));
+            Lc.asserted(new ShouldNotHappenException("SeekBar already attached"));
             return;
         }
         seekBar.setMax(maxVolume);
@@ -144,7 +144,7 @@ public final class VolumeController {
     public void detachSeekBar(@NonNull final SeekBar seekBar) {
         final Subscription subscription = seekBars.get(seekBar);
         if (subscription == null) {
-            Lc.fatalException(new ShouldNotHappenException("SeekBar not attached yet"));
+            Lc.asserted(new ShouldNotHappenException("SeekBar not attached yet"));
             return;
         }
         seekBar.setOnSeekBarChangeListener(null);
@@ -156,7 +156,7 @@ public final class VolumeController {
     public void attachVolumeButtons(@NonNull final View volumeUpButton, @NonNull final View volumeDownButton) {
         final VolumeButtons volumeButtons = new VolumeButtons(volumeUpButton, volumeDownButton);
         if (volumeButtonsSet.contains(volumeButtons)) {
-            Lc.fatalException(new ShouldNotHappenException("VolumeButtons already attached"));
+            Lc.asserted(new ShouldNotHappenException("VolumeButtons already attached"));
             return;
         }
 
@@ -178,7 +178,7 @@ public final class VolumeController {
     public void detachVolumeButtons(@NonNull final View volumeUpButton, @NonNull final View volumeDownButton) {
         final VolumeButtons volumeButtons = new VolumeButtons(volumeUpButton, volumeDownButton);
         if (!volumeButtonsSet.contains(volumeButtons)) {
-            Lc.fatalException(new ShouldNotHappenException("VolumeButtons not attached yet"));
+            Lc.asserted(new ShouldNotHappenException("VolumeButtons not attached yet"));
             return;
         }
 

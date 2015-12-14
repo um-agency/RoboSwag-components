@@ -16,7 +16,7 @@ public abstract class AbstractSavedStateController {
 
     protected AbstractSavedStateController(final int itemId) {
         if (itemId == 0) {
-            Lc.fatalException(new ShouldNotHappenException("ItemId = 0 deprecated"));
+            Lc.asserted(new ShouldNotHappenException("ItemId = 0 deprecated"));
         }
         this.itemId = itemId;
     }

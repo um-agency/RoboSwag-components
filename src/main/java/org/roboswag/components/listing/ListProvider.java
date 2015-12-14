@@ -51,7 +51,7 @@ public class ListProvider<T> implements ItemsProvider<T> {
 
     @Override
     public Observable loadItem(final int position) {
-        Lc.fatalException(new ShouldNotHappenException("ListProvider doesn't support loading"));
+        Lc.asserted(new ShouldNotHappenException("ListProvider doesn't support loading"));
         return Observable.just(items.get(position));
     }
 
