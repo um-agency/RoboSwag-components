@@ -210,13 +210,12 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
             return null;
         }
 
-        postHandler.postDelayed(() -> {
-                    getSupportFragmentManager().beginTransaction()
-                            .replace(getFragmentContainerId(), fragment, backStackTag)
-                            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                            .addToBackStack(backStackTag)
-                            .commit();
-                },
+        postHandler.postDelayed(() ->
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(getFragmentContainerId(), fragment, backStackTag)
+                                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                                .addToBackStack(backStackTag)
+                                .commit(),
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? UiUtils.RIPPLE_EFFECT_DELAY : 0);
 
         return fragment;
