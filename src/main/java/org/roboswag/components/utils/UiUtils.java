@@ -1,18 +1,20 @@
 package org.roboswag.components.utils;
 
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.support.annotation.ColorRes;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.Display;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 
 import org.roboswag.components.navigation.AbstractBaseFragment;
@@ -25,6 +27,8 @@ import rx.functions.Func1;
  */
 public final class UiUtils {
 
+    // to enable ripple effect on tap
+    public static final long RIPPLE_EFFECT_DELAY = 250;
     private static final int MAX_METRICS_TRIES_COUNT = 5;
 
     @NonNull
@@ -50,6 +54,11 @@ public final class UiUtils {
 
     public static int getStatusBarHeight(@NonNull final Context context) {
         final int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        return resourceId > 0 ? context.getResources().getDimensionPixelSize(resourceId) : 0;
+    }
+
+    public static int getNavigationBarHeight(@NonNull final Context context) {
+        final int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
         return resourceId > 0 ? context.getResources().getDimensionPixelSize(resourceId) : 0;
     }
 
@@ -80,22 +89,25 @@ public final class UiUtils {
         return result;
     }
 
-    @SuppressWarnings("deprecation")
-    public static int getColor(@NonNull final Context context, @ColorRes final int colorResId) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return context.getResources().getColor(colorResId, context.getTheme());
-        } else {
-            return context.getResources().getColor(colorResId);
-        }
-    }
+    //http://stackoverflow.com/questions/14853039/how-to-tell-whether-an-android-device-has-hard-keys/14871974#14871974
+    public static boolean hasSoftKeys(@NonNull final Activity activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            final Display display = activity.getWindowManager().getDefaultDisplay();
 
-    @SuppressWarnings("deprecation")
-    public static Drawable getDrawable(@NonNull final Context context, @DrawableRes final int drawableResId) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return context.getResources().getDrawable(drawableResId, context.getTheme());
-        } else {
-            return context.getResources().getDrawable(drawableResId);
+            final DisplayMetrics realDisplayMetrics = new DisplayMetrics();
+            display.getRealMetrics(realDisplayMetrics);
+
+            final DisplayMetrics displayMetrics = new DisplayMetrics();
+            display.getMetrics(displayMetrics);
+
+            return (realDisplayMetrics.widthPixels - displayMetrics.widthPixels) > 0
+                    || (realDisplayMetrics.heightPixels - displayMetrics.heightPixels) > 0;
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            final boolean hasMenuKey = ViewConfiguration.get(activity).hasPermanentMenuKey();
+            final boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
+            return !hasMenuKey && !hasBackKey;
         }
+        return false;
     }
 
     private UiUtils() {

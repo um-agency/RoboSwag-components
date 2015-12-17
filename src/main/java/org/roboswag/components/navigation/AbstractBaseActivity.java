@@ -23,7 +23,9 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -64,6 +66,8 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     @Nullable
     private String requestedPermission;
     private final PublishSubject<Boolean> requestPermissionsEvent = PublishSubject.create();
+
+    private final Handler postHandler = new Handler();
 
     /* Returns id of main fragments container where navigation-node fragments should be */
     protected int getFragmentContainerId() {
@@ -205,11 +209,16 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
             //TODO: log
             return null;
         }
-        getSupportFragmentManager().beginTransaction()
-                .replace(getFragmentContainerId(), fragment, backStackTag)
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .addToBackStack(backStackTag)
-                .commit();
+
+        postHandler.postDelayed(() -> {
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(getFragmentContainerId(), fragment, backStackTag)
+                            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                            .addToBackStack(backStackTag)
+                            .commit();
+                },
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? UiUtils.RIPPLE_EFFECT_DELAY : 0);
+
         return fragment;
     }
 
@@ -275,6 +284,12 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        postHandler.removeCallbacksAndMessages(null);
     }
 
     private void findTopFragmentAndPopBackStackToIt(@NonNull final FragmentManager fragmentManager,

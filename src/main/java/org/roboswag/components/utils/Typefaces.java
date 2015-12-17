@@ -30,7 +30,6 @@ import android.widget.TextView;
 import org.roboswag.components.R;
 import org.roboswag.components.views.TypefacedText;
 import org.roboswag.core.log.Lc;
-import org.roboswag.core.utils.ShouldNotHappenException;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -94,7 +93,7 @@ public final class Typefaces {
                 typefacedText.setTypeface(customTypeface, typeface == null ? Typeface.NORMAL : typeface.getStyle());
             }
         } else if (!allowEmptyCustomTypeface) {
-            Lc.assertion(new ShouldNotHappenException("TypefacedText has no customTypeface attribute: " + typefacedText));
+            Lc.assertion("TypefacedText has no customTypeface attribute: " + typefacedText);
         }
     }
 

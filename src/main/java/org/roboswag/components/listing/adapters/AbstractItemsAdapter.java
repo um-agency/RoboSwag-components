@@ -19,6 +19,9 @@
 
 package org.roboswag.components.listing.adapters;
 
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
@@ -47,6 +50,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
     private static final int LOADED_ITEM_TYPE = R.id.LOADED_ITEM_TYPE;
     private static final int NOT_LOADED_ITEM_TYPE = R.id.NOT_LOADED_ITEM_TYPE;
 
+    private final Handler postHandler = new Handler(Looper.getMainLooper());
     @Nullable
     private OnItemClickListener<TItem> onItemClickListener;
     @Nullable
@@ -98,9 +102,17 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             }
             onBindItemToViewHolder((TViewHolder) holder, position, item);
             if (onItemClickListener != null) {
-                holder.itemView.setOnClickListener(v -> onItemClickListener.onItemClicked(item));
+                holder.itemView.setOnClickListener(v ->
+                        postHandler.postDelayed(() -> onItemClickListener.onItemClicked(item),
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? UiUtils.RIPPLE_EFFECT_DELAY : 0));
             }
         }
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(final RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        postHandler.removeCallbacksAndMessages(null);
     }
 
     protected abstract void onBindItemToViewHolder(@NonNull final TViewHolder holder, final int position, @NonNull TItem item);
@@ -147,10 +159,10 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             subscription = itemsProvider.loadItem(position)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(ignored -> parent.notifyDataSetChanged(),
-                        throwable -> {
-                            retryButton.setVisibility(View.VISIBLE);
-                            progressBar.setVisibility(View.INVISIBLE);
-                        });
+                            throwable -> {
+                                retryButton.setVisibility(View.VISIBLE);
+                                progressBar.setVisibility(View.INVISIBLE);
+                            });
         }
 
     }
