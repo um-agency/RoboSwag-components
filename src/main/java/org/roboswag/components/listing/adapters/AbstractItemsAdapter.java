@@ -102,9 +102,12 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             }
             onBindItemToViewHolder((TViewHolder) holder, position, item);
             if (onItemClickListener != null) {
-                holder.itemView.setOnClickListener(v ->
-                        postHandler.postDelayed(() -> onItemClickListener.onItemClicked(item),
-                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? UiUtils.RIPPLE_EFFECT_DELAY : 0));
+                holder.itemView.setOnClickListener(v -> {
+                    //TODO: fix multitap
+                    postHandler.removeCallbacksAndMessages(null);
+                    postHandler.postDelayed(() -> onItemClickListener.onItemClicked(item),
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? UiUtils.RIPPLE_EFFECT_DELAY : 0);
+                });
             }
         }
     }

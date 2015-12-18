@@ -210,6 +210,8 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
             return null;
         }
 
+        //TODO: fix multitap
+        postHandler.removeCallbacksAndMessages(null);
         postHandler.postDelayed(() ->
                         getSupportFragmentManager().beginTransaction()
                                 .replace(getFragmentContainerId(), fragment, backStackTag)
