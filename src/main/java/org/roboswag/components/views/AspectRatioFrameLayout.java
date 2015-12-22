@@ -53,7 +53,7 @@ public class AspectRatioFrameLayout extends FrameLayout {
             return;
         }
 
-        this.aspectRatio = aspectRatio;
+        this.aspectRatio = 1 / aspectRatio;
         requestLayout();
     }
 
@@ -95,18 +95,18 @@ public class AspectRatioFrameLayout extends FrameLayout {
     }
 
     private void setMeasuredDimensionWithAspectOfLesser(final int measuredWidth, final int measuredHeight) {
-        final float heightBasedOnMw = measuredWidth * aspectRatio;
+        final float heightBasedOnMw = measuredWidth / aspectRatio;
         if (heightBasedOnMw > measuredHeight) {
-            setMeasuredDimension((int) (measuredHeight / aspectRatio), measuredHeight);
+            setMeasuredDimension((int) (measuredHeight * aspectRatio), measuredHeight);
         } else {
             setMeasuredDimension(measuredWidth, (int) heightBasedOnMw);
         }
     }
 
     private void setMeasuredDimensionWithAspectOfHigher(final int measuredWidth, final int measuredHeight) {
-        final float heightBasedOnMw = measuredWidth * aspectRatio;
+        final float heightBasedOnMw = measuredWidth / aspectRatio;
         if (heightBasedOnMw < measuredHeight) {
-            setMeasuredDimension((int) (measuredHeight / aspectRatio), measuredHeight);
+            setMeasuredDimension((int) (measuredHeight * aspectRatio), measuredHeight);
         } else {
             setMeasuredDimension(measuredWidth, (int) heightBasedOnMw);
         }
@@ -166,15 +166,15 @@ public class AspectRatioFrameLayout extends FrameLayout {
         if (wrapToContent) {
             measureWrapToContent(width, height);
         } else {
-            setMeasuredDimension(width, (int) (width * aspectRatio));
+            setMeasuredDimension(width, (int) (width / aspectRatio));
         }
     }
 
     private void measureWrapToContent(final int width, final int height) {
-        if (width < (int) (height / aspectRatio)) {
-            setMeasuredDimension((int) (height / aspectRatio), height);
+        if (width < (int) (height * aspectRatio)) {
+            setMeasuredDimension((int) (height * aspectRatio), height);
         } else {
-            setMeasuredDimension(width, (int) (width * aspectRatio));
+            setMeasuredDimension(width, (int) (width / aspectRatio));
         }
     }
 
@@ -182,7 +182,7 @@ public class AspectRatioFrameLayout extends FrameLayout {
         if (wrapToContent) {
             measureWrapToContent(width, height);
         } else {
-            setMeasuredDimension((int) (height / aspectRatio), height);
+            setMeasuredDimension((int) (height * aspectRatio), height);
         }
     }
 
