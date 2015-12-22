@@ -53,7 +53,7 @@ public class AspectRatioFrameLayout extends FrameLayout {
             return;
         }
 
-        this.aspectRatio = 1 / aspectRatio;
+        this.aspectRatio = aspectRatio;
         requestLayout();
     }
 
