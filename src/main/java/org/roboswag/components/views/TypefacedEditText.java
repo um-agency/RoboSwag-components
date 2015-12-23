@@ -20,40 +20,39 @@
 package org.roboswag.components.views;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.widget.EditText;
-
-import org.roboswag.components.utils.Typefaces;
 
 /**
  * Created by Gavriil Sitnikov on 18/07/2014.
  * TextView that supports fonts from Typefaces class
  */
-public class TypefacedEditText extends EditText implements TypefacedText {
+public class TypefacedEditText extends EditText implements TypefacedView {
 
     public TypefacedEditText(final Context context) {
         super(context);
-        Typefaces.initialize(this, context, null);
+        TypefacedViewHelper.initialize(this, context, null);
     }
 
     public TypefacedEditText(final Context context, final AttributeSet attrs) {
         super(context, attrs);
-        Typefaces.initialize(this, context, attrs);
+        TypefacedViewHelper.initialize(this, context, attrs);
     }
 
     public TypefacedEditText(final Context context, final AttributeSet attrs, final int defStyle) {
         super(context, attrs, defStyle);
-        Typefaces.initialize(this, context, attrs);
+        TypefacedViewHelper.initialize(this, context, attrs);
     }
 
     @Override
-    public void setTypeface(final String name) {
-        Typefaces.setTypeface(this, getContext(), name);
+    public void setTypeface(@NonNull final String name) {
+        TypefacedViewHelper.setTypeface(this, getContext(), name);
     }
 
     @Override
-    public void setTypeface(final String name, final int style) {
-        Typefaces.setTypeface(this, getContext(), name, style);
+    public void setTypeface(@NonNull final String name, final int style) {
+        TypefacedViewHelper.setTypeface(this, getContext(), name, style);
     }
 
 }

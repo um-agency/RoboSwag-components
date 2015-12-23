@@ -21,15 +21,11 @@ package org.roboswag.components.utils;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
-import android.util.AttributeSet;
-import android.widget.TextView;
 
-import org.roboswag.components.R;
-import org.roboswag.components.views.TypefacedText;
 import org.roboswag.core.log.Lc;
+import org.roboswag.core.utils.ShouldNotHappenException;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -38,26 +34,27 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Gavriil Sitnikov on 18/07/2014.
- * Typefaces manager
+ * Created by Gavriil Sitnikov on 18/07/2014. [phase 1]
+ * Manager for typefaces stored in assets 'fonts' folder.
  */
 public final class Typefaces {
 
     private static final Map<String, Typeface> TYPEFACES_MAP = new HashMap<>();
 
-    private static boolean allowEmptyCustomTypeface = true;
-
-    public static void setAllowEmptyCustomTypeface(final boolean allowDefaultTypefacedText) {
-        Typefaces.allowEmptyCustomTypeface = allowDefaultTypefacedText;
-    }
-
-    /* Returns typeface by name from assets 'fonts' folder */
+    /**
+     * Returns typeface by name from assets 'fonts' folder.
+     *
+     * @param context Context of assets where typeface file stored in.
+     * @param name    Full name of typeface (without extension).
+     * @return Typeface from assets.
+     */
     @NonNull
     public static Typeface getByName(@NonNull final Context context, @NonNull final String name) {
         synchronized (TYPEFACES_MAP) {
             Typeface result = TYPEFACES_MAP.get(name);
             if (result == null) {
                 final AssetManager assetManager = context.getAssets();
+                result = Typeface.DEFAULT;
                 try {
                     final List<String> fonts = Arrays.asList(assetManager.list("fonts"));
                     if (fonts.contains(name + ".ttf")) {
@@ -65,46 +62,16 @@ public final class Typefaces {
                     } else if (fonts.contains(name + ".otf")) {
                         result = Typeface.createFromAsset(assetManager, "fonts/" + name + ".otf");
                     } else {
-                        throw new IllegalStateException("Can't find .otf or .ttf file in folder 'fonts' with name: " + name);
+                        Lc.assertion("Can't find .otf or .ttf file in assets folder 'fonts' with name: " + name);
                     }
-                } catch (IOException e) {
-                    throw new IllegalStateException("Typefaces files should be in folder named 'fonts'", e);
+                } catch (IOException exception) {
+                    Lc.assertion(new ShouldNotHappenException("Can't get font " + name + '.'
+                            + "Did you forget to create assets folder named 'fonts'?", exception));
                 }
                 TYPEFACES_MAP.put(name, result);
             }
-
             return result;
         }
-    }
-
-    public static <TTypefacedText extends TextView & TypefacedText> void initialize(final TTypefacedText typefacedText,
-                                                                                    final Context context, final AttributeSet attrs) {
-        typefacedText.setIncludeFontPadding(false);
-        String customTypeface = null;
-        if (attrs != null) {
-            final TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.TypefacedTextView);
-            customTypeface = typedArray.getString(R.styleable.TypefacedTextView_customTypeface);
-            typedArray.recycle();
-        }
-
-        if (customTypeface != null) {
-            if (!typefacedText.isInEditMode()) {
-                final Typeface typeface = typefacedText.getTypeface();
-                typefacedText.setTypeface(customTypeface, typeface == null ? Typeface.NORMAL : typeface.getStyle());
-            }
-        } else if (!allowEmptyCustomTypeface) {
-            Lc.assertion("TypefacedText has no customTypeface attribute: " + typefacedText);
-        }
-    }
-
-    public static <TTypefacedText extends TextView & TypefacedText> void setTypeface(final TTypefacedText typefacedText,
-                                                                                     final Context context, final String name, final int style) {
-        typefacedText.setTypeface(Typefaces.getByName(context, name), style);
-    }
-
-    public static <TTypefacedText extends TextView & TypefacedText> void setTypeface(final TTypefacedText typefacedText,
-                                                                                     final Context context, final String name) {
-        setTypeface(typefacedText, context, name, Typeface.NORMAL);
     }
 
     private Typefaces() {

@@ -19,14 +19,22 @@
 
 package org.roboswag.components.views;
 
+import android.support.annotation.NonNull;
+
 /**
  * Created by Vsevolod Ivanov on 18/07/2014.
- * Interface for TextViews
+ * Interface for views based on text and could have custom typeface (TextView, EditText etc.)
  */
-public interface TypefacedText {
+public interface TypefacedView {
 
-    void setTypeface(String name, int style);
+    /**
+     * Sets typeface.
+     *
+     * @param name  Name of typeface stored in assets folder (getting by {@link org.roboswag.components.utils.Typefaces#getByName})
+     * @param style Style applied to view
+     */
+    void setTypeface(@NonNull String name, int style);
 
-    void setTypeface(String name);
+    void setTypeface(@NonNull String name);
 
 }
