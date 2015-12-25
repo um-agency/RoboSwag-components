@@ -104,9 +104,9 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     @NonNull
-    public Observable<Boolean> requestPermission(@NonNull final String permission) {
+    public Observable<Boolean> requestPermission(@NonNull final String permission, final boolean usePreviousRequest) {
         final Boolean isPermissionGrantedCache = permissionsMap.get(permission);
-        if (isPermissionGrantedCache != null) {
+        if (isPermissionGrantedCache != null && (isPermissionGrantedCache || usePreviousRequest)) {
             return Observable.just(isPermissionGrantedCache);
         } else if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
             permissionsMap.put(permission, true);
@@ -250,13 +250,26 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     //TODO: wait for 1 to be ignored
     @Override
     public void onBackPressed() {
-        if (!UiUtils.tryForeachFragment(getSupportFragmentManager(), fragment -> fragment.onBackPressed(this))) {
+        if (!UiUtils.tryForeachFragment(getSupportFragmentManager(), fragment -> fragment.onBackPressed(this), true)) {
             if (getSupportFragmentManager().getBackStackEntryCount() <= 1) {
                 supportFinishAfterTransition();
             } else {
                 getSupportFragmentManager().popBackStackImmediate();
             }
         }
+    }
+
+    @Deprecated
+    @Override
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        onActivityResultProcess(requestCode, resultCode, data);
+    }
+
+    public boolean onActivityResultProcess(final int requestCode, final int resultCode, final Intent data) {
+        return UiUtils.tryForeachFragment(getSupportFragmentManager(),
+            fragment -> fragment.onActivityResultProcess(requestCode, resultCode, data),
+                false);
     }
 
     @Override
@@ -266,7 +279,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
 
                 final FragmentManager fragmentManager = getSupportFragmentManager();
 
-                if (UiUtils.tryForeachFragment(fragmentManager, fragment -> fragment.onHomePressed(this))) {
+                if (UiUtils.tryForeachFragment(fragmentManager, fragment -> fragment.onHomePressed(this), true)) {
                     return true;
                 }
 

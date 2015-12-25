@@ -2,6 +2,7 @@ package org.roboswag.components.utils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -73,7 +74,8 @@ public final class UiUtils {
     }
 
     public static boolean tryForeachFragment(@NonNull final FragmentManager fragmentManager,
-                                             @NonNull final Func1<AbstractBaseFragment, Boolean> actionOnChild) {
+                                             @NonNull final Func1<AbstractBaseFragment, Boolean> actionOnChild,
+                                             final boolean onlyForResumed) {
         if (fragmentManager.getFragments() == null) {
             return false;
         }
@@ -81,12 +83,16 @@ public final class UiUtils {
         boolean result = false;
         for (final Fragment fragment : fragmentManager.getFragments()) {
             if (fragment != null
-                    && fragment.isResumed()
+                    && (!onlyForResumed || fragment.isResumed())
                     && fragment instanceof AbstractBaseFragment) {
                 result = result || actionOnChild.call((AbstractBaseFragment) fragment);
             }
         }
         return result;
+    }
+
+    public static boolean isIntentAbleToHandle(@NonNull final Context context, @NonNull final Intent intent) {
+        return !context.getPackageManager().queryIntentActivities(intent, 0).isEmpty();
     }
 
     //http://stackoverflow.com/questions/14853039/how-to-tell-whether-an-android-device-has-hard-keys/14871974#14871974

@@ -20,6 +20,7 @@
 package org.roboswag.components.navigation;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcelable;
@@ -151,12 +152,12 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
 
     /* Raises when device back button pressed */
     public boolean onBackPressed(@NonNull final AbstractBaseActivity baseActivity) {
-        return UiUtils.tryForeachFragment(getChildFragmentManager(), fragment -> fragment.onBackPressed(baseActivity));
+        return UiUtils.tryForeachFragment(getChildFragmentManager(), fragment -> fragment.onBackPressed(baseActivity), true);
     }
 
     /* Raises when ActionBar home button pressed */
     public boolean onHomePressed(@NonNull final AbstractBaseActivity baseActivity) {
-        return UiUtils.tryForeachFragment(getChildFragmentManager(), fragment -> fragment.onHomePressed(baseActivity));
+        return UiUtils.tryForeachFragment(getChildFragmentManager(), fragment -> fragment.onHomePressed(baseActivity), true);
     }
 
     @Deprecated
@@ -213,6 +214,19 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         viewController.onDestroy();
     }
 
+    @Deprecated
+    @Override
+    public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        onActivityResultProcess(requestCode, resultCode, data);
+    }
+
+    public boolean onActivityResultProcess(final int requestCode, final int resultCode, final Intent data) {
+        return UiUtils.tryForeachFragment(getChildFragmentManager(),
+            fragment -> fragment.onActivityResultProcess(requestCode, resultCode, data),
+                false);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -248,7 +262,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
             return result;
         }
 
-        public void setTempSavedStates(@Nullable final Map<String,Parcelable> tempSavedStates) {
+        public void setTempSavedStates(@Nullable final Map<String, Parcelable> tempSavedStates) {
             this.tempSavedStates = tempSavedStates;
         }
 
