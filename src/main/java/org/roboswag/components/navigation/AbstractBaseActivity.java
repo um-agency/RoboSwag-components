@@ -189,7 +189,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
             fragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
 
-        return setFragment(fragmentClass);
+        return setFragment(fragmentClass, args);
     }
 
     @Nullable

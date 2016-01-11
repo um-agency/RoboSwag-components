@@ -42,6 +42,8 @@ public class ViewController<TLogicBridge,
     @NonNull
     private final View view;
 
+    //not completed yet
+    @SuppressWarnings("PMD.UnusedFormalParameter")
     public ViewController(@NonNull final CreationContext<TLogicBridge, TActivity, TFragment> creationContext,
                           @Nullable final Bundle savedInstanceState) {
         this.logicBridge = creationContext.logicBridge;
