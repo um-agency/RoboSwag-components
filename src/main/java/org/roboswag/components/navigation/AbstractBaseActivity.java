@@ -114,7 +114,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         }
         requestedPermission = permission;
         ActivityCompat.requestPermissions(this, new String[]{permission}, REQUESTED_PERMISSION_REQUEST_CODE);
-        return requestPermissionsEvent;
+        return requestPermissionsEvent.first();
     }
 
     @SuppressWarnings("PMD.UseVarargs")
