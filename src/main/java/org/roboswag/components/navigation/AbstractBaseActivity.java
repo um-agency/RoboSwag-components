@@ -38,6 +38,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
+import org.roboswag.components.utils.PermissionsAnswer;
 import org.roboswag.components.utils.UiUtils;
 
 import java.util.HashMap;
@@ -60,12 +61,12 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     private static final String REQUESTED_PERMISSION_EXTRA = "REQUESTED_PERMISSION_EXTRA";
     private static final int REQUESTED_PERMISSION_REQUEST_CODE = 17;
 
-    private final Map<String, Boolean> permissionsMap = new HashMap<>();
+    private final Map<String, PermissionsAnswer> permissionsMap = new HashMap<>();
 
     private boolean isPaused;
     @Nullable
     private String requestedPermission;
-    private final PublishSubject<Boolean> requestPermissionsEvent = PublishSubject.create();
+    private final PublishSubject<PermissionsAnswer> requestPermissionsEvent = PublishSubject.create();
 
     private final Handler postHandler = new Handler();
 
@@ -104,13 +105,13 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     @NonNull
-    public Observable<Boolean> requestPermission(@NonNull final String permission, final boolean usePreviousRequest) {
-        final Boolean isPermissionGrantedCache = permissionsMap.get(permission);
-        if (isPermissionGrantedCache != null && (isPermissionGrantedCache || usePreviousRequest)) {
-            return Observable.just(isPermissionGrantedCache);
+    public Observable<PermissionsAnswer> requestPermission(@NonNull final String permission, final boolean usePreviousRequest) {
+        final PermissionsAnswer permissionsAnswer = permissionsMap.get(permission);
+        if (permissionsAnswer != null && ((permissionsAnswer == PermissionsAnswer.GRANTED) || usePreviousRequest)) {
+            return Observable.just(permissionsAnswer);
         } else if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
-            permissionsMap.put(permission, true);
-            return Observable.just(true);
+            permissionsMap.put(permission, PermissionsAnswer.GRANTED);
+            return Observable.just(PermissionsAnswer.GRANTED);
         }
         requestedPermission = permission;
         ActivityCompat.requestPermissions(this, new String[]{permission}, REQUESTED_PERMISSION_REQUEST_CODE);
@@ -122,10 +123,21 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUESTED_PERMISSION_REQUEST_CODE) {
-            final boolean isGranted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-            permissionsMap.put(requestedPermission, isGranted);
+            final PermissionsAnswer permissionsAnswer;
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                permissionsAnswer = PermissionsAnswer.GRANTED;
+            } else if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[0])) {
+                    permissionsAnswer = PermissionsAnswer.DENIED;
+                } else {
+                    permissionsAnswer = PermissionsAnswer.DENIED_PREVIOUSLY;
+                }
+            } else {
+                permissionsAnswer = PermissionsAnswer.DENIED;
+            }
+            permissionsMap.put(requestedPermission, permissionsAnswer);
             requestedPermission = null;
-            requestPermissionsEvent.onNext(isGranted);
+            requestPermissionsEvent.onNext(permissionsAnswer);
         }
     }
 
