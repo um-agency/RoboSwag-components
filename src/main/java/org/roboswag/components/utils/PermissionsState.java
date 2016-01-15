@@ -5,6 +5,6 @@ package org.roboswag.components.utils;
  */
 public enum PermissionsAnswer {
     GRANTED,
-    DENIED_PREVIOUSLY,
-    DENIED
+    DENIED_COMPLETELY,
+    DENIED_THIS_TIME
 }
