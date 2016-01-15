@@ -38,7 +38,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
-import org.roboswag.components.utils.PermissionsState;
+import org.roboswag.components.utils.PermissionsAnswer;
 import org.roboswag.components.utils.UiUtils;
 
 import java.util.HashMap;
@@ -61,12 +61,12 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     private static final String REQUESTED_PERMISSION_EXTRA = "REQUESTED_PERMISSION_EXTRA";
     private static final int REQUESTED_PERMISSION_REQUEST_CODE = 17;
 
-    private final Map<String, PermissionsState> permissionsMap = new HashMap<>();
+    private final Map<String, PermissionsAnswer> permissionsMap = new HashMap<>();
 
     private boolean isPaused;
     @Nullable
     private String requestedPermission;
-    private final PublishSubject<PermissionsState> requestPermissionsEvent = PublishSubject.create();
+    private final PublishSubject<PermissionsAnswer> requestPermissionsEvent = PublishSubject.create();
 
     private final Handler postHandler = new Handler();
 
@@ -105,13 +105,13 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     @NonNull
-    public Observable<PermissionsState> requestPermission(@NonNull final String permission, final boolean usePreviousRequest) {
-        final PermissionsState PermissionsState = permissionsMap.get(permission);
-        if (PermissionsState != null && ((PermissionsState == PermissionsState.GRANTED) || usePreviousRequest)) {
-            return Observable.just(PermissionsState);
+    public Observable<PermissionsAnswer> requestPermission(@NonNull final String permission, final boolean usePreviousRequest) {
+        final PermissionsAnswer permissionsAnswer = permissionsMap.get(permission);
+        if (permissionsAnswer != null && ((permissionsAnswer == PermissionsAnswer.GRANTED) || usePreviousRequest)) {
+            return Observable.just(permissionsAnswer);
         } else if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
-            permissionsMap.put(permission, PermissionsState.GRANTED);
-            return Observable.just(PermissionsState.GRANTED);
+            permissionsMap.put(permission, PermissionsAnswer.GRANTED);
+            return Observable.just(PermissionsAnswer.GRANTED);
         }
         requestedPermission = permission;
         ActivityCompat.requestPermissions(this, new String[]{permission}, REQUESTED_PERMISSION_REQUEST_CODE);
@@ -123,21 +123,21 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUESTED_PERMISSION_REQUEST_CODE) {
-            final PermissionsState PermissionsState;
+            final PermissionsAnswer permissionsAnswer;
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                PermissionsState = PermissionsState.GRANTED;
+                permissionsAnswer = PermissionsAnswer.GRANTED;
             } else if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[0])) {
-                    PermissionsState = PermissionsState.DENIED_THIS_TIME;
+                    permissionsAnswer = PermissionsAnswer.DENIED;
                 } else {
-                    PermissionsState = PermissionsState.DENIED_COMPLETELY;
+                    permissionsAnswer = PermissionsAnswer.DENIED_PREVIOUSLY;
                 }
             } else {
-                PermissionsState = PermissionsState.DENIED_THIS_TIME;
+                permissionsAnswer = PermissionsAnswer.DENIED;
             }
-            permissionsMap.put(requestedPermission, PermissionsState);
+            permissionsMap.put(requestedPermission, permissionsAnswer);
             requestedPermission = null;
-            requestPermissionsEvent.onNext(PermissionsState);
+            requestPermissionsEvent.onNext(permissionsAnswer);
         }
     }
 
