@@ -23,7 +23,6 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -222,15 +221,11 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
             return null;
         }
 
-        //TODO: fix multitap
-        postHandler.removeCallbacksAndMessages(null);
-        postHandler.postDelayed(() ->
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(getFragmentContainerId(), fragment, backStackTag)
-                                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                                .addToBackStack(backStackTag)
-                                .commit(),
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? UiUtils.RIPPLE_EFFECT_DELAY : 0);
+        getSupportFragmentManager().beginTransaction()
+                .replace(getFragmentContainerId(), fragment, backStackTag)
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .addToBackStack(backStackTag)
+                .commit();
 
         return fragment;
     }
