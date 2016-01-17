@@ -274,8 +274,9 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     public boolean onActivityResultProcess(final int requestCode, final int resultCode, final Intent data) {
-        return UiUtils.tryForeachFragment(getSupportFragmentManager(),
-            fragment -> fragment.onActivityResultProcess(requestCode, resultCode, data),
+        return requestCode == REQUESTED_PERMISSION_REQUEST_CODE
+                || UiUtils.tryForeachFragment(getSupportFragmentManager(),
+                    fragment -> fragment.onActivityResultProcess(requestCode, resultCode, data),
                 false);
     }
 
