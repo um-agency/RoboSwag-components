@@ -105,7 +105,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
                 holder.itemView.setOnClickListener(v -> {
                     //TODO: fix multitap
                     postHandler.removeCallbacksAndMessages(null);
-                    postHandler.postDelayed(() -> onItemClickListener.onItemClicked(item),
+                    postHandler.postDelayed(() -> onItemClickListener.onItemClicked(item, position),
                             Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? UiUtils.RIPPLE_EFFECT_DELAY : 0);
                 });
             }
@@ -172,7 +172,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
 
     public interface OnItemClickListener<TItem> {
 
-        void onItemClicked(@NonNull TItem item);
+        void onItemClicked(@NonNull TItem item, int position);
 
     }
 

@@ -22,13 +22,20 @@ package org.roboswag.components.views;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.widget.TextView;
 
 /**
  * Created by Gavriil Sitnikov on 18/07/2014.
  * TextView that supports fonts from Typefaces class
  */
+@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.StdCyclomaticComplexity", "PMD.ModifiedCyclomaticComplexity",
+        "PMD.AvoidDeeplyNestedIfStmts"})
 public class TypefacedTextView extends TextView implements TypefacedView {
+
+    private static final int UNSPECIFIED_MEASURE_SPEC = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
+
+    private boolean isScalable;
 
     public TypefacedTextView(final Context context) {
         super(context);
@@ -53,6 +60,71 @@ public class TypefacedTextView extends TextView implements TypefacedView {
     @Override
     public void setTypeface(@NonNull final String name) {
         TypefacedViewHelper.setTypeface(this, getContext(), name);
+    }
+
+    public void setIsScalable(final boolean isScalable) {
+        this.isScalable = isScalable;
+        requestLayout();
+    }
+
+    @SuppressWarnings("checkstyle:methodlength")
+    @Override
+    protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec) {
+        if (isScalable) {
+            final int maxWidth = MeasureSpec.getSize(widthMeasureSpec);
+            final int maxHeight = MeasureSpec.getSize(heightMeasureSpec);
+            if (maxWidth > 0 || maxHeight > 0) {
+                float difference = getTextSize();
+                ScaleAction scaleAction = ScaleAction.DO_NOTHING;
+                do {
+                    switch (scaleAction) {
+                        case SCALE_DOWN:
+                            difference /= 2;
+                            setTextSize(TypedValue.COMPLEX_UNIT_PX, getTextSize() - difference);
+                            break;
+                        case SCALE_UP:
+                            difference /= 2;
+                            setTextSize(TypedValue.COMPLEX_UNIT_PX, getTextSize() + difference);
+                            break;
+                        case DO_NOTHING:
+                        default:
+                            break;
+                    }
+                    super.onMeasure(UNSPECIFIED_MEASURE_SPEC, UNSPECIFIED_MEASURE_SPEC);
+
+                    scaleAction = ScaleAction.DO_NOTHING;
+
+                    if (maxWidth > 0) {
+                        if (maxWidth < getMeasuredWidth()) {
+                            scaleAction = ScaleAction.SCALE_DOWN;
+                        } else if (maxWidth > getMeasuredWidth()) {
+                            scaleAction = ScaleAction.SCALE_UP;
+                        }
+                    }
+
+                    if (maxHeight > 0) {
+                        if (maxHeight < getMeasuredHeight()) {
+                            scaleAction = ScaleAction.SCALE_DOWN;
+                        } else if (maxHeight > getMeasuredHeight() && scaleAction != ScaleAction.SCALE_DOWN) {
+                            scaleAction = ScaleAction.SCALE_UP;
+                        }
+                    }
+
+                } while (difference >= 1 && scaleAction != ScaleAction.DO_NOTHING);
+
+                if (scaleAction == ScaleAction.SCALE_DOWN) {
+                    setTextSize(TypedValue.COMPLEX_UNIT_PX, getTextSize() - 1);
+                }
+            }
+        }
+
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
+
+    private enum ScaleAction {
+        SCALE_DOWN,
+        SCALE_UP,
+        DO_NOTHING
     }
 
 }
