@@ -64,7 +64,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
     }
 
     public boolean isNestedFragment() {
-        return getParentFragment() != null || getTargetFragment() != null;
+        return getParentFragment() != null;
     }
 
     @Override

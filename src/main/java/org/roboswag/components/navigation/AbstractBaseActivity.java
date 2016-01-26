@@ -50,7 +50,7 @@ import rx.subjects.PublishSubject;
  * Created by Gavriil Sitnikov on 21/10/2015.
  * TODO: fill description
  */
-@SuppressWarnings("PMD.GodClass")
+@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods"})
 public abstract class AbstractBaseActivity extends AppCompatActivity
         implements FragmentManager.OnBackStackChangedListener,
         OnFragmentStartedListener {
@@ -206,6 +206,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     @Nullable
     @SuppressWarnings("unchecked")
     private <T extends AbstractBaseFragment> T addFragmentToStack(@NonNull final Class<T> fragmentClass,
+                                                                  @Nullable final Fragment targetFragment,
                                                                   @Nullable final Bundle args,
                                                                   @Nullable final String backStackTag) {
         if (isPaused) {
@@ -216,6 +217,9 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         final T fragment;
         try {
             fragment = (T) Fragment.instantiate(this, fragmentClass.getName(), args);
+            if (targetFragment != null) {
+                fragment.setTargetFragment(targetFragment, 0);
+            }
         } catch (Exception ex) {
             //TODO: log
             return null;
@@ -238,7 +242,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     /* Setting fragment of special class as top with args */
     public <T extends AbstractBaseFragment> T setFragment(@NonNull final Class<T> fragmentClass,
                                                           @Nullable final Bundle args) {
-        return addFragmentToStack(fragmentClass, args, fragmentClass.getName() + ' ' + TOP_FRAGMENT_TAG_MARK);
+        return addFragmentToStack(fragmentClass, null, args, fragmentClass.getName() + ' ' + TOP_FRAGMENT_TAG_MARK);
     }
 
     /* Pushing fragment of special class to fragments stack */
@@ -249,7 +253,20 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     /* Pushing fragment of special class with args to fragments stack */
     public <T extends AbstractBaseFragment> T pushFragment(@NonNull final Class<T> fragmentClass,
                                                            @Nullable final Bundle args) {
-        return addFragmentToStack(fragmentClass, args, fragmentClass.getName());
+        return addFragmentToStack(fragmentClass, null, args, fragmentClass.getName());
+    }
+
+    /* Pushing fragment of special class with args to fragments stack */
+    public <T extends AbstractBaseFragment> T pushFragmentForResult(@NonNull final Class<T> fragmentClass,
+                                                                    @NonNull final Fragment targetFragment) {
+        return addFragmentToStack(fragmentClass, targetFragment, null, fragmentClass.getName());
+    }
+
+    /* Pushing fragment of special class with args to fragments stack */
+    public <T extends AbstractBaseFragment> T pushFragmentForResult(@NonNull final Class<T> fragmentClass,
+                                                                    @NonNull final Fragment targetFragment,
+                                                                    @Nullable final Bundle args) {
+        return addFragmentToStack(fragmentClass, targetFragment, args, fragmentClass.getName());
     }
 
     /* Raises when device back button pressed */
