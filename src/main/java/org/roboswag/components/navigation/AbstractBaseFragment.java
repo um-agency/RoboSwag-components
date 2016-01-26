@@ -67,6 +67,10 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
         return getParentFragment() != null;
     }
 
+    protected void clearTempSavedStates() {
+        tempSavedStates = null;
+    }
+
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -266,24 +270,30 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
             this.tempSavedStates = tempSavedStates;
         }
 
-        protected void attachSavedStateController(@NonNull final AbstractSavedStateController savedStateController) {
+        protected void attachSavedStateController(@NonNull final View view,
+                                                  @NonNull final AbstractSavedStateController savedStateController) {
+            view.setSaveEnabled(false);
             savedStateControllers.add(savedStateController);
         }
 
         public void restoreState() {
-            if (savedInstanceState == null && tempSavedStates == null) {
-                return;
-            }
-            for (final AbstractSavedStateController savedStateController : savedStateControllers) {
-                final String key = String.valueOf(savedStateController.getId());
-                final Parcelable savedState = tempSavedStates != null
-                        ? tempSavedStates.get(key)
-                        : (savedInstanceState != null ? savedInstanceState.getParcelable(key) : null);
-                if (savedState != null) {
-                    savedStateController.restoreState(savedState);
+            //TODO: investigate and fix mistakes
+            getPostHandler().post(() -> {
+                //TODO: go to next save-restore then clear saved from previous then back
+                if (savedInstanceState == null && tempSavedStates == null) {
+                    return;
                 }
-            }
-            tempSavedStates = null;
+                for (final AbstractSavedStateController savedStateController : savedStateControllers) {
+                    final String key = String.valueOf(savedStateController.getId());
+                    final Parcelable savedState = tempSavedStates != null
+                            ? tempSavedStates.get(key)
+                            : (savedInstanceState != null ? savedInstanceState.getParcelable(key) : null);
+                    if (savedState != null) {
+                        savedStateController.restoreState(savedState);
+                    }
+                }
+                tempSavedStates = null;
+            });
         }
 
         /* Returns post handler to executes code on UI thread */

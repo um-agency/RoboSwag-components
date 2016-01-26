@@ -38,9 +38,7 @@ public class ScrollViewSavedStateController extends AbstractSavedStateController
 
     @Override
     public void restoreState(@NonNull final Parcelable savedState) {
-        if (savedState instanceof Point) {
-            scrollView.post(() -> scrollView.scrollTo(((Point) savedState).x, ((Point) savedState).y));
-        }
+        scrollView.scrollTo(((Point) savedState).x, ((Point) savedState).y);
     }
 
 }
