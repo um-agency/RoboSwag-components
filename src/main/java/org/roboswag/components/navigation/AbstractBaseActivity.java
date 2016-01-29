@@ -374,6 +374,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
 
     /* Shows device keyboard */
     public void showSoftInput(@NonNull final View view) {
+        view.requestFocus();
         final InputMethodManager inputManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         inputManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
     }
