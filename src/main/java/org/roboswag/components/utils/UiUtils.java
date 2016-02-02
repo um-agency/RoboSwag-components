@@ -116,6 +116,20 @@ public final class UiUtils {
         return false;
     }
 
+    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final View.OnClickListener onClickListener) {
+        if (onClickListener == null) {
+            targetView.setOnClickListener(null);
+            return;
+        }
+
+        final Runnable runnable = () -> onClickListener.onClick(targetView);
+
+        targetView.setOnClickListener(v -> {
+            targetView.removeCallbacks(runnable);
+            targetView.postDelayed(runnable, RIPPLE_EFFECT_DELAY);
+        });
+    }
+
     private UiUtils() {
     }
 
