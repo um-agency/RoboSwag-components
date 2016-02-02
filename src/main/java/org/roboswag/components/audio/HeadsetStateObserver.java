@@ -63,7 +63,11 @@ public final class HeadsetStateObserver {
         @Override
         public void onReceive(final Context context, final Intent intent) {
             if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction())) {
-                isPluggedInSubject.onNext(intent.getExtras().getInt("state") != 0);
+                if (intent.getExtras() == null) {
+                    isPluggedInSubject.onNext(false);
+                } else {
+                    isPluggedInSubject.onNext(intent.getExtras().getInt("state") != 0);
+                }
             }
         }
 
