@@ -72,7 +72,7 @@ public abstract class ViewControllerFragment<TLogicBridge, TActivity extends App
 
         if (getContext() != null) {
             viewControllerSubscription = Observable.combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(),
-                    RxAndroidUtils.<LogicService<TLogicBridge>>observeService(getContext(), getLogicServiceClass())
+                    RxAndroidUtils.observeService(getContext(), getLogicServiceClass())
                             .map(service -> service != null ? service.getLogicBridge() : null)
                             .distinctUntilChanged(),
                 (activity, view, logicBridge) -> {

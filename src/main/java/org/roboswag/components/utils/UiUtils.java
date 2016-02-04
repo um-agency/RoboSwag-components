@@ -33,6 +33,7 @@ public final class UiUtils {
     public static final long RIPPLE_EFFECT_DELAY = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? 250 : 0;
     private static final int MAX_METRICS_TRIES_COUNT = 5;
 
+    @SuppressWarnings("BusyWait")
     @NonNull
     public static DisplayMetrics getDisplayMetrics(@NonNull final Context context) {
         DisplayMetrics result = context.getResources().getDisplayMetrics();
@@ -41,7 +42,7 @@ public final class UiUtils {
         while (metricsTryNumber < MAX_METRICS_TRIES_COUNT && (result.heightPixels <= 0 || result.widthPixels <= 0)) {
             try {
                 Thread.sleep(500);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException ignored) {
                 return result;
             }
             result = context.getResources().getDisplayMetrics();
@@ -109,7 +110,9 @@ public final class UiUtils {
 
             return (realDisplayMetrics.widthPixels - displayMetrics.widthPixels) > 0
                     || (realDisplayMetrics.heightPixels - displayMetrics.heightPixels) > 0;
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             final boolean hasMenuKey = ViewConfiguration.get(activity).hasPermanentMenuKey();
             final boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
             return !hasMenuKey && !hasBackKey;

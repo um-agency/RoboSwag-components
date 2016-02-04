@@ -61,6 +61,22 @@ public abstract class AbstractHttpRequest<T> {
     private static final int CACHE_MAX_KEY_SIZE = 128;
 
     @NonNull
+    private static Charset getCharset(final ResponseBody responseBody) {
+        final MediaType contentType = responseBody.contentType();
+        return contentType == null ? Charsets.UTF_8 : contentType.charset(Charsets.UTF_8);
+    }
+
+    private static String requestBodyToString(@NonNull final Request request) throws IOException {
+        final RequestBody body = request.newBuilder().build().body();
+        if (body == null) {
+            return "";
+        }
+        final Buffer buffer = new Buffer();
+        body.writeTo(buffer);
+        return buffer.readUtf8();
+    }
+
+    @NonNull
     private final Class<T> responseResultType;
 
     private Request request;
@@ -132,17 +148,17 @@ public abstract class AbstractHttpRequest<T> {
         if (LcHelper.getLogLevel() <= Log.DEBUG) {
             Lc.d("Response for: %s has code %s and content: %s", request.url(), response.code(), new String(bytes, charset));
         }
-        if (getResponseResultType() == Response.class) {
+        if (getResponseResultType().equals(Response.class)) {
             return handleResponse((T) response);
         }
         final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
         final T result;
         try {
             result = getParser().parseAndClose(byteArrayInputStream, charset, responseResultType);
-        } catch (RuntimeException throwable) {
+        } catch (final RuntimeException throwable) {
             throw new ShouldNotHappenException("Runtime exception during response parsing " + getUrl(), throwable);
-        } catch (JsonProcessingException ex) {
-            throw new ShouldNotHappenException("Parsing exception during response parsing " + getUrl(), ex);
+        } catch (final JsonProcessingException exception) {
+            throw new ShouldNotHappenException("Parsing exception during response parsing " + getUrl(), exception);
         }
         if (result == null) {
             throw new ShouldNotHappenException("Response is null for request " + getUrl());
@@ -162,22 +178,6 @@ public abstract class AbstractHttpRequest<T> {
         }).subscribeOn(Schedulers.io())
                 .doOnUnsubscribe(this::cancel)
                 .unsubscribeOn(Schedulers.io());
-    }
-
-    @NonNull
-    private Charset getCharset(final ResponseBody responseBody) {
-        final MediaType contentType = responseBody.contentType();
-        return contentType == null ? Charsets.UTF_8 : contentType.charset(Charsets.UTF_8);
-    }
-
-    private String requestBodyToString(@NonNull final Request request) throws IOException {
-        final RequestBody body = request.newBuilder().build().body();
-        if (body == null) {
-            return "";
-        }
-        final Buffer buffer = new Buffer();
-        body.writeTo(buffer);
-        return buffer.readUtf8();
     }
 
     /* Handle response. Use it to do something after request successfully executes */

@@ -37,14 +37,18 @@ public final class IsCallingObserver {
     @Nullable
     private static IsCallingObserver instance;
 
+    private static boolean isCallingState(final int state) {
+        return state != TelephonyManager.CALL_STATE_IDLE;
+    }
+
     @NonNull
     public static IsCallingObserver getInstance(@NonNull final Context context) {
         synchronized (IsCallingObserver.class) {
             if (instance == null) {
                 instance = new IsCallingObserver(context);
             }
+            return instance;
         }
-        return instance;
     }
 
     private final BehaviorSubject<Boolean> isCallingSubject = BehaviorSubject.create();
@@ -64,10 +68,6 @@ public final class IsCallingObserver {
                 .distinctUntilChanged()
                 .replay(1)
                 .refCount();
-    }
-
-    private boolean isCallingState(final int state) {
-        return state != TelephonyManager.CALL_STATE_IDLE;
     }
 
     @NonNull

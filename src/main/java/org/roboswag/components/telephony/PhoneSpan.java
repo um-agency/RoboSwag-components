@@ -21,20 +21,20 @@ public class PhoneSpan extends URLSpan {
 
     @SuppressWarnings("PMD.AvoidCatchingThrowable")
     @Override
-    public void onClick(final View widget) {
+    public void onClick(@NonNull final View widget) {
         super.onClick(widget);
         try {
             final Intent intent = new Intent(Intent.ACTION_DIAL);
             intent.setData(Uri.parse(getURL()));
             widget.getContext().startActivity(intent);
             // it should catch throwable to not crash in production if there are problems with startActivity()
-        } catch (Throwable throwable) {
+        } catch (final Throwable throwable) {
             Lc.assertion(throwable);
         }
     }
 
     @Override
-    public void updateDrawState(final TextPaint ds) {
+    public void updateDrawState(@NonNull final TextPaint ds) {
         super.updateDrawState(ds);
         ds.setUnderlineText(false);
     }

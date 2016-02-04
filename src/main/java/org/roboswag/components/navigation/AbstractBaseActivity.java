@@ -108,7 +108,8 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         final PermissionState permissionState = permissionsMap.get(permission);
         if (permissionState != null && ((permissionState == PermissionState.GRANTED) || usePreviousRequest)) {
             return Observable.just(permissionState);
-        } else if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
+        }
+        if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
             permissionsMap.put(permission, PermissionState.GRANTED);
             return Observable.just(PermissionState.GRANTED);
         }
@@ -126,11 +127,9 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 permissionState = PermissionState.GRANTED;
             } else if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[0])) {
-                    permissionState = PermissionState.DENIED_THIS_TIME;
-                } else {
-                    permissionState = PermissionState.DENIED_COMPLETELY;
-                }
+                permissionState = ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[0])
+                        ? PermissionState.DENIED_THIS_TIME
+                        : PermissionState.DENIED_COMPLETELY;
             } else {
                 permissionState = PermissionState.DENIED_THIS_TIME;
             }
@@ -220,7 +219,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
             if (targetFragment != null) {
                 fragment.setTargetFragment(targetFragment, 0);
             }
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             //TODO: log
             return null;
         }
@@ -317,7 +316,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
                         getSupportFragmentManager().popBackStack();
                         return true;
                     default:
-                        findTopFragmentAndPopBackStackToIt(fragmentManager, stackSize);
+                        findTopFragmentAndPopBackStackToIt(stackSize);
                         return true;
                 }
             default:
@@ -331,8 +330,8 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         postHandler.removeCallbacksAndMessages(null);
     }
 
-    private void findTopFragmentAndPopBackStackToIt(@NonNull final FragmentManager fragmentManager,
-                                                    final int stackSize) {
+    private void findTopFragmentAndPopBackStackToIt(final int stackSize) {
+        final FragmentManager fragmentManager = getSupportFragmentManager();
         String lastFragmentName = fragmentManager.getBackStackEntryAt(stackSize - 1).getName();
         for (int i = stackSize - 2; i >= 0; i--) {
             final String currentFragmentName = fragmentManager.getBackStackEntryAt(i).getName();

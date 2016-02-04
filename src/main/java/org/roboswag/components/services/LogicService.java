@@ -17,7 +17,7 @@ public abstract class LogicService<TLogicBridge> extends IntentService {
 
     private final TLogicBridge logicBridge;
 
-    public LogicService(final String name) {
+    protected LogicService(final String name) {
         super(name);
         this.logicBridge = createLogicBridge();
     }
@@ -41,7 +41,7 @@ public abstract class LogicService<TLogicBridge> extends IntentService {
     }
 
     @Override
-    public final IBinder onBind(final Intent intent) {
+    public IBinder onBind(final Intent intent) {
         return new ServiceBinder<>(this);
     }
 
