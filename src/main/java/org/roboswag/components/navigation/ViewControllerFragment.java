@@ -75,25 +75,25 @@ public abstract class ViewControllerFragment<TLogicBridge, TActivity extends App
                     RxAndroidUtils.observeService(getContext(), getLogicServiceClass())
                             .map(service -> service != null ? service.getLogicBridge() : null)
                             .distinctUntilChanged(),
-                (activity, view, logicBridge) -> {
-                    if (activity == null || view == null || logicBridge == null) {
-                        return null;
-                    }
-
-                    final ViewController.CreationContext<TLogicBridge, TActivity,
-                            ? extends ViewControllerFragment<TLogicBridge, TActivity>> creationContext
-                            = new ViewController.CreationContext<>(logicBridge, activity, this, view.first);
-                    if (getViewControllerClass().getConstructors().length == 1) {
-                        try {
-                            return (ViewController) getViewControllerClass().getConstructors()[0].newInstance(creationContext, view.second);
-                        } catch (Throwable throwable) {
-                            Lc.assertion(throwable);
+                    (activity, view, logicBridge) -> {
+                        if (activity == null || view == null || logicBridge == null) {
+                            return null;
                         }
-                    } else {
-                        Lc.assertion("There should be single constructor for " + getViewControllerClass());
-                    }
-                    return null;
-                }).subscribe(this::onViewControllerChanged);
+
+                        final ViewController.CreationContext<TLogicBridge, TActivity,
+                                ? extends ViewControllerFragment<TLogicBridge, TActivity>> creationContext
+                                = new ViewController.CreationContext<>(logicBridge, activity, this, view.first);
+                        if (getViewControllerClass().getConstructors().length == 1) {
+                            try {
+                                return (ViewController) getViewControllerClass().getConstructors()[0].newInstance(creationContext, view.second);
+                            } catch (Throwable throwable) {
+                                Lc.assertion(throwable);
+                            }
+                        } else {
+                            Lc.assertion("There should be single constructor for " + getViewControllerClass());
+                        }
+                        return null;
+                    }).subscribe(this::onViewControllerChanged);
         } else {
             Lc.assertion("Context is null in onCreate.");
         }
