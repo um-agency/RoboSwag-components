@@ -43,8 +43,8 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      *
      * @return Returns true if fragment is in some fragment's children stack.
      */
-    public final boolean isChildFragment() {
-        return getParentFragment() != null || getTargetFragment() != null;
+    public boolean isChildFragment() {
+        return getParentFragment() != null;
     }
 
     /**
@@ -61,7 +61,7 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
 
         try {
             return (TActivity) getActivity();
-        } catch (ClassCastException exception) {
+        } catch (final ClassCastException exception) {
             Lc.assertion(exception);
             return null;
         }

@@ -57,8 +57,8 @@ public final class VolumeController {
             if (instance == null) {
                 instance = new VolumeController(context);
             }
+            return instance;
         }
-        return instance;
     }
 
     private final AudioManager audioManager;
@@ -92,7 +92,7 @@ public final class VolumeController {
 
     public void setVolume(final int value) {
         if (value < 0 || value > maxVolume) {
-            Lc.assertion(new ShouldNotHappenException("Volume: " + value + " out of bounds [0," + maxVolume + "]"));
+            Lc.assertion(new ShouldNotHappenException("Volume: " + value + " out of bounds [0," + maxVolume + ']'));
             return;
         }
         if (getVolume() != value) {
@@ -120,17 +120,17 @@ public final class VolumeController {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             @Override
-            public void onProgressChanged(final SeekBar seekBar, final int progress, final boolean fromUser) {
+            public void onProgressChanged(final SeekBar ignored, final int progress, final boolean fromUser) {
                 setVolume(progress);
             }
 
             @Override
-            public void onStartTrackingTouch(final SeekBar seekBar) {
+            public void onStartTrackingTouch(final SeekBar ignored) {
                 //ignored
             }
 
             @Override
-            public void onStopTrackingTouch(final SeekBar seekBar) {
+            public void onStopTrackingTouch(final SeekBar ignored) {
                 //ignored
             }
 

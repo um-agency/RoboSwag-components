@@ -227,7 +227,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
 
     public boolean onActivityResultProcess(final int requestCode, final int resultCode, final Intent data) {
         return UiUtils.tryForeachFragment(getChildFragmentManager(),
-            fragment -> fragment.onActivityResultProcess(requestCode, resultCode, data),
+                fragment -> fragment.onActivityResultProcess(requestCode, resultCode, data),
                 false);
     }
 

@@ -64,7 +64,7 @@ public final class Typefaces {
                     } else {
                         Lc.assertion("Can't find .otf or .ttf file in assets folder 'fonts' with name: " + name);
                     }
-                } catch (IOException exception) {
+                } catch (final IOException exception) {
                     Lc.assertion(new ShouldNotHappenException("Can't get font " + name + '.'
                             + "Did you forget to create assets folder named 'fonts'?", exception));
                 }

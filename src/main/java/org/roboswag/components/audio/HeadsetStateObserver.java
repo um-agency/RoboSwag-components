@@ -26,8 +26,8 @@ public final class HeadsetStateObserver {
             if (instance == null) {
                 instance = new HeadsetStateObserver(context);
             }
+            return instance;
         }
-        return instance;
     }
 
     private final AudioManager audioManager;

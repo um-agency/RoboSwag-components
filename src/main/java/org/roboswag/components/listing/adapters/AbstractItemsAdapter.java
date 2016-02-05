@@ -162,10 +162,10 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             subscription = itemsProvider.loadItem(position)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(ignored -> parent.notifyDataSetChanged(),
-                        throwable -> {
-                            retryButton.setVisibility(View.VISIBLE);
-                            progressBar.setVisibility(View.INVISIBLE);
-                        });
+                            throwable -> {
+                                retryButton.setVisibility(View.VISIBLE);
+                                progressBar.setVisibility(View.INVISIBLE);
+                            });
         }
 
     }

@@ -132,9 +132,11 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
     //TODO: nearest pages + preloading + observable for items collection changes
     @Override
     public Observable loadItem(final int position) {
-        if (!isInitialized) {
-            Lc.assertion(new ShouldNotHappenException("Provider should be initialized first"));
-            return Observable.empty();
+        synchronized (lock) {
+            if (!isInitialized) {
+                Lc.assertion(new ShouldNotHappenException("Provider should be initialized first"));
+                return Observable.empty();
+            }
         }
         return loadPage(position / PAGE_SIZE);
     }
@@ -144,14 +146,12 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
         synchronized (lock) {
             loadedPage = loadedPages.get(index);
         }
-        if (loadedPage != null) {
-            return Observable.just(loadedPage);
-        } else {
-            return pageRequestCreator.call(index * PAGE_SIZE, PAGE_SIZE)
-                    .first()
-                    .subscribeOn(Schedulers.io())
-                    .map(page -> onPageLoaded(index, page));
-        }
+        return loadedPage != null
+                ? Observable.just(loadedPage)
+                : pageRequestCreator.call(index * PAGE_SIZE, PAGE_SIZE)
+                .first()
+                .subscribeOn(Schedulers.io())
+                .map(page -> onPageLoaded(index, page));
     }
 
     //TODO: if something loaded or if loaded emty with index=999
