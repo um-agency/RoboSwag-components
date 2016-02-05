@@ -114,7 +114,10 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
                         }
 
                         maxLoadedPage = (index - 1) / PAGE_SIZE;
-                        if (!pageToAdd.isEmpty()) {
+                        if (pageToAdd.isEmpty() && index == 0) {
+                            maxLoadedPage = null;
+                            isLastPageLoaded = true;
+                        } else if (!pageToAdd.isEmpty()) {
                             loadedPages.put(maxLoadedPage, pageToAdd);
                             isLastPageLoaded = pageToAdd.size() < PAGE_SIZE;
                         } else {
