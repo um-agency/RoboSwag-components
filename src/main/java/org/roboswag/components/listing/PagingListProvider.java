@@ -84,7 +84,6 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
         return initialize(0);
     }
 
-    @SuppressWarnings("checkstyle:MethodLengthCheck")
     public Observable<Integer> initialize(final int loadToPosition) {
         synchronized (lock) {
             if (isInitialized) {
@@ -96,37 +95,39 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
         return pageRequestCreator.call(0, itemsToLoad)
                 .first()
                 .subscribeOn(Schedulers.io())
-                .map(page -> {
-                    synchronized (lock) {
-                        loadedPages.clear();
-                        isInitialized = true;
-                        totalCount = page.getTotalCount();
-                        final Iterator<T> iterator = page.getItems().iterator();
-                        int index = 0;
-                        ArrayList<T> pageToAdd = new ArrayList<>(PAGE_SIZE);
-                        while (iterator.hasNext()) {
-                            pageToAdd.add(iterator.next());
-                            index++;
-                            if (index % PAGE_SIZE == 0) {
-                                loadedPages.put((index - 1) / PAGE_SIZE, pageToAdd);
-                                pageToAdd = new ArrayList<>(PAGE_SIZE);
-                            }
-                        }
+                .map(this::pageInitializedMap);
+    }
 
-                        maxLoadedPage = (index - 1) / PAGE_SIZE;
-                        if (pageToAdd.isEmpty() && index == 0) {
-                            maxLoadedPage = null;
-                            isLastPageLoaded = true;
-                        } else if (!pageToAdd.isEmpty()) {
-                            loadedPages.put(maxLoadedPage, pageToAdd);
-                            isLastPageLoaded = pageToAdd.size() < PAGE_SIZE;
-                        } else {
-                            maxLoadedPage--;
-                            isLastPageLoaded = true;
-                        }
-                        return isLastPageLoaded ? getSize() : getSize() - 1;
-                    }
-                });
+    private int pageInitializedMap(@NonNull final Page<T> page) {
+        synchronized (lock) {
+            loadedPages.clear();
+            isInitialized = true;
+            totalCount = page.getTotalCount();
+            final Iterator<T> iterator = page.getItems().iterator();
+            int index = 0;
+            ArrayList<T> pageToAdd = new ArrayList<>(PAGE_SIZE);
+            while (iterator.hasNext()) {
+                pageToAdd.add(iterator.next());
+                index++;
+                if (index % PAGE_SIZE == 0) {
+                    loadedPages.put((index - 1) / PAGE_SIZE, pageToAdd);
+                    pageToAdd = new ArrayList<>(PAGE_SIZE);
+                }
+            }
+
+            maxLoadedPage = (index - 1) / PAGE_SIZE;
+            if (pageToAdd.isEmpty() && index == 0) {
+                maxLoadedPage = null;
+                isLastPageLoaded = true;
+            } else if (!pageToAdd.isEmpty()) {
+                loadedPages.put(maxLoadedPage, pageToAdd);
+                isLastPageLoaded = pageToAdd.size() < PAGE_SIZE;
+            } else {
+                maxLoadedPage--;
+                isLastPageLoaded = true;
+            }
+            return isLastPageLoaded ? getSize() : getSize() - 1;
+        }
     }
 
     //TODO: nearest pages + preloading + observable for items collection changes
