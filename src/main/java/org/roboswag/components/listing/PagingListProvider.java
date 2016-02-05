@@ -84,7 +84,7 @@ public class PagingListProvider<T> implements ItemsProvider<T> {
         return initialize(0);
     }
 
-    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+    @SuppressWarnings("checkstyle:MethodLengthCheck")
     public Observable<Integer> initialize(final int loadToPosition) {
         synchronized (lock) {
             if (isInitialized) {
