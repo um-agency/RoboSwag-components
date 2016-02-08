@@ -101,7 +101,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
                 return;
             }
             onBindItemToViewHolder((TViewHolder) holder, position, item);
-            if (onItemClickListener != null) {
+            if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
                 holder.itemView.setOnClickListener(v -> {
                     //TODO: fix multitap
                     postHandler.removeCallbacksAndMessages(null);
@@ -168,6 +168,10 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
                             });
         }
 
+    }
+
+    public boolean isOnClickListenerDisabled(@NonNull final TItem item) {
+        return false;
     }
 
     public interface OnItemClickListener<TItem> {
