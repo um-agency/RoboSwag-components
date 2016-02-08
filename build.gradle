@@ -39,7 +39,7 @@ dependencies {
     provided('com.google.http-client:google-http-client-jackson2:1.21.0') {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
-    provided 'com.squareup.okhttp:okhttp:2.7.2'
+    provided 'com.squareup.okhttp:okhttp:2.7.4'
     provided 'com.facebook.fresco:fbcore:0.9.0'
 }
 

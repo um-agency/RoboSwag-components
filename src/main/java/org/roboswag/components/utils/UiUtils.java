@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,6 +34,9 @@ public final class UiUtils {
     // to enable ripple effect on tap
     public static final long RIPPLE_EFFECT_DELAY = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? 250 : 0;
     private static final int MAX_METRICS_TRIES_COUNT = 5;
+
+    // TODO remove on activity stop
+    private static final Handler RIPPLE_HANDLER = new Handler(Looper.getMainLooper());
 
     @SuppressWarnings("BusyWait")
     @NonNull
@@ -129,8 +134,9 @@ public final class UiUtils {
         final Runnable runnable = () -> onClickListener.onClick(targetView);
 
         targetView.setOnClickListener(v -> {
-            targetView.removeCallbacks(runnable);
-            targetView.postDelayed(runnable, RIPPLE_EFFECT_DELAY);
+            RIPPLE_HANDLER.removeCallbacksAndMessages(null);
+            RIPPLE_HANDLER.postDelayed(runnable, RIPPLE_EFFECT_DELAY);
+
         });
     }
 
