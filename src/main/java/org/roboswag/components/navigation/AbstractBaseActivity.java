@@ -378,4 +378,9 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         inputManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
     }
 
+    @Nullable
+    public String getActionBarFont() {
+        return null;
+    }
+
 }
