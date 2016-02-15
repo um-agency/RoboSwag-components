@@ -1,0 +1,64 @@
+/*
+ *  Copyright (c) 2015 RoboSwag (Gavriil Sitnikov, Vsevolod Ivanov)
+ *
+ *  This file is part of RoboSwag library.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
+package org.roboswag.components.utils;
+
+import android.content.Context;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.text.TextPaint;
+import android.text.style.MetricAffectingSpan;
+import android.util.LruCache;
+
+
+/**
+ * Created by Ilia Kurtov on 15/02/2016.
+ * Span for typefaces in texts.
+ * http://stackoverflow.com/a/15181195
+ */
+public class TypefaceSpan extends MetricAffectingSpan {
+
+    private static final LruCache<String, Typeface> TYPEFACE_LRU_CACHE = new LruCache<>(12);
+    private Typeface typeface;
+
+    public TypefaceSpan(final Context context, final String typefaceName) {
+        super();
+        typeface = TYPEFACE_LRU_CACHE.get(typefaceName);
+
+        if (typeface == null) {
+            typeface = Typeface.createFromAsset(context.getApplicationContext()
+                    .getAssets(), String.format("fonts/%s", typefaceName));
+
+            TYPEFACE_LRU_CACHE.put(typefaceName, typeface);
+        }
+    }
+
+    @Override
+    public void updateMeasureState(final TextPaint textPaint) {
+        textPaint.setTypeface(typeface);
+        textPaint.setFlags(textPaint.getFlags() | Paint.SUBPIXEL_TEXT_FLAG);
+    }
+
+    @Override
+    public void updateDrawState(final TextPaint textPaint) {
+        textPaint.setTypeface(typeface);
+        textPaint.setFlags(textPaint.getFlags() | Paint.SUBPIXEL_TEXT_FLAG);
+    }
+
+}
