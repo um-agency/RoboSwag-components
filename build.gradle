@@ -42,5 +42,3 @@ dependencies {
     provided 'com.squareup.okhttp:okhttp:2.7.4'
     provided 'com.facebook.fresco:fbcore:0.9.0'
 }
-
-apply from: "${rootDir}/libraries/BuildScripts/gradle/staticAnalysis.gradle"
