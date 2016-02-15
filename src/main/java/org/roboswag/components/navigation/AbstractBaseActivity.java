@@ -23,6 +23,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -379,7 +380,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     @Nullable
-    public String getActionBarFont() {
+    public Typeface getToolbarTitleTypeface(@NonNull final AbstractBaseActivity activity) {
         return null;
     }
 

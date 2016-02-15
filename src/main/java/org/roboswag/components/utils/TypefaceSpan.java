@@ -22,9 +22,9 @@ package org.roboswag.components.utils;
 import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.support.annotation.NonNull;
 import android.text.TextPaint;
 import android.text.style.MetricAffectingSpan;
-import android.util.LruCache;
 
 
 /**
@@ -34,19 +34,12 @@ import android.util.LruCache;
  */
 public class TypefaceSpan extends MetricAffectingSpan {
 
-    private static final LruCache<String, Typeface> TYPEFACE_LRU_CACHE = new LruCache<>(12);
-    private Typeface typeface;
+    @NonNull
+    private final Typeface typeface;
 
-    public TypefaceSpan(final Context context, final String typefaceName) {
+    public TypefaceSpan(@NonNull final Context context, @NonNull final Typeface typeface) {
         super();
-        typeface = TYPEFACE_LRU_CACHE.get(typefaceName);
-
-        if (typeface == null) {
-            typeface = Typeface.createFromAsset(context.getApplicationContext()
-                    .getAssets(), String.format("fonts/%s", typefaceName));
-
-            TYPEFACE_LRU_CACHE.put(typefaceName, typeface);
-        }
+        this.typeface = typeface;
     }
 
     @Override
