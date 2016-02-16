@@ -19,7 +19,6 @@
 
 package org.roboswag.components.utils;
 
-import android.content.Context;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
@@ -37,7 +36,7 @@ public class TypefaceSpan extends MetricAffectingSpan {
     @NonNull
     private final Typeface typeface;
 
-    public TypefaceSpan(@NonNull final Context context, @NonNull final Typeface typeface) {
+    public TypefaceSpan(@NonNull final Typeface typeface) {
         super();
         this.typeface = typeface;
     }
