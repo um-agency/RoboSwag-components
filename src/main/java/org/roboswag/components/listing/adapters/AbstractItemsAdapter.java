@@ -47,6 +47,8 @@ import rx.android.schedulers.AndroidSchedulers;
 public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerView.ViewHolder>
         extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    private static final int PRE_LOADING_COUNT = 2;
+
     private static final int LOADED_ITEM_TYPE = R.id.LOADED_ITEM_TYPE;
     private static final int NOT_LOADED_ITEM_TYPE = R.id.NOT_LOADED_ITEM_TYPE;
 
@@ -159,7 +161,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             }
             retryButton.setVisibility(View.INVISIBLE);
             progressBar.setVisibility(View.VISIBLE);
-            subscription = itemsProvider.loadItem(position)
+            subscription = itemsProvider.loadRange(Math.max(0, position - PRE_LOADING_COUNT), position + PRE_LOADING_COUNT)
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(ignored -> parent.notifyDataSetChanged(),
                             throwable -> {

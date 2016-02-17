@@ -21,19 +21,53 @@ package org.roboswag.components.listing;
 
 import android.support.annotation.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import rx.Observable;
+import rx.internal.util.RxRingBuffer;
 
 /**
  * Created by Gavriil Sitnikov on 07/12/2015.
  * TODO: fill description
  */
-public interface ItemsProvider<T> {
+public abstract class ItemsProvider<T> {
 
     @Nullable
-    T getItem(int position);
+    public abstract T getItem(int position);
 
-    Observable loadItem(int position);
+    public abstract Observable<T> loadItem(int position);
 
-    int getSize();
+    public abstract int getSize();
+
+    @SuppressWarnings("unchecked")
+    public Observable<List<T>> loadRange(int first, int last) {
+        final List<Observable<List<T>>> itemsRequests = new ArrayList<>();
+
+        int i = first;
+        while (i <= last) {
+            final List<Observable<T>> limitedPageRequests = new ArrayList<>();
+            final int maxIndex = i + RxRingBuffer.SIZE - 1;
+            while (i <= Math.min(last, maxIndex)) {
+                limitedPageRequests.add(loadItem(i));
+                i++;
+            }
+            itemsRequests.add(Observable.combineLatest(limitedPageRequests, args -> {
+                final List<T> resultPart = new ArrayList<>(args.length);
+                for (final Object item : args) {
+                    resultPart.add((T) item);
+                }
+                return resultPart;
+            }));
+        }
+
+        return Observable.combineLatest(itemsRequests, args -> {
+            final List<T> result = new ArrayList<>();
+            for (final Object resultPart : args) {
+                result.addAll((List<T>) resultPart);
+            }
+            return result;
+        });
+    }
 
 }

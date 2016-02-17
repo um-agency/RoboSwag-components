@@ -35,7 +35,7 @@ import rx.Observable;
  * Created by Gavriil Sitnikov on 07/12/2015.
  * TODO: fill description
  */
-public class ListProvider<T> implements ItemsProvider<T> {
+public class ListProvider<T> extends ItemsProvider<T> {
 
     private final List<T> items;
 
@@ -50,7 +50,7 @@ public class ListProvider<T> implements ItemsProvider<T> {
     }
 
     @Override
-    public Observable loadItem(final int position) {
+    public Observable<T> loadItem(final int position) {
         Lc.assertion(new ShouldNotHappenException("ListProvider doesn't support loading"));
         return Observable.just(items.get(position));
     }
