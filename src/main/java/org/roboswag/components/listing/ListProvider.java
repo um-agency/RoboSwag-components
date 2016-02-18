@@ -38,6 +38,7 @@ public class ListProvider<T> extends ItemsProvider<T> {
     private final List<T> items;
 
     public ListProvider(@NonNull final Collection<T> collection) {
+        super();
         items = Collections.unmodifiableList(new ArrayList<>(collection));
     }
 
@@ -49,7 +50,7 @@ public class ListProvider<T> extends ItemsProvider<T> {
 
     @Override
     public Observable<T> loadItem(final int position) {
-        return Observable.just(items.get(position));
+        return Observable.just(items.size() > position ? items.get(position) : null);
     }
 
     @Override

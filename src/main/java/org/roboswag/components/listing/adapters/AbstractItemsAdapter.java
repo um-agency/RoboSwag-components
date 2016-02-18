@@ -48,8 +48,6 @@ import rx.functions.Actions;
 public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerView.ViewHolder>
         extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    private static final int PRE_LOADING_COUNT = 2;
-
     private static final int LOADED_ITEM_TYPE = R.id.LOADED_ITEM_TYPE;
     private static final int NOT_LOADED_ITEM_TYPE = R.id.NOT_LOADED_ITEM_TYPE;
 
@@ -58,31 +56,48 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
     private OnItemClickListener<TItem> onItemClickListener;
     @Nullable
     private ItemsProvider<TItem> itemsProvider;
+    @Nullable
+    private Subscription itemsProviderSubscription;
 
     public void setItems(@NonNull final List<TItem> items) {
         setItemsProvider(new ListProvider<>(items));
     }
 
+    protected int itemsOffset() {
+        return 0;
+    }
+
     public void setItemsProvider(@NonNull final ItemsProvider<TItem> itemsProvider) {
+        if (itemsProviderSubscription != null) {
+            itemsProviderSubscription.unsubscribe();
+            itemsProviderSubscription = null;
+        }
         this.itemsProvider = itemsProvider;
         notifyDataSetChanged();
-        itemsProvider.observeListChanges()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(listChanges -> {
-                    for (final ItemsProvider.ListChange listChange : listChanges) {
-                        switch (listChange.getType()) {
-                            case INSERTED:
-                                notifyItemRangeInserted(listChange.getStart(), listChange.getCount());
-                                break;
-                            case CHANGED:
-                                notifyItemRangeChanged(listChange.getStart(), listChange.getCount());
-                                break;
-                            case REMOVED:
-                                notifyItemRangeRemoved(listChange.getStart(), listChange.getCount());
-                                break;
-                        }
-                    }
-                });
+        if (this.itemsProvider != null) {
+            itemsProviderSubscription = itemsProvider.observeListChanges()
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(this::onItemsChanged);
+        }
+    }
+
+    protected void onItemsChanged(@NonNull final List<ItemsProvider.Change> changes) {
+        for (final ItemsProvider.Change change : changes) {
+            switch (change.getType()) {
+                case INSERTED:
+                    notifyItemRangeInserted(change.getStart() + itemsOffset(), change.getCount());
+                    break;
+                case CHANGED:
+                    notifyItemRangeChanged(change.getStart() + itemsOffset(), change.getCount());
+                    break;
+                case REMOVED:
+                    notifyItemRangeRemoved(change.getStart() + itemsOffset(), change.getCount());
+                    break;
+                default:
+                    Lc.assertion("Not supported " + change.getType());
+                    break;
+            }
+        }
     }
 
     public void setOnItemClickListener(@Nullable final OnItemClickListener<TItem> onItemClickListener) {
@@ -116,11 +131,13 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             }
             ((NotLoadedItemViewHolder) holder).bindItem(position, itemsProvider);
         } else {
-            if (item == null) {
+            if (item == null || itemsProvider == null) {
                 Lc.assertion(new ShouldNotHappenException("Item at" + position + " should not be null"));
                 return;
             }
             onBindItemToViewHolder((TViewHolder) holder, position, item);
+            itemsProvider.loadRange(Math.max(0, position - itemsProvider.getSize() / 2), position + itemsProvider.getSize() / 2).first()
+                    .subscribe(Actions.empty(), Actions.empty());
             if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
                 holder.itemView.setOnClickListener(v -> {
                     //TODO: fix multitap
@@ -179,7 +196,9 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             }
             retryButton.setVisibility(View.INVISIBLE);
             progressBar.setVisibility(View.VISIBLE);
-            subscription = itemsProvider.loadRange(Math.max(0, position - PRE_LOADING_COUNT), position + PRE_LOADING_COUNT)
+            subscription = itemsProvider
+                    .loadRange(Math.max(0, position - itemsProvider.getSize() / 2), position + itemsProvider.getSize() / 2)
+                    .first()
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(Actions.empty(),
                             throwable -> {

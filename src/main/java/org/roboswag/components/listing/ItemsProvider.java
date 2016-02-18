@@ -35,10 +35,10 @@ import rx.subjects.PublishSubject;
  */
 public abstract class ItemsProvider<T> {
 
-    private final PublishSubject<List<ListChange>> listChangesSubject = PublishSubject.create();
+    private final PublishSubject<List<Change>> listChangesSubject = PublishSubject.create();
 
-    protected void notifyChanges(@NonNull final List<ListChange> listChanges) {
-        listChangesSubject.onNext(listChanges);
+    protected void notifyChanges(@NonNull final List<Change> changes) {
+        listChangesSubject.onNext(changes);
     }
 
     @Nullable
@@ -49,16 +49,16 @@ public abstract class ItemsProvider<T> {
     public abstract int getSize();
 
     @SuppressWarnings("unchecked")
-    public Observable<List<T>> loadRange(int first, int last) {
+    public Observable<List<T>> loadRange(final int first, final int last) {
         final List<Observable<List<T>>> itemsRequests = new ArrayList<>();
 
-        int i = first;
-        while (i <= last) {
+        int index = first;
+        while (index <= last) {
             final List<Observable<T>> limitedPageRequests = new ArrayList<>();
-            final int maxIndex = i + RxRingBuffer.SIZE - 1;
-            while (i <= Math.min(last, maxIndex)) {
-                limitedPageRequests.add(loadItem(i));
-                i++;
+            final int maxIndex = index + RxRingBuffer.SIZE - 1;
+            while (index <= Math.min(last, maxIndex)) {
+                limitedPageRequests.add(loadItem(index));
+                index++;
             }
             itemsRequests.add(Observable.combineLatest(limitedPageRequests, args -> {
                 final List<T> resultPart = new ArrayList<>(args.length);
@@ -79,18 +79,18 @@ public abstract class ItemsProvider<T> {
     }
 
     @NonNull
-    public Observable<List<ListChange>> observeListChanges() {
+    public Observable<List<Change>> observeListChanges() {
         return listChangesSubject;
     }
 
-    public static class ListChange {
+    public static class Change {
 
         @NonNull
         private final Type type;
         private final int start;
         private final int count;
 
-        public ListChange(final @NonNull Type type, final int start, final int count) {
+        public Change(@NonNull final Type type, final int start, final int count) {
             this.type = type;
             this.start = start;
             this.count = count;
