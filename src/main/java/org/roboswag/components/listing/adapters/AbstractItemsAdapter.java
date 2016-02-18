@@ -39,6 +39,7 @@ import java.util.List;
 
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Actions;
 
 /**
  * Created by Gavriil Sitnikov on 20/11/2015.
@@ -65,6 +66,23 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
     public void setItemsProvider(@NonNull final ItemsProvider<TItem> itemsProvider) {
         this.itemsProvider = itemsProvider;
         notifyDataSetChanged();
+        itemsProvider.observeListChanges()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(listChanges -> {
+                    for (final ItemsProvider.ListChange listChange : listChanges) {
+                        switch (listChange.getType()) {
+                            case INSERTED:
+                                notifyItemRangeInserted(listChange.getStart(), listChange.getCount());
+                                break;
+                            case CHANGED:
+                                notifyItemRangeChanged(listChange.getStart(), listChange.getCount());
+                                break;
+                            case REMOVED:
+                                notifyItemRangeRemoved(listChange.getStart(), listChange.getCount());
+                                break;
+                        }
+                    }
+                });
     }
 
     public void setOnItemClickListener(@Nullable final OnItemClickListener<TItem> onItemClickListener) {
@@ -163,7 +181,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             progressBar.setVisibility(View.VISIBLE);
             subscription = itemsProvider.loadRange(Math.max(0, position - PRE_LOADING_COUNT), position + PRE_LOADING_COUNT)
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(ignored -> parent.notifyDataSetChanged(),
+                    .subscribe(Actions.empty(),
                             throwable -> {
                                 retryButton.setVisibility(View.VISIBLE);
                                 progressBar.setVisibility(View.INVISIBLE);

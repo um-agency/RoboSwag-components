@@ -22,11 +22,9 @@ package org.roboswag.components.listing;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import org.roboswag.core.log.Lc;
-import org.roboswag.core.utils.ShouldNotHappenException;
-
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import rx.Observable;
@@ -40,7 +38,7 @@ public class ListProvider<T> extends ItemsProvider<T> {
     private final List<T> items;
 
     public ListProvider(@NonNull final Collection<T> collection) {
-        items = new ArrayList<>(collection);
+        items = Collections.unmodifiableList(new ArrayList<>(collection));
     }
 
     @Nullable
@@ -51,7 +49,6 @@ public class ListProvider<T> extends ItemsProvider<T> {
 
     @Override
     public Observable<T> loadItem(final int position) {
-        Lc.assertion(new ShouldNotHappenException("ListProvider doesn't support loading"));
         return Observable.just(items.get(position));
     }
 

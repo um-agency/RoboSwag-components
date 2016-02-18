@@ -19,19 +19,36 @@
 
 package org.roboswag.components.listing;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import org.roboswag.core.utils.android.RxAndroidUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import rx.Observable;
+import rx.Scheduler;
 import rx.internal.util.RxRingBuffer;
+import rx.subjects.PublishSubject;
 
 /**
  * Created by Gavriil Sitnikov on 07/12/2015.
  * TODO: fill description
  */
 public abstract class ItemsProvider<T> {
+
+    private final PublishSubject<List<ListChange>> listChangesSubject = PublishSubject.create();
+    private final Scheduler scheduler = RxAndroidUtils.createLooperScheduler();
+
+    @NonNull
+    public Scheduler getScheduler() {
+        return scheduler;
+    }
+
+    protected void notifyChanges(@NonNull final List<ListChange> listChanges) {
+        scheduler.createWorker().schedule(() -> listChangesSubject.onNext(listChanges));
+    }
 
     @Nullable
     public abstract T getItem(int position);
@@ -68,6 +85,45 @@ public abstract class ItemsProvider<T> {
             }
             return result;
         });
+    }
+
+    @NonNull
+    public Observable<List<ListChange>> observeListChanges() {
+        return listChangesSubject;
+    }
+
+    public static class ListChange {
+
+        @NonNull
+        private final Type type;
+        private final int start;
+        private final int count;
+
+        public ListChange(final @NonNull Type type, final int start, final int count) {
+            this.type = type;
+            this.start = start;
+            this.count = count;
+        }
+
+        @NonNull
+        public Type getType() {
+            return type;
+        }
+
+        public int getStart() {
+            return start;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public enum Type {
+            INSERTED,
+            CHANGED,
+            REMOVED
+        }
+
     }
 
 }
