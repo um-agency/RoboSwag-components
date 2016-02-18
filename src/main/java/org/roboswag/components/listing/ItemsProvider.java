@@ -22,13 +22,10 @@ package org.roboswag.components.listing;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import org.roboswag.core.utils.android.RxAndroidUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import rx.Observable;
-import rx.Scheduler;
 import rx.internal.util.RxRingBuffer;
 import rx.subjects.PublishSubject;
 
@@ -39,15 +36,9 @@ import rx.subjects.PublishSubject;
 public abstract class ItemsProvider<T> {
 
     private final PublishSubject<List<ListChange>> listChangesSubject = PublishSubject.create();
-    private final Scheduler scheduler = RxAndroidUtils.createLooperScheduler();
-
-    @NonNull
-    public Scheduler getScheduler() {
-        return scheduler;
-    }
 
     protected void notifyChanges(@NonNull final List<ListChange> listChanges) {
-        scheduler.createWorker().schedule(() -> listChangesSubject.onNext(listChanges));
+        listChangesSubject.onNext(listChanges);
     }
 
     @Nullable
