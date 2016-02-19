@@ -113,7 +113,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
         if (viewType == NOT_LOADED_ITEM_TYPE) {
-            return new NotLoadedItemViewHolder(UiUtils.inflate(R.layout.item_not_loaded, parent), this);
+            return new NotLoadedItemViewHolder(UiUtils.inflate(R.layout.item_not_loaded, parent));
         }
         return onCreateItemViewHolder(parent, viewType);
     }
@@ -169,16 +169,13 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
 
     public static class NotLoadedItemViewHolder extends RecyclerView.ViewHolder {
 
-        @NonNull
-        private final RecyclerView.Adapter parent;
         private final View progressBar;
         private final View retryButton;
         @Nullable
         private Subscription subscription;
 
-        public NotLoadedItemViewHolder(final View itemView, @NonNull final RecyclerView.Adapter parent) {
+        public NotLoadedItemViewHolder(final View itemView) {
             super(itemView);
-            this.parent = parent;
             progressBar = itemView.findViewById(R.id.item_not_loaded_progress_bar);
             retryButton = itemView.findViewById(R.id.item_not_loaded_retry_button);
         }
