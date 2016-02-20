@@ -19,6 +19,9 @@
 
 package ru.touchin.roboswag.components.navigation;
 
+import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
+
 /**
  * Created by Gavriil Sitnikov on 08/10/2014.
  * Base interface to listen fragment changing
@@ -26,5 +29,6 @@ package ru.touchin.roboswag.components.navigation;
 public interface OnFragmentStartedListener {
 
     /* Raises by fragment to notify that it is started */
-    void onFragmentStarted(AbstractBaseFragment fragment);
+    void onFragmentStarted(@NonNull Fragment fragment);
+
 }

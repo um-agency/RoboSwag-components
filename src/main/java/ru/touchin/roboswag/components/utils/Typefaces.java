@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Gavriil Sitnikov on 18/07/2014. [phase 1]
+ * Created by Gavriil Sitnikov on 18/07/2014.
  * Manager for typefaces stored in assets 'fonts' folder.
  */
 public final class Typefaces {

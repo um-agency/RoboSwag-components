@@ -1,11 +1,3 @@
-package ru.touchin.roboswag.components.navigation;
-
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-
 /*
  *  Copyright (c) 2015 RoboSwag (Gavriil Sitnikov, Vsevolod Ivanov)
  *
@@ -25,14 +17,28 @@ import android.view.View;
  *
  */
 
+package ru.touchin.roboswag.components.navigation;
+
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
+import android.view.ViewGroup;
+
+import java.io.Serializable;
+
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
  * Class to control view of specific fragment, activity and application by logic bridge.
+ * [phase 1]
  */
-public class ViewController<TLogicBridge,
+public class ViewController<TState extends Serializable,
+        TLogicBridge,
         TActivity extends AppCompatActivity,
         TFragment extends ViewControllerFragment<TLogicBridge, TActivity>> {
 
+    @NonNull
+    private final TState state;
     @NonNull
     private final TLogicBridge logicBridge;
     @NonNull
@@ -40,16 +46,25 @@ public class ViewController<TLogicBridge,
     @NonNull
     private final TFragment fragment;
     @NonNull
-    private final View view;
+    private final ViewGroup container;
 
-    //not completed yet
-    @SuppressWarnings("PMD.UnusedFormalParameter")
-    public ViewController(@NonNull final CreationContext<TLogicBridge, TActivity, TFragment> creationContext,
+    public ViewController(@NonNull final CreationContext<TState, TLogicBridge, TActivity, TFragment> creationContext,
                           @Nullable final Bundle savedInstanceState) {
+        this.state = creationContext.state;
         this.logicBridge = creationContext.logicBridge;
         this.activity = creationContext.activity;
         this.fragment = creationContext.fragment;
-        this.view = creationContext.view;
+        this.container = creationContext.container;
+    }
+
+    /**
+     * Returns specific object which contains state of ViewController.
+     *
+     * @return Object of TState type.
+     */
+    @NonNull
+    public TState getState() {
+        return state;
     }
 
     /**
@@ -65,7 +80,7 @@ public class ViewController<TLogicBridge,
     /**
      * Returns view's activity.
      *
-     * @return Returns activity;
+     * @return Returns activity.
      */
     @NonNull
     public TActivity getActivity() {
@@ -85,11 +100,11 @@ public class ViewController<TLogicBridge,
     /**
      * Returns view instantiated in {@link #getFragment} fragment attached to {@link #getActivity} activity.
      *
-     * @return Returns view;
+     * @return Returns view.
      */
     @NonNull
-    public View getView() {
-        return view;
+    public ViewGroup getContainer() {
+        return container;
     }
 
     public void onDestroy() {
@@ -99,10 +114,13 @@ public class ViewController<TLogicBridge,
     /**
      * Class to simplify constructor override.
      */
-    public static class CreationContext<TLogicBridge,
+    public static class CreationContext<TState extends Serializable,
+            TLogicBridge,
             TActivity extends AppCompatActivity,
             TFragment extends ViewControllerFragment<TLogicBridge, TActivity>> {
 
+        @NonNull
+        private final TState state;
         @NonNull
         private final TLogicBridge logicBridge;
         @NonNull
@@ -110,16 +128,18 @@ public class ViewController<TLogicBridge,
         @NonNull
         private final TFragment fragment;
         @NonNull
-        private final View view;
+        private final ViewGroup container;
 
-        public CreationContext(@NonNull final TLogicBridge logicBridge,
+        public CreationContext(@NonNull final TState state,
+                               @NonNull final TLogicBridge logicBridge,
                                @NonNull final TActivity activity,
                                @NonNull final TFragment fragment,
-                               @NonNull final View view) {
+                               @NonNull final ViewGroup container) {
+            this.state = state;
             this.logicBridge = logicBridge;
             this.activity = activity;
             this.fragment = fragment;
-            this.view = view;
+            this.container = container;
         }
 
     }

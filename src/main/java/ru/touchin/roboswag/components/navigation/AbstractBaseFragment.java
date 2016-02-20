@@ -106,7 +106,7 @@ public abstract class AbstractBaseFragment<TViewController extends AbstractBaseF
     protected abstract TViewController createViewController(@NonNull final View view, @Nullable final Bundle savedInstanceState);
 
     @Override
-    public void onFragmentStarted(@NonNull final AbstractBaseFragment fragment) {
+    public void onFragmentStarted(@NonNull final Fragment fragment) {
         //do nothing
     }
 

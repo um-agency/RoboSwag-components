@@ -168,7 +168,7 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     }
 
     @Override
-    public void onFragmentStarted(@NonNull final AbstractBaseFragment fragment) {
+    public void onFragmentStarted(@NonNull final Fragment fragment) {
         hideSoftInput();
     }
 

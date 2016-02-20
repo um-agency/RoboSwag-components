@@ -29,12 +29,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import ru.touchin.roboswag.core.log.Lc;
-
 import rx.functions.Action2;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
  * Fragment that have specific activity as a parent and can't be background.
+ * [phase 1]
  */
 public abstract class ViewFragment<TActivity extends AppCompatActivity> extends Fragment {
 
@@ -67,24 +67,23 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
         }
     }
 
-    @Deprecated
     @NonNull
     @Override
     public View onCreateView(@NonNull final LayoutInflater inflater,
                              @Nullable final ViewGroup container,
                              @Nullable final Bundle savedInstanceState) {
-        throw new IllegalStateException("Method onCreateView() should be override.");
+        throw new IllegalStateException("Method onCreateView() should be overridden");
     }
 
     @Deprecated
     @Override
     public void onActivityCreated(@Nullable final Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (getView() != null && getBaseActivity() != null) {
-            onActivityCreated(getView(), getBaseActivity(), savedInstanceState);
-        } else {
+        if (getView() == null || getBaseActivity() == null) {
             Lc.assertion("View and activity shouldn't be null");
+            return;
         }
+        onActivityCreated(getView(), getBaseActivity(), savedInstanceState);
     }
 
     /**
@@ -99,11 +98,11 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
     }
 
     private void callMethodAfterInstantiation(@NonNull final Action2<View, TActivity> action) {
-        if (getView() != null && getBaseActivity() != null) {
-            action.call(getView(), getBaseActivity());
-        } else {
+        if (getView() == null || getBaseActivity() == null) {
             Lc.assertion("View and activity shouldn't be null");
+            return;
         }
+        action.call(getView(), getBaseActivity());
     }
 
     @Deprecated
@@ -120,7 +119,11 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      * @param activity Activity which fragment attached to.
      */
     protected void onStart(@NonNull final View view, @NonNull final TActivity activity) {
-        //do nothing
+        if (getParentFragment() instanceof OnFragmentStartedListener) {
+            ((OnFragmentStartedListener) getParentFragment()).onFragmentStarted(this);
+        } else if (activity instanceof OnFragmentStartedListener) {
+            ((OnFragmentStartedListener) activity).onFragmentStarted(this);
+        }
     }
 
     @Deprecated
@@ -177,11 +180,11 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
     @Deprecated
     @Override
     public void onDestroyView() {
-        if (getView() != null) {
-            onDestroyView(getView());
-        } else {
+        if (getView() == null) {
             Lc.assertion("View shouldn't be null");
+            return;
         }
+        onDestroyView(getView());
         super.onDestroyView();
     }
 
