@@ -22,11 +22,14 @@ package ru.touchin.roboswag.components.listing.adapters;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
+
+import java.util.List;
 
 import ru.touchin.roboswag.components.R;
 import ru.touchin.roboswag.components.listing.ItemsProvider;
@@ -34,9 +37,6 @@ import ru.touchin.roboswag.components.listing.ListProvider;
 import ru.touchin.roboswag.components.utils.UiUtils;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
-
-import java.util.List;
-
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Actions;
@@ -113,9 +113,14 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
         if (viewType == NOT_LOADED_ITEM_TYPE) {
-            return new NotLoadedItemViewHolder(UiUtils.inflate(R.layout.item_not_loaded, parent));
+            return new NotLoadedItemViewHolder(UiUtils.inflate(getNotLoadedItemLayoutRes(), parent));
         }
         return onCreateItemViewHolder(parent, viewType);
+    }
+
+    @LayoutRes
+    protected int getNotLoadedItemLayoutRes() {
+        return R.layout.item_not_loaded;
     }
 
     public abstract TViewHolder onCreateItemViewHolder(final ViewGroup parent, final int viewType);
@@ -167,6 +172,10 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
         return itemsProvider != null ? itemsProvider.getSize() : 0;
     }
 
+    public boolean isOnClickListenerDisabled(@NonNull final TItem item) {
+        return false;
+    }
+
     public static class NotLoadedItemViewHolder extends RecyclerView.ViewHolder {
 
         private final View progressBar;
@@ -204,10 +213,6 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
                             });
         }
 
-    }
-
-    public boolean isOnClickListenerDisabled(@NonNull final TItem item) {
-        return false;
     }
 
     public interface OnItemClickListener<TItem> {
