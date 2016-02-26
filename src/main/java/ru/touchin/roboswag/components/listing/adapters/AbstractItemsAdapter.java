@@ -48,6 +48,8 @@ import rx.functions.Actions;
 public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerView.ViewHolder>
         extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    private static final int PRE_LOADING_COUNT = 10;
+
     private static final int LOADED_ITEM_TYPE = R.id.LOADED_ITEM_TYPE;
     private static final int NOT_LOADED_ITEM_TYPE = R.id.NOT_LOADED_ITEM_TYPE;
 
@@ -141,7 +143,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
                 return;
             }
             onBindItemToViewHolder((TViewHolder) holder, position, item);
-            itemsProvider.loadRange(Math.max(0, position - itemsProvider.getSize() / 2), position + itemsProvider.getSize() / 2).first()
+            itemsProvider.loadRange(Math.max(0, position - PRE_LOADING_COUNT), position + PRE_LOADING_COUNT).first()
                     .subscribe(Actions.empty(), Actions.empty());
             if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
                 UiUtils.setOnRippleClickListener(holder.itemView, () -> {
@@ -203,7 +205,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             retryButton.setVisibility(View.INVISIBLE);
             progressBar.setVisibility(View.VISIBLE);
             subscription = itemsProvider
-                    .loadRange(Math.max(0, position - itemsProvider.getSize() / 2), position + itemsProvider.getSize() / 2)
+                    .loadRange(Math.max(0, position - PRE_LOADING_COUNT), position + PRE_LOADING_COUNT)
                     .first()
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(Actions.empty(),
