@@ -22,7 +22,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 
 import ru.touchin.roboswag.components.navigation.AbstractBaseFragment;
-
+import rx.functions.Action0;
 import rx.functions.Func1;
 
 /**
@@ -125,18 +125,35 @@ public final class UiUtils {
         return false;
     }
 
+    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Action0 onClickListener, final long delay) {
+        setOnRippleClickListener(targetView, onClickListener != null ? v -> onClickListener.call() : null, delay);
+    }
+
+    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Action0 onClickListener) {
+        setOnRippleClickListener(targetView, onClickListener != null ? v -> onClickListener.call() : null, RIPPLE_EFFECT_DELAY);
+    }
+
     public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final View.OnClickListener onClickListener) {
+        setOnRippleClickListener(targetView, onClickListener, RIPPLE_EFFECT_DELAY);
+    }
+
+    public static void setOnRippleClickListener(@NonNull final View targetView,
+                                                @Nullable final View.OnClickListener onClickListener,
+                                                final long delay) {
         if (onClickListener == null) {
             targetView.setOnClickListener(null);
             return;
         }
 
-        final Runnable runnable = () -> onClickListener.onClick(targetView);
+        final Runnable runnable = () -> {
+            if (targetView.getWindowVisibility() == View.VISIBLE) {
+                onClickListener.onClick(targetView);
+            }
+        };
 
         targetView.setOnClickListener(v -> {
             RIPPLE_HANDLER.removeCallbacksAndMessages(null);
-            RIPPLE_HANDLER.postDelayed(runnable, RIPPLE_EFFECT_DELAY);
-
+            RIPPLE_HANDLER.postDelayed(runnable, delay);
         });
     }
 

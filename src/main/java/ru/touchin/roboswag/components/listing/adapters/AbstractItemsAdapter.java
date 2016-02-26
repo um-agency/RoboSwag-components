@@ -144,7 +144,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             itemsProvider.loadRange(Math.max(0, position - itemsProvider.getSize() / 2), position + itemsProvider.getSize() / 2).first()
                     .subscribe(Actions.empty(), Actions.empty());
             if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
-                holder.itemView.setOnClickListener(v -> {
+                UiUtils.setOnRippleClickListener(holder.itemView, () -> {
                     //TODO: fix multitap
                     postHandler.removeCallbacksAndMessages(null);
                     postHandler.postDelayed(() -> onItemClickListener.onItemClicked(item, position),
@@ -191,7 +191,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
 
         public void bindItem(final int position, @NonNull final ItemsProvider itemsProvider) {
             loadItem(position, itemsProvider);
-            retryButton.setOnClickListener(v -> loadItem(position, itemsProvider));
+            UiUtils.setOnRippleClickListener(retryButton, () -> loadItem(position, itemsProvider));
         }
 
         @SuppressWarnings("unchecked")
