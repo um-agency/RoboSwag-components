@@ -19,10 +19,27 @@
 
 package ru.touchin.roboswag.components.utils;
 
+import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
+import com.facebook.cache.common.CacheKey;
+import com.facebook.common.executors.CallerThreadExecutor;
+import com.facebook.common.references.CloseableReference;
 import com.facebook.common.util.UriUtil;
+import com.facebook.datasource.DataSource;
+import com.facebook.imagepipeline.bitmaps.PlatformBitmapFactory;
+import com.facebook.imagepipeline.datasource.BaseBitmapDataSubscriber;
+import com.facebook.imagepipeline.image.CloseableImage;
+import com.facebook.imagepipeline.request.ImageRequest;
+import com.facebook.imagepipeline.request.ImageRequestBuilder;
+import com.facebook.imagepipeline.request.Postprocessor;
+import com.facebook.drawee.backends.pipeline.Fresco;
+
+import javax.annotation.Nullable;
+
+import rx.functions.Action1;
 
 /**
  * Created by Gavriil Sitnikov on 20/10/2015.
@@ -30,12 +47,67 @@ import com.facebook.common.util.UriUtil;
  */
 public final class FrescoUtils {
 
+    private static final BaseBitmapDataSubscriber EMPTY_CALLBACK = new BaseBitmapDataSubscriber() {
+
+        @Override
+        protected void onNewResultImpl(final Bitmap bitmap) {
+            //do nothing
+        }
+
+        @Override
+        protected void onFailureImpl(final DataSource<CloseableReference<CloseableImage>> dataSource) {
+            //do nothing
+        }
+
+    };
+
     @NonNull
     public static Uri getResourceUri(final int resourceId) {
         return new Uri.Builder().scheme(UriUtil.LOCAL_RESOURCE_SCHEME).path(String.valueOf(resourceId)).build();
     }
 
+    public static void loadAndHandleBitmap(@NonNull final Context context,
+                                           @NonNull final Uri imageUrl,
+                                           @NonNull final Action1<Bitmap> bitmapHandler) {
+        final ImageRequest imageRequest = ImageRequestBuilder
+                .newBuilderWithSource(imageUrl)
+                .setPostprocessor(new RealCallback(bitmapHandler))
+                .build();
+        Fresco.getImagePipeline()
+                .fetchDecodedImage(imageRequest, context)
+                .subscribe(EMPTY_CALLBACK, CallerThreadExecutor.getInstance());
+    }
+
     private FrescoUtils() {
+    }
+
+    private static class RealCallback implements Postprocessor {
+
+        private final Action1<Bitmap> bitmapHandler;
+
+        private RealCallback(final Action1<Bitmap> bitmapHandler) {
+            this.bitmapHandler = bitmapHandler;
+        }
+
+        @Override
+        public CloseableReference<Bitmap> process(final Bitmap sourceBitmap, final PlatformBitmapFactory bitmapFactory) {
+            final CloseableReference<Bitmap> result
+                    = bitmapFactory.createBitmap(sourceBitmap.getWidth(), sourceBitmap.getHeight());
+            bitmapHandler.call(result.get());
+            return result;
+        }
+
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Nullable
+        @Override
+        public CacheKey getPostprocessorCacheKey() {
+            return null;
+        }
+
     }
 
 }
