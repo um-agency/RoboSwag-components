@@ -19,13 +19,11 @@
 
 package ru.touchin.roboswag.components.utils;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
 import com.facebook.cache.common.CacheKey;
-import com.facebook.common.executors.CallerThreadExecutor;
 import com.facebook.common.references.CloseableReference;
 import com.facebook.common.util.UriUtil;
 import com.facebook.datasource.DataSource;
@@ -35,7 +33,6 @@ import com.facebook.imagepipeline.image.CloseableImage;
 import com.facebook.imagepipeline.request.ImageRequest;
 import com.facebook.imagepipeline.request.ImageRequestBuilder;
 import com.facebook.imagepipeline.request.Postprocessor;
-import com.facebook.drawee.backends.pipeline.Fresco;
 
 import javax.annotation.Nullable;
 
@@ -47,7 +44,7 @@ import rx.functions.Action1;
  */
 public final class FrescoUtils {
 
-    private static final BaseBitmapDataSubscriber EMPTY_CALLBACK = new BaseBitmapDataSubscriber() {
+    public static final BaseBitmapDataSubscriber EMPTY_CALLBACK = new BaseBitmapDataSubscriber() {
 
         @Override
         protected void onNewResultImpl(final Bitmap bitmap) {
@@ -66,16 +63,13 @@ public final class FrescoUtils {
         return new Uri.Builder().scheme(UriUtil.LOCAL_RESOURCE_SCHEME).path(String.valueOf(resourceId)).build();
     }
 
-    public static void loadAndHandleBitmap(@NonNull final Context context,
-                                           @NonNull final Uri imageUrl,
-                                           @NonNull final Action1<Bitmap> bitmapHandler) {
-        final ImageRequest imageRequest = ImageRequestBuilder
+    @NonNull
+    public static ImageRequest loadAndHandleBitmapRequest(@NonNull final Uri imageUrl,
+                                                          @NonNull final Action1<Bitmap> bitmapHandler) {
+        return ImageRequestBuilder
                 .newBuilderWithSource(imageUrl)
                 .setPostprocessor(new RealCallback(bitmapHandler))
                 .build();
-        Fresco.getImagePipeline()
-                .fetchDecodedImage(imageRequest, context)
-                .subscribe(EMPTY_CALLBACK, CallerThreadExecutor.getInstance());
     }
 
     private FrescoUtils() {

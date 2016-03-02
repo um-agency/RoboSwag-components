@@ -52,16 +52,16 @@ public abstract class SocketConnection {
                 .<Socket>create(subscriber -> {
                     try {
                         final Socket socket = createSocket();
-                        socket.on(Socket.EVENT_CONNECT, args -> stateSubject.onNext(State.CONNECTED));
-                        socket.on(Socket.EVENT_CONNECTING, args -> stateSubject.onNext(State.CONNECTING));
-                        socket.on(Socket.EVENT_CONNECT_ERROR, args -> stateSubject.onNext(State.CONNECTION_ERROR));
-                        socket.on(Socket.EVENT_CONNECT_TIMEOUT, args -> stateSubject.onNext(State.CONNECTION_ERROR));
-                        socket.on(Socket.EVENT_DISCONNECT, args -> stateSubject.onNext(State.DISCONNECTED));
-                        socket.on(Socket.EVENT_RECONNECT_ATTEMPT, args -> stateSubject.onNext(State.CONNECTING));
-                        socket.on(Socket.EVENT_RECONNECTING, args -> stateSubject.onNext(State.CONNECTING));
-                        socket.on(Socket.EVENT_RECONNECT, args -> stateSubject.onNext(State.CONNECTED));
-                        socket.on(Socket.EVENT_RECONNECT_ERROR, args -> stateSubject.onNext(State.CONNECTION_ERROR));
-                        socket.on(Socket.EVENT_RECONNECT_FAILED, args -> stateSubject.onNext(State.CONNECTION_ERROR));
+                        socket.on(Socket.EVENT_CONNECT, args -> changeSocketState(State.CONNECTED));
+                        socket.on(Socket.EVENT_CONNECTING, args -> changeSocketState(State.CONNECTING));
+                        socket.on(Socket.EVENT_CONNECT_ERROR, args -> changeSocketState(State.CONNECTION_ERROR));
+                        socket.on(Socket.EVENT_CONNECT_TIMEOUT, args -> changeSocketState(State.CONNECTION_ERROR));
+                        socket.on(Socket.EVENT_DISCONNECT, args -> changeSocketState(State.DISCONNECTED));
+                        socket.on(Socket.EVENT_RECONNECT_ATTEMPT, args -> changeSocketState(State.CONNECTING));
+                        socket.on(Socket.EVENT_RECONNECTING, args -> changeSocketState(State.CONNECTING));
+                        socket.on(Socket.EVENT_RECONNECT, args -> changeSocketState(State.CONNECTED));
+                        socket.on(Socket.EVENT_RECONNECT_ERROR, args -> changeSocketState(State.CONNECTION_ERROR));
+                        socket.on(Socket.EVENT_RECONNECT_FAILED, args -> changeSocketState(State.CONNECTION_ERROR));
                         subscriber.onNext(socket);
                     } catch (final Exception exception) {
                         Lc.assertion(exception);
@@ -74,6 +74,11 @@ public abstract class SocketConnection {
                         .doOnUnsubscribe(socket::disconnect))
                 .replay(1)
                 .refCount();
+    }
+
+    private void changeSocketState(@NonNull final State state) {
+        stateSubject.onNext(state);
+        Lc.d("Socket state changed: %s", state);
     }
 
     @SuppressWarnings("unchecked")
@@ -134,7 +139,7 @@ public abstract class SocketConnection {
             } catch (final JsonProcessingException exception) {
                 Lc.assertion(exception);
             } catch (final Exception exception) {
-                Lc.e("Socket processing error", exception);
+                Lc.e(exception, "Socket processing error");
             }
         }
 
