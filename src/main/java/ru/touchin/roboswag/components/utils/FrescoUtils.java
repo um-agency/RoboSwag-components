@@ -42,6 +42,7 @@ import rx.functions.Action1;
  * Created by Gavriil Sitnikov on 20/10/2015.
  * TODO: fill description
  */
+@SuppressWarnings("PMD.AccessorClassGeneration")
 public final class FrescoUtils {
 
     public static final BaseBitmapDataSubscriber EMPTY_CALLBACK = new BaseBitmapDataSubscriber() {

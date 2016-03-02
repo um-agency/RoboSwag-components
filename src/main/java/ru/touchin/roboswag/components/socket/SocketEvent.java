@@ -63,11 +63,11 @@ public class SocketEvent<T> {
     }
 
     @Override
-    public boolean equals(final Object o) {
-        return o instanceof SocketEvent
-                && ((SocketEvent) o).name.equals(name)
-                && ((SocketEvent) o).clz.equals(clz)
-                && ((SocketEvent) o).eventDataHandler == eventDataHandler;
+    public boolean equals(final Object object) {
+        return object instanceof SocketEvent
+                && ((SocketEvent) object).name.equals(name)
+                && ((SocketEvent) object).clz.equals(clz)
+                && ((SocketEvent) object).eventDataHandler == eventDataHandler;
     }
 
     @Override
