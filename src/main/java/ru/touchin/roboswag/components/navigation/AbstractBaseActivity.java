@@ -38,12 +38,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
-import ru.touchin.roboswag.components.utils.PermissionState;
-import ru.touchin.roboswag.components.utils.UiUtils;
-
 import java.util.HashMap;
 import java.util.Map;
 
+import ru.touchin.roboswag.components.utils.PermissionState;
+import ru.touchin.roboswag.components.utils.UiUtils;
 import rx.Observable;
 import rx.subjects.PublishSubject;
 
@@ -308,16 +307,14 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
                     return true;
                 }
 
-                final int stackSize = fragmentManager.getBackStackEntryCount();
-
-                switch (stackSize) {
+                switch (fragmentManager.getBackStackEntryCount()) {
                     case 0:
                         return false;
                     case 1:
                         getSupportFragmentManager().popBackStack();
                         return true;
                     default:
-                        findTopFragmentAndPopBackStackToIt(stackSize);
+                        popBackStackToTopFragment();
                         return true;
                 }
             default:
@@ -329,22 +326,6 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         postHandler.removeCallbacksAndMessages(null);
-    }
-
-    private void findTopFragmentAndPopBackStackToIt(final int stackSize) {
-        final FragmentManager fragmentManager = getSupportFragmentManager();
-        String lastFragmentName = fragmentManager.getBackStackEntryAt(stackSize - 1).getName();
-        for (int i = stackSize - 2; i >= 0; i--) {
-            final String currentFragmentName = fragmentManager.getBackStackEntryAt(i).getName();
-            if (currentFragmentName == null || !currentFragmentName.equals(lastFragmentName)) {
-                fragmentManager.popBackStackImmediate(currentFragmentName, 0);
-                break;
-            } else if (i == 0) {
-                fragmentManager.popBackStackImmediate(currentFragmentName, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            } else {
-                lastFragmentName = currentFragmentName;
-            }
-        }
     }
 
     /* Hides device keyboard */
