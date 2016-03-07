@@ -35,10 +35,8 @@ import java.io.Serializable;
 public class ViewController<TState extends Serializable,
         TLogicBridge,
         TActivity extends AppCompatActivity,
-        TFragment extends ViewControllerFragment<TLogicBridge, TActivity>> {
+        TFragment extends ViewControllerFragment<TState, TLogicBridge, TActivity>> {
 
-    @NonNull
-    private final TState state;
     @NonNull
     private final TLogicBridge logicBridge;
     @NonNull
@@ -50,21 +48,10 @@ public class ViewController<TState extends Serializable,
 
     public ViewController(@NonNull final CreationContext<TState, TLogicBridge, TActivity, TFragment> creationContext,
                           @Nullable final Bundle savedInstanceState) {
-        this.state = creationContext.state;
         this.logicBridge = creationContext.logicBridge;
         this.activity = creationContext.activity;
         this.fragment = creationContext.fragment;
         this.container = creationContext.container;
-    }
-
-    /**
-     * Returns specific object which contains state of ViewController.
-     *
-     * @return Object of TState type.
-     */
-    @NonNull
-    public TState getState() {
-        return state;
     }
 
     /**
@@ -117,10 +104,8 @@ public class ViewController<TState extends Serializable,
     public static class CreationContext<TState extends Serializable,
             TLogicBridge,
             TActivity extends AppCompatActivity,
-            TFragment extends ViewControllerFragment<TLogicBridge, TActivity>> {
+            TFragment extends ViewControllerFragment<TState, TLogicBridge, TActivity>> {
 
-        @NonNull
-        private final TState state;
         @NonNull
         private final TLogicBridge logicBridge;
         @NonNull
@@ -130,12 +115,10 @@ public class ViewController<TState extends Serializable,
         @NonNull
         private final ViewGroup container;
 
-        public CreationContext(@NonNull final TState state,
-                               @NonNull final TLogicBridge logicBridge,
+        public CreationContext(@NonNull final TLogicBridge logicBridge,
                                @NonNull final TActivity activity,
                                @NonNull final TFragment fragment,
                                @NonNull final ViewGroup container) {
-            this.state = state;
             this.logicBridge = logicBridge;
             this.activity = activity;
             this.fragment = fragment;

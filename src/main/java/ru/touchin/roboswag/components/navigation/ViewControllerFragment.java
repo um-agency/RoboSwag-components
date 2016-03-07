@@ -47,7 +47,8 @@ import rx.subjects.BehaviorSubject;
  * Fragment that creates {@link ViewController} between {@link #onViewCreated} and {@link #onDestroyView}.
  * [phase 1]
  */
-public abstract class ViewControllerFragment<TLogicBridge, TActivity extends AppCompatActivity> extends ViewFragment<TActivity> {
+public abstract class ViewControllerFragment<TState extends Serializable, TLogicBridge, TActivity extends AppCompatActivity>
+        extends ViewFragment<TActivity> {
 
     private static final String VIEW_CONTROLLER_STATE_EXTRA = "VIEW_CONTROLLER_STATE_EXTRA";
 
@@ -57,7 +58,7 @@ public abstract class ViewControllerFragment<TLogicBridge, TActivity extends App
      * @param state State to use into ViewController.
      * @return Returns bundle with state inside.
      */
-    public static Bundle createState(@NonNull final Serializable state) {
+    public static Bundle createState(@Nullable final Serializable state) {
         final Bundle result = new Bundle();
         result.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, state);
         return result;
@@ -69,6 +70,17 @@ public abstract class ViewControllerFragment<TLogicBridge, TActivity extends App
     @Nullable
     private ViewController viewController;
     private Subscription viewControllerSubscription;
+    private TState state;
+
+    /**
+     * Returns specific object which contains state of ViewController.
+     *
+     * @return Object of TState type.
+     */
+    @Nullable
+    public TState getState() {
+        return state;
+    }
 
     /**
      * It should return specific Service class where from this fragment should get interface to logic.
@@ -84,11 +96,11 @@ public abstract class ViewControllerFragment<TLogicBridge, TActivity extends App
      * @return Returns class of specific ViewController.
      */
     @NonNull
-    protected abstract Class<? extends ViewController<? extends Serializable, TLogicBridge, TActivity,
-            ? extends ViewControllerFragment<TLogicBridge, TActivity>>> getViewControllerClass();
+    protected abstract Class<? extends ViewController<TState, TLogicBridge, TActivity,
+            ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>>> getViewControllerClass();
 
     // need throwable for app stability
-    @SuppressWarnings("PMD.AvoidCatchingThrowable")
+    @SuppressWarnings({"PMD.AvoidCatchingThrowable", "unchecked"})
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,32 +109,25 @@ public abstract class ViewControllerFragment<TLogicBridge, TActivity extends App
             Lc.assertion("Context is null in onCreate");
         }
 
+        state = savedInstanceState != null
+                ? (TState) savedInstanceState.getSerializable(VIEW_CONTROLLER_STATE_EXTRA)
+                : (getArguments() != null ? (TState) getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
+
         viewControllerSubscription = Observable
-                .combineLatest(Observable.<Serializable>create(subscriber -> {
-                            final Serializable state = savedInstanceState != null
-                                    ? savedInstanceState.getSerializable(VIEW_CONTROLLER_STATE_EXTRA)
-                                    : (getArguments() != null ? getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
-                            if (state != null) {
-                                subscriber.onNext(state);
-                            } else {
-                                Lc.assertion("State should be stored into arguments or savedInstanceState");
-                            }
-                            subscriber.onCompleted();
-                        }).subscribeOn(backgroundScheduler),
-                        RxAndroidUtils.observeService(getContext(), getLogicServiceClass())
+                .combineLatest(RxAndroidUtils.observeService(getContext(), getLogicServiceClass())
                                 .map(service -> service != null ? service.getLogicBridge() : null)
                                 .distinctUntilChanged()
                                 .observeOn(backgroundScheduler),
                         activitySubject.distinctUntilChanged().observeOn(backgroundScheduler),
                         viewSubject.distinctUntilChanged().observeOn(backgroundScheduler),
-                        (state, logicBridge, activity, view) -> {
+                        (logicBridge, activity, view) -> {
                             if (activity == null || view == null || logicBridge == null) {
                                 return null;
                             }
 
                             final ViewController.CreationContext<? extends Serializable, TLogicBridge, TActivity,
-                                    ? extends ViewControllerFragment<TLogicBridge, TActivity>> creationContext
-                                    = new ViewController.CreationContext<>(state, logicBridge, activity, this, view.first);
+                                    ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>> creationContext
+                                    = new ViewController.CreationContext<>(logicBridge, activity, this, view.first);
                             if (getViewControllerClass().getConstructors().length > 1) {
                                 Lc.assertion("There should be single constructor for " + getViewControllerClass());
                                 return null;
@@ -189,7 +194,7 @@ public abstract class ViewControllerFragment<TLogicBridge, TActivity extends App
     public void onSaveInstanceState(@NonNull final Bundle stateToSave) {
         super.onSaveInstanceState(stateToSave);
         if (viewController != null) {
-            stateToSave.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, viewController.getState());
+            stateToSave.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, state);
         } else if (getArguments() != null && getArguments().containsKey(VIEW_CONTROLLER_STATE_EXTRA)) {
             stateToSave.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA));
         }
