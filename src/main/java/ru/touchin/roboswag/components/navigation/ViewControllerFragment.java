@@ -23,7 +23,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,21 +32,21 @@ import android.widget.FrameLayout;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
-import ru.touchin.roboswag.components.services.LogicService;
 import ru.touchin.roboswag.core.log.Lc;
+import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import ru.touchin.roboswag.core.utils.android.RxAndroidUtils;
 import rx.Observable;
 import rx.Scheduler;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.exceptions.OnErrorThrowable;
 import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
- * Fragment that creates {@link ViewController} between {@link #onViewCreated} and {@link #onDestroyView}.
- * [phase 1]
+ * Fragment instantiated in specific activity of {@link TActivity} type that is holding {@link ViewController} inside.
  */
-public abstract class ViewControllerFragment<TState extends Serializable, TLogicBridge, TActivity extends AppCompatActivity>
+public abstract class ViewControllerFragment<TState extends Serializable, TLogicBridge, TActivity extends ViewControllerActivity<TLogicBridge>>
         extends ViewFragment<TActivity> {
 
     private static final String VIEW_CONTROLLER_STATE_EXTRA = "VIEW_CONTROLLER_STATE_EXTRA";
@@ -58,6 +57,7 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
      * @param state State to use into ViewController.
      * @return Returns bundle with state inside.
      */
+    @NonNull
     public static Bundle createState(@Nullable final Serializable state) {
         final Bundle result = new Bundle();
         result.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, state);
@@ -69,6 +69,7 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     private final Scheduler backgroundScheduler = RxAndroidUtils.createLooperScheduler();
     @Nullable
     private ViewController viewController;
+    @Nullable
     private Subscription viewControllerSubscription;
     private TState state;
 
@@ -83,30 +84,22 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     }
 
     /**
-     * It should return specific Service class where from this fragment should get interface to logic.
-     *
-     * @return Returns class of specific LogicService.
-     */
-    @NonNull
-    protected abstract Class<? extends LogicService<TLogicBridge>> getLogicServiceClass();
-
-    /**
      * It should return specific ViewController class to control instantiated view by logic bridge after activity creation.
      *
      * @return Returns class of specific ViewController.
      */
     @NonNull
-    protected abstract Class<? extends ViewController<TState, TLogicBridge, TActivity,
+    protected abstract Class<? extends ViewController<TLogicBridge, TActivity,
             ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>>> getViewControllerClass();
 
-    // need throwable for app stability
-    @SuppressWarnings({"PMD.AvoidCatchingThrowable", "unchecked"})
+    @SuppressWarnings("unchecked")
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         if (getContext() == null) {
             Lc.assertion("Context is null in onCreate");
+            return;
         }
 
         state = savedInstanceState != null
@@ -114,26 +107,26 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
                 : (getArguments() != null ? (TState) getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
 
         viewControllerSubscription = Observable
-                .combineLatest(RxAndroidUtils.observeService(getContext(), getLogicServiceClass())
-                                .map(service -> service != null ? service.getLogicBridge() : null)
+                .combineLatest(activitySubject
+                                .switchMap(activity -> activity != null ? activity.observeLogicBridge() : Observable.just(null))
                                 .distinctUntilChanged()
                                 .observeOn(backgroundScheduler),
                         activitySubject.distinctUntilChanged().observeOn(backgroundScheduler),
                         viewSubject.distinctUntilChanged().observeOn(backgroundScheduler),
                         (logicBridge, activity, view) -> {
-                            if (activity == null || view == null || logicBridge == null) {
+                            if (logicBridge == null || activity == null || view == null) {
                                 return null;
                             }
 
-                            final ViewController.CreationContext<? extends Serializable, TLogicBridge, TActivity,
+                            final ViewController.CreationContext<TLogicBridge, TActivity,
                                     ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>> creationContext
                                     = new ViewController.CreationContext<>(logicBridge, activity, this, view.first);
-                            if (getViewControllerClass().getConstructors().length > 1) {
-                                Lc.assertion("There should be single constructor for " + getViewControllerClass());
-                                return null;
+                            if (getViewControllerClass().getConstructors().length != 1) {
+                                throw OnErrorThrowable
+                                        .from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
                             }
+                            final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
                             try {
-                                final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
                                 switch (constructor.getParameterTypes().length) {
                                     case 2:
                                         return (ViewController) constructor.newInstance(creationContext, view.second);
@@ -143,13 +136,12 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
                                         Lc.assertion("Wrong constructor parameters count: " + constructor.getParameterTypes().length);
                                         return null;
                                 }
-                            } catch (final Throwable throwable) {
-                                Lc.assertion(throwable);
-                                return null;
+                            } catch (final Exception exception) {
+                                throw OnErrorThrowable.from(exception);
                             }
                         })
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::onViewControllerChanged);
+                .subscribe(this::onViewControllerChanged, Lc::assertion);
     }
 
     @Deprecated
@@ -181,22 +173,23 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
         if (this.viewController == null) {
             return;
         }
-        if (getView() instanceof PlaceholderView) {
-            ((PlaceholderView) getView()).removeAllViews();
-            ((PlaceholderView) getView())
-                    .addView(this.viewController.getContainer(), ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-        } else {
+        if (getView() == null || !(getView() instanceof PlaceholderView)) {
             Lc.assertion("View of fragment should be PlaceholderView");
         }
+        ((PlaceholderView) getView()).removeAllViews();
+        ((PlaceholderView) getView())
+                .addView(this.viewController.getContainer(), ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        viewController.getActivity().supportInvalidateOptionsMenu();
     }
 
     @Override
-    public void onSaveInstanceState(@NonNull final Bundle stateToSave) {
-        super.onSaveInstanceState(stateToSave);
+    public void onSaveInstanceState(@NonNull final Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
         if (viewController != null) {
-            stateToSave.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, state);
+            viewController.onSaveInstanceState(savedInstanceState);
+            savedInstanceState.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, state);
         } else if (getArguments() != null && getArguments().containsKey(VIEW_CONTROLLER_STATE_EXTRA)) {
-            stateToSave.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA));
+            savedInstanceState.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA));
         }
     }
 
@@ -208,7 +201,10 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
 
     @Override
     public void onDestroy() {
-        viewControllerSubscription.unsubscribe();
+        if (viewControllerSubscription != null) {
+            viewControllerSubscription.unsubscribe();
+            viewControllerSubscription = null;
+        }
         super.onDestroy();
     }
 

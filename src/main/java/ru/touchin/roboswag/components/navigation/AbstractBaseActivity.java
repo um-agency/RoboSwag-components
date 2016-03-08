@@ -51,7 +51,7 @@ import rx.subjects.PublishSubject;
  * TODO: fill description
  */
 @SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods"})
-public abstract class AbstractBaseActivity extends AppCompatActivity
+public abstract class AbstractBaseActivity extends BaseActivity
         implements FragmentManager.OnBackStackChangedListener,
         OnFragmentStartedListener {
 
@@ -66,8 +66,6 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
     @Nullable
     private String requestedPermission;
     private final PublishSubject<PermissionState> requestPermissionsEvent = PublishSubject.create();
-
-    private final Handler postHandler = new Handler();
 
     /* Returns id of main fragments container where navigation-node fragments should be */
     protected int getFragmentContainerId() {
@@ -322,24 +320,6 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        postHandler.removeCallbacksAndMessages(null);
-    }
-
-    /* Hides device keyboard */
-    public void hideSoftInput() {
-        if (getCurrentFocus() != null) {
-            final InputMethodManager inputManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-            final View mainFragmentContainer = findViewById(getFragmentContainerId());
-            if (mainFragmentContainer != null) {
-                mainFragmentContainer.requestFocus();
-            }
-        }
-    }
-
     public void popBackStackToTopFragment() {
         final FragmentManager fragmentManager = getSupportFragmentManager();
         final int stackSize = fragmentManager.getBackStackEntryCount();
@@ -351,13 +331,6 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
             }
         }
         fragmentManager.popBackStackImmediate(currentFragmentName, 0);
-    }
-
-    /* Shows device keyboard */
-    public void showSoftInput(@NonNull final View view) {
-        view.requestFocus();
-        final InputMethodManager inputManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        inputManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
     }
 
     @Nullable

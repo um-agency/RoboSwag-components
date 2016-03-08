@@ -20,22 +20,27 @@
 package ru.touchin.roboswag.components.navigation;
 
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.SparseArray;
+import android.view.View;
 import android.view.ViewGroup;
 
-import java.io.Serializable;
+import rx.Observable;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
  * Class to control view of specific fragment, activity and application by logic bridge.
- * [phase 1]
  */
-public class ViewController<TState extends Serializable,
-        TLogicBridge,
-        TActivity extends AppCompatActivity,
-        TFragment extends ViewControllerFragment<TState, TLogicBridge, TActivity>> {
+public class ViewController<TLogicBridge,
+        TActivity extends ViewControllerActivity<TLogicBridge>,
+        TFragment extends ViewControllerFragment<?, TLogicBridge, TActivity>> {
+
+    private static final String SUPPORT_FRAGMENT_VIEW_STATE_EXTRA = "android:view_state";
 
     @NonNull
     private final TLogicBridge logicBridge;
@@ -45,13 +50,35 @@ public class ViewController<TState extends Serializable,
     private final TFragment fragment;
     @NonNull
     private final ViewGroup container;
+    @NonNull
+    private final Subscription savedStateSubscription;
 
-    public ViewController(@NonNull final CreationContext<TState, TLogicBridge, TActivity, TFragment> creationContext,
+    public ViewController(@NonNull final CreationContext<TLogicBridge, TActivity, TFragment> creationContext,
                           @Nullable final Bundle savedInstanceState) {
         this.logicBridge = creationContext.logicBridge;
         this.activity = creationContext.activity;
         this.fragment = creationContext.fragment;
         this.container = creationContext.container;
+
+        savedStateSubscription = getRestoreSavedStateObservable(creationContext, savedInstanceState)
+                .filter(savedState -> savedState != null)
+                .first()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::onRestoreSavedState);
+    }
+
+    /**
+     * Sets {@link Observable} which will be used to get a moment when controller should restore it's state.
+     * It will be waits for first non-null {@link Bundle} that contains saved state.
+     *
+     * @param creationContext    Context passed into {@link ViewController} constructor.
+     * @param savedInstanceState Saved state of {@link ViewController}.
+     * @return {@link Observable} to get restore time to.
+     */
+    @NonNull
+    protected Observable<Bundle> getRestoreSavedStateObservable(@NonNull final CreationContext<TLogicBridge, TActivity, TFragment> creationContext,
+                                                                @Nullable final Bundle savedInstanceState) {
+        return Observable.just(savedInstanceState);
     }
 
     /**
@@ -67,7 +94,7 @@ public class ViewController<TState extends Serializable,
     /**
      * Returns view's activity.
      *
-     * @return Returns activity.
+     * @return Returns activity;
      */
     @NonNull
     public TActivity getActivity() {
@@ -87,24 +114,40 @@ public class ViewController<TState extends Serializable,
     /**
      * Returns view instantiated in {@link #getFragment} fragment attached to {@link #getActivity} activity.
      *
-     * @return Returns view.
+     * @return Returns view;
      */
     @NonNull
-    public ViewGroup getContainer() {
+    public View getContainer() {
         return container;
     }
 
-    public void onDestroy() {
-        //do nothing
+    /**
+     * Called when savedInstanceState is ready to be restored.
+     *
+     * @param savedInstanceState Saved state.
+     */
+    protected void onRestoreSavedState(@NonNull final Bundle savedInstanceState) {
+        final SparseArray<Parcelable> viewStates = savedInstanceState.getSparseParcelableArray(SUPPORT_FRAGMENT_VIEW_STATE_EXTRA);
+        if (viewStates != null) {
+            container.restoreHierarchyState(viewStates);
+        }
     }
+
+    public void onSaveInstanceState(@NonNull final Bundle savedInstanceState) {
+        // do nothing
+    }
+
+    public void onDestroy() {
+        savedStateSubscription.unsubscribe();
+    }
+
 
     /**
      * Class to simplify constructor override.
      */
-    public static class CreationContext<TState extends Serializable,
-            TLogicBridge,
-            TActivity extends AppCompatActivity,
-            TFragment extends ViewControllerFragment<TState, TLogicBridge, TActivity>> {
+    public static class CreationContext<TLogicBridge,
+            TActivity extends ViewControllerActivity<TLogicBridge>,
+            TFragment extends ViewControllerFragment<?, TLogicBridge, TActivity>> {
 
         @NonNull
         private final TLogicBridge logicBridge;
