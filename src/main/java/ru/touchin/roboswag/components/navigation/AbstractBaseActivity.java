@@ -310,9 +310,6 @@ public abstract class AbstractBaseActivity extends AppCompatActivity
                 switch (fragmentManager.getBackStackEntryCount()) {
                     case 0:
                         return false;
-                    case 1:
-                        getSupportFragmentManager().popBackStack();
-                        return true;
                     default:
                         popBackStackToTopFragment();
                         return true;
