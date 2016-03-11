@@ -110,6 +110,12 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
         addViewControllerToStack(viewControllerClass, targetFragment, state, viewControllerClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
+    public void setViewControllerAsTop(@NonNull final Class<? extends ViewController<TLogicBridge,
+            ? extends ViewControllerActivity<TLogicBridge>,
+            ? extends SimpleViewControllerFragment<Mock, TLogicBridge, ? extends ViewControllerActivity<TLogicBridge>>>> viewControllerClass) {
+        addViewControllerToStack(viewControllerClass, null, null, viewControllerClass.getName() + ' ' + TOP_FRAGMENT_TAG_MARK, null);
+    }
+
     public <TState extends Serializable> void setViewControllerAsTop(@NonNull final Class<? extends ViewController<TLogicBridge,
             ? extends ViewControllerActivity<TLogicBridge>,
             ? extends SimpleViewControllerFragment<TState, TLogicBridge, ? extends ViewControllerActivity<TLogicBridge>>>> viewControllerClass,
@@ -123,6 +129,12 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
                                                                      @Nullable final TState state,
                                                                      @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addViewControllerToStack(viewControllerClass, null, state, viewControllerClass.getName() + ' ' + TOP_FRAGMENT_TAG_MARK, transactionSetup);
+    }
+
+    public void setInitialViewController(@NonNull final Class<? extends ViewController<TLogicBridge,
+            ? extends ViewControllerActivity<TLogicBridge>,
+            ? extends SimpleViewControllerFragment<Mock, TLogicBridge, ? extends ViewControllerActivity<TLogicBridge>>>> viewControllerClass) {
+        setInitialViewController(viewControllerClass, null, null);
     }
 
     public <TState extends Serializable> void setInitialViewController(@NonNull final Class<? extends ViewController<TLogicBridge,
@@ -157,6 +169,11 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
             @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addToStack(SimpleViewControllerFragment.class, targetFragment,
                 SimpleViewControllerFragment.createState(viewControllerClass, state), backStackTag, transactionSetup);
+    }
+
+    //TODO: remove somehow???
+    public static class Mock implements Serializable {
+        // just mock class
     }
 
 }

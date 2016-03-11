@@ -35,7 +35,7 @@ public class SimpleViewControllerFragment<TState extends Serializable, TLogicBri
 
     @NonNull
     @Override
-    protected Class<? extends ViewController<TLogicBridge, TActivity,
+    public Class<? extends ViewController<TLogicBridge, TActivity,
             ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>>> getViewControllerClass() {
         return viewControllerClass;
     }

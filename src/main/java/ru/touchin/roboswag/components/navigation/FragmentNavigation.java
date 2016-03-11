@@ -64,6 +64,22 @@ public class FragmentNavigation {
         return context;
     }
 
+    /**
+     * Returns if last fragment in stack is top (added by setFragment) like fragment from sidebar menu.
+     *
+     * @return True if last fragment on stack has TOP_FRAGMENT_TAG_MARK.
+     */
+    public boolean isCurrentFragmentTop() {
+        if (fragmentManager.getBackStackEntryCount() == 0) {
+            return true;
+        }
+
+        final String topFragmentTag = fragmentManager
+                .getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1)
+                .getName();
+        return topFragmentTag != null && topFragmentTag.contains(TOP_FRAGMENT_TAG_MARK);
+    }
+
     @SuppressLint("CommitTransaction")
     protected void addToStack(@NonNull final Class<? extends Fragment> fragmentClass,
                               @Nullable final Fragment targetFragment,

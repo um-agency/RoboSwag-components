@@ -1,7 +1,6 @@
 package ru.touchin.roboswag.components.navigation;
 
 import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 
 import ru.touchin.roboswag.components.services.LogicService;
 import ru.touchin.roboswag.core.utils.android.RxAndroidUtils;

@@ -23,9 +23,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.util.SparseArray;
-import android.view.View;
 import android.view.ViewGroup;
 
 import rx.Observable;
@@ -61,8 +59,8 @@ public class ViewController<TLogicBridge,
         this.container = creationContext.container;
 
         savedStateSubscription = getRestoreSavedStateObservable(creationContext, savedInstanceState)
-                .filter(savedState -> savedState != null)
                 .first()
+                .filter(savedState -> savedState != null)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(this::onRestoreSavedState);
     }
@@ -117,7 +115,7 @@ public class ViewController<TLogicBridge,
      * @return Returns view;
      */
     @NonNull
-    public View getContainer() {
+    public ViewGroup getContainer() {
         return container;
     }
 

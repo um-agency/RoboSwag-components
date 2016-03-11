@@ -89,7 +89,7 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
      * @return Returns class of specific ViewController.
      */
     @NonNull
-    protected abstract Class<? extends ViewController<TLogicBridge, TActivity,
+    public abstract Class<? extends ViewController<TLogicBridge, TActivity,
             ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>>> getViewControllerClass();
 
     @SuppressWarnings("unchecked")

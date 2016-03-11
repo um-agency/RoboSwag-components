@@ -36,7 +36,8 @@ import rx.functions.Action2;
  * Fragment that have specific activity as a parent and can't be background.
  * [phase 1]
  */
-public abstract class ViewFragment<TActivity extends AppCompatActivity> extends Fragment {
+public abstract class ViewFragment<TActivity extends AppCompatActivity> extends Fragment
+        implements OnFragmentStartedListener {
 
     /**
      * Returns if fragment have parent fragment.
@@ -73,6 +74,11 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
                              @Nullable final ViewGroup container,
                              @Nullable final Bundle savedInstanceState) {
         throw new IllegalStateException("Method onCreateView() should be overridden");
+    }
+
+    @Override
+    public void onFragmentStarted(@NonNull final Fragment fragment) {
+        //do nothing
     }
 
     @Deprecated
