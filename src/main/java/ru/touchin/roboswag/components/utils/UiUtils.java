@@ -32,7 +32,7 @@ import rx.functions.Func1;
 public final class UiUtils {
 
     // to enable ripple effect on tap
-    public static final long RIPPLE_EFFECT_DELAY = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? 250 : 0;
+    public static final long RIPPLE_EFFECT_DELAY = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? 150 : 0;
     private static final int MAX_METRICS_TRIES_COUNT = 5;
 
     // TODO remove on activity stop

@@ -296,28 +296,21 @@ public abstract class AbstractBaseActivity extends BaseActivity
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-
-                final FragmentManager fragmentManager = getSupportFragmentManager();
-
-                if (UiUtils.tryForeachFragment(fragmentManager, fragment -> fragment.onHomePressed(this), true)) {
-                    return true;
-                }
-
-                switch (fragmentManager.getBackStackEntryCount()) {
-                    case 0:
-                        return false;
-                    case 1:
-                        getSupportFragmentManager().popBackStack();
-                        return true;
-                    default:
-                        popBackStackToTopFragment();
-                        return true;
-                }
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() != android.R.id.home) {
+            return super.onOptionsItemSelected(item);
         }
+
+        final FragmentManager fragmentManager = getSupportFragmentManager();
+
+        if (UiUtils.tryForeachFragment(fragmentManager, fragment -> fragment.onHomePressed(this), true)) {
+            return true;
+        }
+
+        if (fragmentManager.getBackStackEntryCount() != 0) {
+            popBackStackToTopFragment();
+            return true;
+        }
+        return false;
     }
 
     public void popBackStackToTopFragment() {

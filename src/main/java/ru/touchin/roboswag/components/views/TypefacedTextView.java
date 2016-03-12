@@ -67,6 +67,14 @@ public class TypefacedTextView extends TextView implements TypefacedView {
         requestLayout();
     }
 
+    @Override
+    public void setText(final CharSequence text, final BufferType type) {
+        super.setText(text, type);
+        if (isScalable) {
+            requestLayout();
+        }
+    }
+
     @SuppressWarnings("checkstyle:methodlength")
     @Override
     protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec) {
