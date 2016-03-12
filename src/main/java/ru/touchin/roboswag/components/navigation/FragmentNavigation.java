@@ -217,6 +217,11 @@ public class FragmentNavigation {
     public void setInitial(@NonNull final Class<? extends Fragment> fragmentClass,
                            @Nullable final Bundle args,
                            @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+        beforeSetInitialActions();
+        setAsTop(fragmentClass, args, transactionSetup);
+    }
+
+    protected void beforeSetInitialActions() {
         if (fragmentManager.isDestroyed()) {
             Lc.assertion("FragmentManager is destroyed");
             return;
@@ -225,8 +230,6 @@ public class FragmentNavigation {
         if (fragmentManager.getBackStackEntryCount() > 0) {
             fragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
-
-        setAsTop(fragmentClass, args, transactionSetup);
     }
 
 }
