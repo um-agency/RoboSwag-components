@@ -47,8 +47,8 @@ public class MaterialProgressDrawable extends Drawable {
 
     private static final int UPDATE_INTERVAL = 10;
 
-    private static final int DEFAULT_STROKE_WIDTH_DP = 5;
-    private static final Parameters DEFAULT_PARAMETERS = new Parameters(30, 310, 4, 12, 4, 8);
+    private static final float DEFAULT_STROKE_WIDTH_DP = 4.5f;
+    private static final Parameters DEFAULT_PARAMETERS = new Parameters(20, 270, 4, 12, 4, 8);
 
     private WeakReference<Callback> lastDrawCallback;
 
