@@ -113,7 +113,6 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
      *
      * @return Object of TState type.
      */
-    @Nullable
     public TState getState() {
         return state;
     }
