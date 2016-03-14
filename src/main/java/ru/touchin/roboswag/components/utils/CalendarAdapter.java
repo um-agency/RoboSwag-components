@@ -17,13 +17,15 @@
  *
  */
 
-package org.roboswag.components.utils;
+package ru.touchin.roboswag.components.utils;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +37,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+
+import ru.touchin.roboswag.core.log.Lc;
 
 /**
  * Created by Ilia Kurtov on 11.03.2016.
@@ -76,6 +80,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
         final TextView view = new TextView(context);
         final RecyclerView.LayoutParams layoutParams = new RecyclerView.LayoutParams(100, 100);
+        view.setTextColor(Color.BLACK);
         view.setLayoutParams(layoutParams);
         view.setGravity(Gravity.CENTER);
 
@@ -108,7 +113,6 @@ public class CalendarAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
             calendar.setTime(new Date((((CalendarDayItem) calendarItem).getFirstDayReal() + (position - calendarItem.getStartRange())) * ONE_DAY_LENGTH));
             ((DayViewHolder) holder).bindItem(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
         }
-
     }
 
     @Override

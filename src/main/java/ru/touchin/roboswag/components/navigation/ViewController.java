@@ -166,6 +166,26 @@ public class ViewController<TLogicBridge,
             this.container = container;
         }
 
+        @NonNull
+        public TLogicBridge getLogicBridge() {
+            return logicBridge;
+        }
+
+        @NonNull
+        public TActivity getActivity() {
+            return activity;
+        }
+
+        @NonNull
+        public TFragment getFragment() {
+            return fragment;
+        }
+
+        @NonNull
+        public ViewGroup getContainer() {
+            return container;
+        }
+
     }
 
 }
