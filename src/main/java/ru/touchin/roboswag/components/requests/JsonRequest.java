@@ -29,7 +29,7 @@ import com.google.api.client.util.ObjectParser;
  * Created by Gavriil Sitnikov on 07/14.
  * Request that returns data in JSON format
  */
-public abstract class AbstractJsonRequest<T> extends AbstractHttpRequest<T> {
+public abstract class JsonRequest<T> extends HttpRequest<T> {
 
     protected static final JsonFactory DEFAULT_JSON_FACTORY = new JacksonFactory();
 
@@ -39,7 +39,7 @@ public abstract class AbstractJsonRequest<T> extends AbstractHttpRequest<T> {
         return DEFAULT_JSON_FACTORY.createJsonObjectParser();
     }
 
-    protected AbstractJsonRequest(@NonNull final Class<T> responseResultType) {
+    protected JsonRequest(@NonNull final Class<T> responseResultType) {
         super(responseResultType);
     }
 

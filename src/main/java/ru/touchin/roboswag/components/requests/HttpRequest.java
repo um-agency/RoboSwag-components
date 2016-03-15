@@ -35,11 +35,6 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
 
-import ru.touchin.roboswag.core.log.Lc;
-import ru.touchin.roboswag.core.log.LcHelper;
-import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
-import ru.touchin.roboswag.core.utils.StringUtils;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -48,6 +43,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import okio.Buffer;
+import ru.touchin.roboswag.core.log.Lc;
+import ru.touchin.roboswag.core.log.LcHelper;
+import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
+import ru.touchin.roboswag.core.utils.StringUtils;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 
@@ -55,7 +54,7 @@ import rx.schedulers.Schedulers;
  * Created by Gavriil Sitnikov on 13/11/2015.
  * TODO: fill description
  */
-public abstract class AbstractHttpRequest<T> {
+public abstract class HttpRequest<T> {
 
     private static final String CACHE_PARAMETER_SEPARATOR = "#";
     private static final int CACHE_MAX_KEY_SIZE = 128;
@@ -82,7 +81,7 @@ public abstract class AbstractHttpRequest<T> {
     private Request request;
     private Call call;
 
-    protected AbstractHttpRequest(@NonNull final Class<T> responseResultType) {
+    protected HttpRequest(@NonNull final Class<T> responseResultType) {
         this.responseResultType = responseResultType;
     }
 
@@ -97,11 +96,11 @@ public abstract class AbstractHttpRequest<T> {
     @NonNull
     protected abstract String getUrl();
 
-    protected void setupUrlParameters(@NonNull final GenericUrl url) {
+    protected void onConfigureUrlParameters(@NonNull final GenericUrl url) {
         // to be overridden. default does nothing
     }
 
-    protected void setupHeaders(@NonNull final Map<String, String> headers) {
+    protected void onConfigureHeaders(@NonNull final Map<String, String> headers) {
         // to be overridden. default does nothing
     }
 
@@ -114,8 +113,8 @@ public abstract class AbstractHttpRequest<T> {
     protected Request.Builder createHttpRequest() throws IOException {
         final GenericUrl genericUrl = new GenericUrl(getUrl());
         final Map<String, String> headers = new HashMap<>();
-        setupHeaders(headers);
-        setupUrlParameters(genericUrl);
+        onConfigureHeaders(headers);
+        onConfigureUrlParameters(genericUrl);
         return new Request.Builder().url(genericUrl.build()).headers(Headers.of(headers));
     }
 

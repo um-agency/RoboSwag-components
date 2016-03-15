@@ -33,12 +33,12 @@ import java.io.IOException;
  * Created by Gavriil Sitnikov on 07/14.
  * Post request that returns data in JSON format
  */
-public abstract class AbstractPostJsonRequest<T> extends AbstractJsonRequest<T> {
+public abstract class PostJsonRequest<T> extends JsonRequest<T> {
 
     @NonNull
     protected abstract AbstractHttpContent getContent();
 
-    protected AbstractPostJsonRequest(@NonNull final Class<T> responseResultType) {
+    protected PostJsonRequest(@NonNull final Class<T> responseResultType) {
         super(responseResultType);
     }
 

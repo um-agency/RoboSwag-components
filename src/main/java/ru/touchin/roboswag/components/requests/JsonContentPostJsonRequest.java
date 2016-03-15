@@ -21,24 +21,27 @@ package ru.touchin.roboswag.components.requests;
 
 import android.support.annotation.NonNull;
 
-import com.squareup.okhttp.Request;
-
-import java.io.IOException;
+import com.google.api.client.http.AbstractHttpContent;
+import com.google.api.client.http.json.JsonHttpContent;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
- * Get request that returns data in JSON format
+ * Post request that includes JSON data as content and returns data in JSON format
  */
-public abstract class AbstractGetJsonRequest<T> extends AbstractJsonRequest<T> {
-
-    protected AbstractGetJsonRequest(@NonNull final Class<T> responseResultType) {
-        super(responseResultType);
-    }
+public abstract class JsonContentPostJsonRequest<T> extends PostJsonRequest<T> {
 
     @NonNull
     @Override
-    protected Request.Builder createHttpRequest() throws IOException {
-        return super.createHttpRequest().get();
+    protected AbstractHttpContent getContent() {
+        return new JsonHttpContent(DEFAULT_JSON_FACTORY, getContentObject());
     }
+
+    protected JsonContentPostJsonRequest(@NonNull final Class<T> responseResultType) {
+        super(responseResultType);
+    }
+
+    /* Returns content object to store in JSON format */
+    @NonNull
+    protected abstract Object getContentObject();
 
 }
