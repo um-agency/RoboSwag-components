@@ -25,6 +25,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -136,6 +138,8 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
             return;
         }
 
+        setHasOptionsMenu(getParentFragment() == null);
+
         state = savedInstanceState != null
                 ? (TState) savedInstanceState.getSerializable(VIEW_CONTROLLER_STATE_EXTRA)
                 : (getArguments() != null ? (TState) getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
@@ -161,6 +165,14 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     public void onActivityCreated(@NonNull final View view, @NonNull final TActivity activity, @Nullable final Bundle savedInstanceState) {
         super.onActivityCreated(view, activity, savedInstanceState);
         activitySubject.onNext(activity);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        if (viewController != null) {
+            viewController.onConfigureNavigation(menu, inflater);
+        }
     }
 
     private void onViewControllerChanged(@Nullable final ViewController viewController) {

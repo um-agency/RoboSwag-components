@@ -98,6 +98,14 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
         addViewControllerToStack(viewControllerClass, null, state, null, transactionSetup);
     }
 
+    public void pushViewControllerForResult(@NonNull final Class<? extends ViewController<TLogicBridge,
+            ? extends ViewControllerActivity<TLogicBridge>,
+            ? extends StatelessViewControllerFragment<TLogicBridge, ? extends ViewControllerActivity<TLogicBridge>>>> viewControllerClass,
+                                            @NonNull final Fragment targetFragment) {
+        addStatelessViewControllerToStack(viewControllerClass, targetFragment,
+                viewControllerClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, null);
+    }
+
     public <TState extends Serializable> void pushViewControllerForResult(@NonNull final Class<? extends ViewController<TLogicBridge,
             ? extends ViewControllerActivity<TLogicBridge>,
             ? extends SimpleViewControllerFragment<TState, TLogicBridge, ? extends ViewControllerActivity<TLogicBridge>>>> viewControllerClass,

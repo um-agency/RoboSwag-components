@@ -23,7 +23,10 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.util.SparseArray;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.ViewGroup;
 
 import rx.Observable;
@@ -117,6 +120,17 @@ public class ViewController<TLogicBridge,
     @NonNull
     public ViewGroup getContainer() {
         return container;
+    }
+
+    /**
+     * Calls when activity configuring ActionBar, Toolbar, Sidebar etc.
+     * If it will be called or not depends on {@link Fragment#hasOptionsMenu())} and {@link Fragment#isMenuVisible()}.
+     *
+     * @param menu     The options menu in which you place your items;
+     * @param inflater Helper to inflate menu items.
+     */
+    public void onConfigureNavigation(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
+        // do nothing
     }
 
     /**
