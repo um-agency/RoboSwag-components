@@ -20,16 +20,11 @@
 package ru.touchin.roboswag.components.utils;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -38,65 +33,108 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-import ru.touchin.roboswag.core.log.Lc;
 
 /**
  * Created by Ilia Kurtov on 11.03.2016.
  * //TODO: fill description
  */
-public class CalendarAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHolder, THeaderViewHolder extends RecyclerView.ViewHolder,
+        TEmptyViewHolder extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int HEADER_ITEM_TYPE = 0;
     private static final int EMPTY_ITEM_TYPE = 1;
     private static final int DAY_ITEM_TYPE = 2;
 
     public static final int DAYS_IN_WEEK = 7;
-    public static final long ONE_WEEK_LENGTH = TimeUnit.DAYS.toMillis(7);
+    public static final int MONTHS_IN_YEAR = 12;
+
     public static final long ONE_DAY_LENGTH = TimeUnit.DAYS.toMillis(1);
-    private int shift;
-    private int emptyShift;
-    private boolean isWeekShifted;
-    private boolean isMonthStarted;
+
     private List<CalendarItem> calendarItems;
 
-    private Calendar startDate;
-    private Calendar endDate;
+    @Nullable
+    private Integer startSelectionPosition;
+    @Nullable
+    private Integer endSelectionPosition;
 
+    @NonNull
     private final Context context;
+    private String[] monthsNames = null;
+
+    @Nullable
+    public String[] getMonthsNames() {
+        return monthsNames;
+    }
+
+    protected CalendarAdapter(@NonNull final Context context, @Nullable final String... monthsNames) {
+        this.context = context;
+        if (monthsNames != null && monthsNames.length == MONTHS_IN_YEAR) {
+            this.monthsNames = monthsNames;
+        }
+    }
 
     public void setRange(@NonNull final Calendar startDate, @NonNull final Calendar endDate) {
-        this.startDate = getCleanDate(startDate);
-        this.endDate = getCleanDate(endDate);
-
-        fillRanges();
+        fillRanges(getCleanDate(startDate), getCleanDate(endDate));
         getItemCount();
     }
 
-    public CalendarAdapter(@NonNull final Context context) {
-        this.context = context;
+    public void setSelectedRange(@Nullable final Calendar startSelectionDate, @Nullable final Calendar endSelectionDate) {
+        if (startSelectionDate != null) {
+            startSelectionPosition = findPositionByDate(getCleanDate(startSelectionDate).getTimeInMillis() / ONE_DAY_LENGTH);
+        }
+        if (endSelectionDate != null) {
+            endSelectionPosition = findPositionByDate(getCleanDate(endSelectionDate).getTimeInMillis() / ONE_DAY_LENGTH);
+        }
+
+        notifySelectedDaysChanged();
+    }
+
+    private void notifySelectedDaysChanged() {
+        if (startSelectionPosition == null && endSelectionPosition == null) {
+            return;
+        }
+        if (startSelectionPosition == null) {
+            notifyItemRangeChanged(endSelectionPosition, 1);
+            return;
+        }
+        if (endSelectionPosition == null) {
+            notifyItemRangeChanged(startSelectionPosition, 1);
+            return;
+        }
+        notifyItemRangeChanged(startSelectionPosition, endSelectionPosition - startSelectionPosition);
     }
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
-        final TextView view = new TextView(context);
-        final RecyclerView.LayoutParams layoutParams = new RecyclerView.LayoutParams(100, 100);
-        view.setTextColor(Color.BLACK);
-        view.setLayoutParams(layoutParams);
-        view.setGravity(Gravity.CENTER);
-
         switch (viewType) {
             case HEADER_ITEM_TYPE:
-                return new HeaderViewHolder(view);
+                return createHeaderViewHolder(parent);
             case EMPTY_ITEM_TYPE:
-                return new EmptyViewHolder(view);
+                return createEmptyViewHolder(parent);
             case DAY_ITEM_TYPE:
-                return new DayViewHolder(view);
+                return createDayViewHolder(parent);
             default:
                 return null;
         }
     }
 
+    protected abstract THeaderViewHolder createHeaderViewHolder(final ViewGroup parent);
+
+    protected abstract TEmptyViewHolder createEmptyViewHolder(final ViewGroup parent);
+
+    protected abstract TDayViewHolder createDayViewHolder(final ViewGroup parent);
+
+    protected abstract void bindHeaderItem(@NonNull final THeaderViewHolder viewHolder, @NonNull final String monthName);
+
+    protected abstract void bindEmptyItem(@NonNull final TEmptyViewHolder viewHolder, @NonNull final CalendarState state);
+
+    protected abstract void bindDayItem(@NonNull final TDayViewHolder viewHolder,
+                                        @NonNull final String day,
+                                        @NonNull final Date date,
+                                        @NonNull final CalendarState state);
+
     @Override
+    @SuppressWarnings("unchecked")
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
         final CalendarItem calendarItem = find(position);
 
@@ -105,13 +143,39 @@ public class CalendarAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     new StaggeredGridLayoutManager.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             layoutParams.setFullSpan(true);
             holder.itemView.setLayoutParams(layoutParams);
-            ((HeaderViewHolder) holder).bindItem(((CalendarHeaderItem) calendarItem).getMonth());
+            final String monthName;
+            if (monthsNames != null) {
+                monthName = monthsNames[((CalendarHeaderItem) calendarItem).getMonth()];
+            } else {
+                monthName = String.valueOf(((CalendarHeaderItem) calendarItem).getMonth());
+            }
+            bindHeaderItem((THeaderViewHolder) holder, monthName);
         } else if (calendarItem instanceof CalendarEmptyItem) {
-            ((EmptyViewHolder) holder).bindItem();
+            if (startSelectionPosition != null && endSelectionPosition != null
+                    && position >= startSelectionPosition && position <= endSelectionPosition) {
+                bindEmptyItem((TEmptyViewHolder) holder, CalendarState.SELECTED_MIDDLE);
+            } else {
+                bindEmptyItem((TEmptyViewHolder) holder, CalendarState.NOT_SELECTED);
+            }
         } else if (calendarItem instanceof CalendarDayItem) {
-            final Calendar calendar = Calendar.getInstance();
-            calendar.setTime(new Date((((CalendarDayItem) calendarItem).getFirstDayReal() + (position - calendarItem.getStartRange())) * ONE_DAY_LENGTH));
-            ((DayViewHolder) holder).bindItem(String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
+            final String currentDay = String.valueOf(((CalendarDayItem) calendarItem).getPositionOfFirstDay()
+                    + position - calendarItem.getStartRange());
+            final Date currentDate = new Date((((CalendarDayItem) calendarItem).getDateOfFirstDay() + position - calendarItem.getStartRange()) * ONE_DAY_LENGTH);
+            if (startSelectionPosition != null && position == startSelectionPosition) {
+                bindDayItem((TDayViewHolder) holder, currentDay, currentDate, CalendarState.SELECTED_FIRST);
+                return;
+            }
+            if (endSelectionPosition != null && position == endSelectionPosition) {
+                bindDayItem((TDayViewHolder) holder, currentDay, currentDate, CalendarState.SELECTED_LAST);
+
+                return;
+            }
+            if (startSelectionPosition != null && endSelectionPosition != null && position >= startSelectionPosition && position <= endSelectionPosition) {
+                bindDayItem((TDayViewHolder) holder, currentDay, currentDate, CalendarState.SELECTED_MIDDLE);
+                return;
+            }
+
+            bindDayItem((TDayViewHolder) holder, currentDay, currentDate, CalendarState.NOT_SELECTED);
         }
     }
 
@@ -154,12 +218,52 @@ public class CalendarAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return null;
     }
 
+    @Nullable
+    public Integer findPositionByDate(final long date) {
+        if (calendarItems != null) {
+            int low = 0;
+            int high = calendarItems.size() - 1;
+            int addition = 0;
+            float count = 0;
+            while (true) {
+                final int mid = (low + high) / 2 + addition;
+                if (calendarItems.get(mid) instanceof CalendarDayItem) {
+                    if (date < ((CalendarDayItem) calendarItems.get(mid)).getDateOfFirstDay()) {
+                        if (mid == 0) {
+                            break;
+                        }
+                        high = mid - 1;
+                    } else {
+                        final long endDate = ((CalendarDayItem) calendarItems.get(mid)).getDateOfFirstDay() +
+                                calendarItems.get(mid).getEndRange() - calendarItems.get(mid).getStartRange();
+                        if (date > endDate) {
+                            if (mid == calendarItems.size()) {
+                                break;
+                            }
+                            low = mid + 1;
+                        } else {
+                            return (int) (calendarItems.get(mid).getStartRange()
+                                    + date - ((CalendarDayItem) calendarItems.get(mid)).getDateOfFirstDay());
+                        }
+
+                    }
+                    count = 0;
+                    addition = 0;
+                } else {
+                    count++;
+                    addition = ((int) Math.ceil(count / 2)) * ((int) (StrictMath.pow(-1, count)));
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public int getItemCount() {
         return calendarItems.isEmpty() ? 0 : calendarItems.get(calendarItems.size() - 1).getEndRange();
     }
 
-    private void fillRanges() {
+    private void fillRanges(@NonNull final Calendar startDate, @NonNull final Calendar endDate) {
         calendarItems = new ArrayList<>();
 
         final Calendar calendar = Calendar.getInstance(Locale.getDefault());
@@ -186,10 +290,13 @@ public class CalendarAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 calendar.setTime(new Date(calendar.getTimeInMillis() + ONE_DAY_LENGTH));
 
                 final int firstDayInWeek = getFirstDateStart(calendar);
-                calendarItems.add(new CalendarDayItem(firstRangeDate, shift + daysEnded, shift + daysEnded + (daysInCurrentMonth - firstRange) - 1));
+                calendarItems.add(new CalendarDayItem(firstRangeDate, firstRange + 1,
+                        shift + daysEnded, shift + daysEnded + (daysInCurrentMonth - firstRange) - 1));
                 daysEnded += daysInCurrentMonth - firstRange;
+                if (daysEnded == totalDaysCount) {
+                    return;
+                }
                 firstRangeDate = calendar.getTimeInMillis() / ONE_DAY_LENGTH + 1;
-
                 firstRange = 0;
 
                 if (firstDayInWeek != 0) {
@@ -206,7 +313,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 }
 
             } else {
-                calendarItems.add(new CalendarDayItem(firstRangeDate, shift + daysEnded, shift + totalDaysCount));
+                calendarItems.add(new CalendarDayItem(firstRangeDate, firstRange + 1, shift + daysEnded, shift + totalDaysCount));
                 break;
             }
         }
@@ -229,63 +336,30 @@ public class CalendarAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         return calendar;
     }
 
-    public static class DayViewHolder extends RecyclerView.ViewHolder {
-
-        private final TextView dayText;
-
-        public DayViewHolder(final View itemView) {
-            super(itemView);
-            dayText = (TextView) itemView;
-        }
-
-        public void bindItem(@NonNull final String day) {
-            dayText.setText(day);
-        }
-    }
-
-    public static class EmptyViewHolder extends RecyclerView.ViewHolder {
-
-        private final TextView dayText;
-
-        public EmptyViewHolder(final View itemView) {
-            super(itemView);
-            dayText = (TextView) itemView;
-        }
-
-        public void bindItem() {
-            dayText.setText(null);
-        }
-    }
-
-    public static class HeaderViewHolder extends RecyclerView.ViewHolder {
-
-        private final TextView dayText;
-
-        public HeaderViewHolder(final View itemView) {
-            super(itemView);
-            dayText = (TextView) itemView;
-        }
-
-        public void bindItem(final int monthName) {
-            dayText.setText(String.valueOf(monthName));
-        }
-
+    protected boolean isToday(@NonNull final Date currentDate, @NonNull final Date date) {
+        return currentDate.getTime() / ONE_DAY_LENGTH == date.getTime() / ONE_DAY_LENGTH;
     }
 
     public static class CalendarDayItem implements CalendarItem {
 
         private final long firstDayReal;
+        private final int firstDayInMonth;
         private final int startRange;
         private final int endRange;
 
-        public CalendarDayItem(final long firstDayReal, final int startRange, final int endRange) {
+        public CalendarDayItem(final long firstDayReal, final int firstDayInMonth, final int startRange, final int endRange) {
             this.firstDayReal = firstDayReal;
+            this.firstDayInMonth = firstDayInMonth;
             this.startRange = startRange;
             this.endRange = endRange;
         }
 
-        public long getFirstDayReal() {
+        public long getDateOfFirstDay() {
             return firstDayReal;
+        }
+
+        public int getPositionOfFirstDay() {
+            return firstDayInMonth;
         }
 
         @Override
@@ -354,6 +428,13 @@ public class CalendarAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
         int getStartRange();
 
         int getEndRange();
+    }
+
+    public enum CalendarState {
+        SELECTED_FIRST,
+        SELECTED_MIDDLE,
+        SELECTED_LAST,
+        NOT_SELECTED
     }
 
 }
