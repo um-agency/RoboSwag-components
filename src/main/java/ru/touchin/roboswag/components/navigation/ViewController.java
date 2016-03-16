@@ -29,9 +29,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.ViewGroup;
 
+import ru.touchin.roboswag.core.log.Lc;
 import rx.Observable;
-import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
@@ -52,7 +53,7 @@ public class ViewController<TLogicBridge,
     @NonNull
     private final ViewGroup container;
     @NonNull
-    private final Subscription savedStateSubscription;
+    private final BehaviorSubject<Boolean> isDestroyed = BehaviorSubject.create(false);
 
     public ViewController(@NonNull final CreationContext<TLogicBridge, TActivity, TFragment> creationContext,
                           @Nullable final Bundle savedInstanceState) {
@@ -61,10 +62,9 @@ public class ViewController<TLogicBridge,
         this.fragment = creationContext.fragment;
         this.container = creationContext.container;
 
-        savedStateSubscription = getRestoreSavedStateObservable(creationContext, savedInstanceState)
+        bind(getRestoreSavedStateObservable(creationContext, savedInstanceState)
                 .first()
-                .filter(savedState -> savedState != null)
-                .observeOn(AndroidSchedulers.mainThread())
+                .filter(savedState -> savedState != null))
                 .subscribe(this::onRestoreSavedState);
     }
 
@@ -133,6 +133,18 @@ public class ViewController<TLogicBridge,
         // do nothing
     }
 
+    @NonNull
+    protected <T> Observable<T> bind(@NonNull final Observable<T> observable) {
+        return observable
+                .onErrorResumeNext(throwable -> {
+                    // there should be no exceptions during binding
+                    Lc.assertion(throwable);
+                    return Observable.empty();
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .takeUntil(isDestroyed.filter(isDestroyed -> isDestroyed).first());
+    }
+
     /**
      * Called when savedInstanceState is ready to be restored.
      *
@@ -150,9 +162,8 @@ public class ViewController<TLogicBridge,
     }
 
     public void onDestroy() {
-        savedStateSubscription.unsubscribe();
+        isDestroyed.onNext(true);
     }
-
 
     /**
      * Class to simplify constructor override.
