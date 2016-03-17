@@ -17,6 +17,7 @@ import rx.functions.Func1;
  */
 public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
 
+    @SuppressWarnings("CPD-START")
     public ViewControllerNavigation(@NonNull final ViewControllerActivity<TLogicBridge> context,
                                     @NonNull final FragmentManager fragmentManager,
                                     @IdRes final int containerViewId) {
@@ -40,7 +41,8 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
             ? extends ViewControllerActivity<TLogicBridge>>> fragmentClass,
                                                             @NonNull final Fragment targetFragment,
                                                             @NonNull final TState state) {
-        addToStack(fragmentClass, targetFragment, ViewControllerFragment.createState(state), fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, null);
+        addToStack(fragmentClass, targetFragment, ViewControllerFragment.createState(state), fragmentClass.getName() + ';'
+                + WITH_TARGET_FRAGMENT_TAG_MARK, null);
     }
 
     public <TState extends Serializable> void pushForResult(@NonNull final Class<? extends ViewControllerFragment<TState, TLogicBridge,
@@ -48,7 +50,8 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
                                                             @NonNull final Fragment targetFragment,
                                                             @Nullable final TState state,
                                                             @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
-        addToStack(fragmentClass, targetFragment, ViewControllerFragment.createState(state), fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
+        addToStack(fragmentClass, targetFragment, ViewControllerFragment.createState(state), fragmentClass.getName() + ';'
+                + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
     public <TState extends Serializable> void setAsTop(@NonNull final Class<? extends ViewControllerFragment<TState, TLogicBridge,
@@ -111,7 +114,8 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
             ? extends SimpleViewControllerFragment<TState, TLogicBridge, ? extends ViewControllerActivity<TLogicBridge>>>> viewControllerClass,
                                                                           @NonNull final Fragment targetFragment,
                                                                           @NonNull final TState state) {
-        addViewControllerToStack(viewControllerClass, targetFragment, state, viewControllerClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, null);
+        addViewControllerToStack(viewControllerClass, targetFragment, state, viewControllerClass.getName() + ';'
+                + WITH_TARGET_FRAGMENT_TAG_MARK, null);
     }
 
     public <TState extends Serializable> void pushViewControllerForResult(@NonNull final Class<? extends ViewController<TLogicBridge,
@@ -119,8 +123,10 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
             ? extends SimpleViewControllerFragment<TState, TLogicBridge, ? extends ViewControllerActivity<TLogicBridge>>>> viewControllerClass,
                                                                           @NonNull final Fragment targetFragment,
                                                                           @Nullable final TState state,
-                                                                          @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
-        addViewControllerToStack(viewControllerClass, targetFragment, state, viewControllerClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
+                                                                          @Nullable final Func1<FragmentTransaction, FragmentTransaction>
+                                                                                  transactionSetup) {
+        addViewControllerToStack(viewControllerClass, targetFragment, state, viewControllerClass.getName() + ';'
+                + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
     public void setViewControllerAsTop(@NonNull final Class<? extends ViewController<TLogicBridge,
@@ -140,7 +146,8 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
             ? extends ViewControllerActivity<TLogicBridge>,
             ? extends SimpleViewControllerFragment<TState, TLogicBridge, ? extends ViewControllerActivity<TLogicBridge>>>> viewControllerClass,
                                                                      @Nullable final TState state,
-                                                                     @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                                                                     @Nullable final Func1<FragmentTransaction, FragmentTransaction>
+                                                                             transactionSetup) {
         addViewControllerToStack(viewControllerClass, null, state, viewControllerClass.getName() + ' ' + TOP_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
@@ -162,7 +169,8 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
             ? extends ViewControllerActivity<TLogicBridge>,
             ? extends SimpleViewControllerFragment<TState, TLogicBridge, ? extends ViewControllerActivity<TLogicBridge>>>> viewControllerClass,
                                                                        @Nullable final TState state,
-                                                                       @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                                                                       @Nullable final Func1<FragmentTransaction, FragmentTransaction>
+                                                                               transactionSetup) {
         beforeSetInitialActions();
         setViewControllerAsTop(viewControllerClass, state, transactionSetup);
     }
@@ -177,6 +185,7 @@ public class ViewControllerNavigation<TLogicBridge> extends FragmentNavigation {
                 SimpleViewControllerFragment.createState(viewControllerClass, state), backStackTag, transactionSetup);
     }
 
+    @SuppressWarnings("CPD-END")
     protected <TState extends Serializable> void addStatelessViewControllerToStack(
             @NonNull final Class<? extends ViewController<TLogicBridge, ? extends ViewControllerActivity<TLogicBridge>, ?>> viewControllerClass,
             @Nullable final Fragment targetFragment,

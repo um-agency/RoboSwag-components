@@ -42,7 +42,7 @@ public class SimpleViewControllerFragment<TState extends Serializable, TLogicBri
      * @return Returns {@link Bundle} with state inside.
      */
     @NonNull
-    public static Bundle createState(@NonNull Class<? extends ViewController> viewControllerClass,
+    public static Bundle createState(@NonNull final Class<? extends ViewController> viewControllerClass,
                                      @Nullable final Serializable state) {
         final Bundle result = ViewControllerFragment.createState(state);
         result.putSerializable(VIEW_CONTROLLER_CLASS_EXTRA, viewControllerClass);

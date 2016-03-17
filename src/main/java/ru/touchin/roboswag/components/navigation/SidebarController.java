@@ -45,25 +45,8 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
                              @NonNull final View sidebar) {
         this.drawerLayout = drawerLayout;
         this.sidebar = sidebar;
-        drawerToggle = new ActionBarDrawerToggle(activity, drawerLayout, 0, 0) {
+        drawerToggle = new MyActionBarDrawerToggle(activity, drawerLayout);
 
-            @Override
-            public void onDrawerClosed(final View view) {
-                activity.supportInvalidateOptionsMenu();
-            }
-
-            @Override
-            public void onDrawerOpened(final View drawerView) {
-                activity.hideSoftInput();
-                activity.supportInvalidateOptionsMenu();
-            }
-
-            @Override
-            public void onDrawerSlide(final View drawerView, final float slideOffset) {
-                super.onDrawerSlide(drawerView, 0);
-            }
-
-        };
         drawerLayout.addDrawerListener(drawerToggle);
         activity.getSupportFragmentManager().addOnBackStackChangedListener(this);
         activity.addOnBackPressedListener(this);
@@ -126,4 +109,30 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
         return false;
     }
 
+    private static class MyActionBarDrawerToggle extends ActionBarDrawerToggle {
+
+        private final BaseActivity activity;
+
+        public MyActionBarDrawerToggle(final BaseActivity activity, final DrawerLayout drawerLayout) {
+            super(activity, drawerLayout, 0, 0);
+            this.activity = activity;
+        }
+
+        @Override
+        public void onDrawerClosed(final View view) {
+            activity.supportInvalidateOptionsMenu();
+        }
+
+        @Override
+        public void onDrawerOpened(final View drawerView) {
+            activity.hideSoftInput();
+            activity.supportInvalidateOptionsMenu();
+        }
+
+        @Override
+        public void onDrawerSlide(final View drawerView, final float slideOffset) {
+            super.onDrawerSlide(drawerView, 0);
+        }
+
+    }
 }

@@ -183,7 +183,7 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
         if (this.viewController == null) {
             return;
         }
-        if (getView() == null || !(getView() instanceof PlaceholderView)) {
+        if (!(getView() instanceof PlaceholderView)) {
             Lc.assertion("View of fragment should be PlaceholderView");
             return;
         }
