@@ -20,7 +20,6 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
     public static final int EMPTY_ITEM_TYPE = 1;
     public static final int DAY_ITEM_TYPE = 2;
 
-    public static final int DAYS_IN_WEEK = 7;
     public static final int MONTHS_IN_YEAR = 12;
     public static final long ONE_DAY_LENGTH = TimeUnit.DAYS.toMillis(1);
 
@@ -106,7 +105,7 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
 
     protected abstract TDayViewHolder createDayViewHolder(final ViewGroup parent);
 
-    protected abstract void bindHeaderItem(@NonNull final THeaderViewHolder viewHolder, @NonNull final String monthName);
+    protected abstract void bindHeaderItem(@NonNull final THeaderViewHolder viewHolder, @NonNull final String monthName, final boolean isFirstMonth);
 
     protected abstract void bindEmptyItem(@NonNull final TEmptyViewHolder viewHolder, @NonNull final CalendarAdapter.State state);
 
@@ -128,7 +127,7 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
             final String monthName;
             monthName = monthsNames != null ? monthsNames[((CalendarHeaderItem) calendarItem).getMonth()]
                     : String.valueOf(((CalendarHeaderItem) calendarItem).getMonth());
-            bindHeaderItem((THeaderViewHolder) holder, monthName);
+            bindHeaderItem((THeaderViewHolder) holder, monthName, position == 0);
         } else if (calendarItem instanceof CalendarEmptyItem) {
             if (startSelectionPosition != null && endSelectionPosition != null
                     && position >= startSelectionPosition && position <= endSelectionPosition) {
