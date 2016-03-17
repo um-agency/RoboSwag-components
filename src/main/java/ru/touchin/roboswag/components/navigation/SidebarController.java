@@ -45,20 +45,7 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
                              @NonNull final View sidebar) {
         this.drawerLayout = drawerLayout;
         this.sidebar = sidebar;
-        drawerToggle = new ActionBarDrawerToggle(activity, drawerLayout, 0, 0) {
-
-            @Override
-            public void onDrawerClosed(final View view) {
-                activity.supportInvalidateOptionsMenu();
-            }
-
-            @Override
-            public void onDrawerOpened(final View drawerView) {
-                activity.hideSoftInput();
-                activity.supportInvalidateOptionsMenu();
-            }
-
-        };
+        drawerToggle = new MyActionBarDrawerToggle(activity, drawerLayout);
         drawerLayout.addDrawerListener(drawerToggle);
         activity.getSupportFragmentManager().addOnBackStackChangedListener(this);
         activity.addOnBackPressedListener(this);
@@ -119,6 +106,28 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
             return true;
         }
         return false;
+    }
+
+    private static class MyActionBarDrawerToggle extends ActionBarDrawerToggle {
+
+        private final BaseActivity activity;
+
+        public MyActionBarDrawerToggle(final BaseActivity activity, final DrawerLayout drawerLayout) {
+            super(activity, drawerLayout, 0, 0);
+            this.activity = activity;
+        }
+
+        @Override
+        public void onDrawerClosed(final View view) {
+            activity.supportInvalidateOptionsMenu();
+        }
+
+        @Override
+        public void onDrawerOpened(final View drawerView) {
+            activity.hideSoftInput();
+            activity.supportInvalidateOptionsMenu();
+        }
+
     }
 
 }

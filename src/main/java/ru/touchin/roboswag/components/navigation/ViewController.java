@@ -124,7 +124,7 @@ public class ViewController<TLogicBridge,
 
     /**
      * Calls when activity configuring ActionBar, Toolbar, Sidebar etc.
-     * If it will be called or not depends on {@link Fragment#hasOptionsMenu())} and {@link Fragment#isMenuVisible()}.
+     * If it will be called or not depends on {@link Fragment#hasOptionsMenu()} and {@link Fragment#isMenuVisible()}.
      *
      * @param menu     The options menu in which you place your items;
      * @param inflater Helper to inflate menu items.

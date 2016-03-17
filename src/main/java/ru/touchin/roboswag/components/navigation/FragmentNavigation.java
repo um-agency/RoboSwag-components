@@ -132,6 +132,8 @@ public class FragmentNavigation {
         return false;
     }
 
+
+    @SuppressWarnings("PMD.ShortMethodName")
     public boolean up() {
         return backTo(backStackEntry -> backStackEntry.getName().endsWith(TOP_FRAGMENT_TAG_MARK));
     }

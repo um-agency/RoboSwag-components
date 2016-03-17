@@ -38,6 +38,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 
 import ru.touchin.roboswag.components.utils.UiUtils;
+import ru.touchin.roboswag.core.log.Lc;
 
 /**
  * Created by Gavriil Sitnikov on 03/16.
@@ -69,6 +70,8 @@ public class MaterialProgressDrawable extends Drawable {
     private final RectF arcBounds = new RectF();
 
     public MaterialProgressDrawable(@NonNull final Context context) {
+        super();
+
         paint = new Paint();
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DEFAULT_STROKE_WIDTH_DP, UiUtils.getDisplayMetrics(context)));
@@ -116,18 +119,19 @@ public class MaterialProgressDrawable extends Drawable {
     }
 
     private Callback getInternalCallback() {
-        if (Build.VERSION.SDK_INT >= 11) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             return getCallback();
-        } else {
-            try {
-                Field f = Drawable.class.getDeclaredField("mCallback");
-                f.setAccessible(true);
-                return (Callback) f.get(this);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                return null;
-            }
         }
+
+        try {
+            final Field field = Drawable.class.getDeclaredField("mCallback");
+            field.setAccessible(true);
+            return (Callback) field.get(this);
+        } catch (final Exception ex) {
+            Lc.assertion(ex);
+            return null;
+        }
+
     }
 
     @Override
@@ -137,13 +141,24 @@ public class MaterialProgressDrawable extends Drawable {
         animationCycle = 0;
     }
 
-    public void draw(Canvas canvas) {
+    @Override
+    public void draw(final Canvas canvas) {
         final Callback currentCallback = getInternalCallback();
 
         if (lastDrawCallback == null || lastDrawCallback.get() != currentCallback) {
             unscheduleSelf(loop);
         }
 
+        drawArc(canvas);
+
+        if (lastDrawCallback == null || lastDrawCallback.get() != currentCallback) {
+            lastDrawCallback = new WeakReference<>(currentCallback);
+            loop.run();
+        }
+    }
+
+    @SuppressWarnings("PMD.NPathComplexity")
+    private void drawArc(final Canvas canvas) {
         final boolean isGrowingCycle = (((int) (arcSize / parameters.maxAngle)) % 2) == 0;
         final float angle = arcSize % parameters.maxAngle;
         final float shift = (angle / parameters.maxAngle) * parameters.gapAngle;
@@ -154,21 +169,16 @@ public class MaterialProgressDrawable extends Drawable {
         if (arcSize < 0) {
             arcSize = 0;
         }
-
-        if (lastDrawCallback == null || lastDrawCallback.get() != currentCallback) {
-            lastDrawCallback = new WeakReference<>(currentCallback);
-            loop.run();
-        }
     }
 
     @Override
-    public void setAlpha(int alpha) {
+    public void setAlpha(final int alpha) {
         paint.setAlpha(alpha);
         invalidateSelf();
     }
 
     @Override
-    public void setColorFilter(ColorFilter colorFilter) {
+    public void setColorFilter(final ColorFilter colorFilter) {
         paint.setColorFilter(colorFilter);
         invalidateSelf();
     }

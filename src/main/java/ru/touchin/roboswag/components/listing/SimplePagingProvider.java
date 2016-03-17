@@ -93,6 +93,7 @@ public class SimplePagingProvider<T> extends ItemsProvider<T> {
         }
     }
 
+    @Override
     @NonNull
     public Observable<T> loadItem(final int position) {
         final int indexOfPage = pageIndexOf(position);
