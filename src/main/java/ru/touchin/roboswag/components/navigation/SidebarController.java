@@ -46,6 +46,7 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
         this.drawerLayout = drawerLayout;
         this.sidebar = sidebar;
         drawerToggle = new MyActionBarDrawerToggle(activity, drawerLayout);
+
         drawerLayout.addDrawerListener(drawerToggle);
         activity.getSupportFragmentManager().addOnBackStackChangedListener(this);
         activity.addOnBackPressedListener(this);
@@ -128,6 +129,10 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
             activity.supportInvalidateOptionsMenu();
         }
 
-    }
+        @Override
+        public void onDrawerSlide(final View drawerView, final float slideOffset) {
+            super.onDrawerSlide(drawerView, 0);
+        }
 
+    }
 }
