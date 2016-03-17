@@ -58,6 +58,11 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
                 activity.supportInvalidateOptionsMenu();
             }
 
+            @Override
+            public void onDrawerSlide(final View drawerView, final float slideOffset) {
+                super.onDrawerSlide(drawerView, 0);
+            }
+
         };
         drawerLayout.addDrawerListener(drawerToggle);
         activity.getSupportFragmentManager().addOnBackStackChangedListener(this);
