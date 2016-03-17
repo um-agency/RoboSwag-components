@@ -70,6 +70,17 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
         notifySelectedDaysChanged();
     }
 
+    @Nullable
+    public Integer getPositionToScroll(final boolean beginningOfSelection) {
+        if (beginningOfSelection && startSelectionPosition != null) {
+            return CalendarUtils.findPositionOfSelectedMonth(calendarItems, startSelectionPosition);
+        }
+        if (!beginningOfSelection && endSelectionPosition != null) {
+            return CalendarUtils.findPositionOfSelectedMonth(calendarItems, endSelectionPosition);
+        }
+        return null;
+    }
+
     private void notifySelectedDaysChanged() {
         if (startSelectionPosition == null && endSelectionPosition == null) {
             return;
@@ -117,7 +128,7 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
     @Override
     @SuppressWarnings("unchecked")
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
-        final CalendarItem calendarItem = CalendarUtils.find(calendarItems, position);
+        final CalendarItem calendarItem = CalendarUtils.findItemByPosition(calendarItems, position);
 
         if (calendarItem instanceof CalendarHeaderItem) {
             final StaggeredGridLayoutManager.LayoutParams layoutParams =
@@ -168,7 +179,7 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
 
     @Override
     public int getItemViewType(final int position) {
-        final CalendarItem calendarItem = CalendarUtils.find(calendarItems, position);
+        final CalendarItem calendarItem = CalendarUtils.findItemByPosition(calendarItems, position);
 
         if (calendarItem instanceof CalendarHeaderItem) {
             return HEADER_ITEM_TYPE;

@@ -19,7 +19,21 @@ public final class CalendarUtils {
     public static final int DAYS_IN_WEEK = 7;
 
     @Nullable
-    public static CalendarItem find(@Nullable final List<CalendarItem> calendarItems, final long position) {
+    public static CalendarItem findItemByPosition(@Nullable final List<CalendarItem> calendarItems, final long position) {
+        return find(calendarItems, position, false);
+    }
+
+    @Nullable
+    public static Integer findPositionOfSelectedMonth(@Nullable final List<CalendarItem> calendarItems, final long position) {
+        final CalendarItem calendarItem = find(calendarItems, position, true);
+        if (calendarItem != null) {
+            return calendarItem.getStartRange();
+        }
+        return null;
+    }
+
+    @Nullable
+    private static CalendarItem find(@Nullable final List<CalendarItem> calendarItems, final long position, final boolean getHeaderPosition) {
         if (calendarItems != null) {
             int low = 0;
             int high = calendarItems.size() - 1;
@@ -38,6 +52,18 @@ public final class CalendarUtils {
                     }
                     low = mid + 1;
                 } else {
+                    if (getHeaderPosition) {
+                        int calendarShift = mid;
+                        while (true) {
+                            calendarShift--;
+                            if (calendarShift == -1) {
+                                return null;
+                            }
+                            if (calendarItems.get(calendarShift) instanceof CalendarHeaderItem) {
+                                return calendarItems.get(calendarShift);
+                            }
+                        }
+                    }
                     return calendarItems.get(mid);
                 }
             }
