@@ -27,6 +27,7 @@ import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -173,6 +174,11 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
         if (viewController != null) {
             viewController.onConfigureNavigation(menu, inflater);
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
+        return (viewController != null && viewController.onOptionsItemSelected(item)) || super.onOptionsItemSelected(item);
     }
 
     private void onViewControllerChanged(@Nullable final ViewController viewController) {
