@@ -27,6 +27,7 @@ import android.support.v4.app.Fragment;
 import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.ViewGroup;
 
 import ru.touchin.roboswag.core.log.Lc;
@@ -163,6 +164,10 @@ public class ViewController<TLogicBridge,
 
     public void onDestroy() {
         isDestroyed.onNext(true);
+    }
+
+    public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
+        return false;
     }
 
     /**
