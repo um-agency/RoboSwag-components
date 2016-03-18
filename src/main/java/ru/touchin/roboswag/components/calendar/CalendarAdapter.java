@@ -1,3 +1,5 @@
+
+
 package ru.touchin.roboswag.components.calendar;
 
 import android.content.Context;
@@ -12,7 +14,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("PMD.CyclomaticComplexity")
+/**
+ * Created by Ilia Kurtov on 17.03.2016.
+ * * //TODO: fill description
+ */
+@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.GodClass"})
 public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHolder, THeaderViewHolder extends RecyclerView.ViewHolder,
         TEmptyViewHolder extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -195,10 +201,6 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
     @Override
     public int getItemCount() {
         return calendarItems.isEmpty() ? 0 : calendarItems.get(calendarItems.size() - 1).getEndRange();
-    }
-
-    protected boolean isToday(@NonNull final Date currentDate, @NonNull final Date date) {
-        return currentDate.getTime() / ONE_DAY_LENGTH == date.getTime() / ONE_DAY_LENGTH;
     }
 
 }
