@@ -123,7 +123,8 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
     protected abstract void bindDayItem(@NonNull final TDayViewHolder viewHolder,
                                         @NonNull final String day,
                                         @NonNull final Date date,
-                                        @NonNull final CalendarAdapter.State state);
+                                        @NonNull final CalendarAdapter.State state,
+                                        @NonNull final CalendarDateState dateState);
 
     @Override
     @SuppressWarnings("unchecked")
@@ -156,25 +157,26 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
                 + position - calendarItem.getStartRange());
         final Date currentDate = new Date((((CalendarDayItem) calendarItem).getDateOfFirstDay()
                 + position - calendarItem.getStartRange()) * ONE_DAY_LENGTH);
+        final CalendarDateState dateState = ((CalendarDayItem) calendarItem).getDateState();
         if (startSelectionPosition != null && position == startSelectionPosition) {
             if (endSelectionPosition == null || endSelectionPosition.equals(startSelectionPosition)) {
-                bindDayItem(holder, currentDay, currentDate, State.SELECTED_ONE_ONLY);
+                bindDayItem(holder, currentDay, currentDate, State.SELECTED_ONE_ONLY, dateState);
                 return;
             }
-            bindDayItem(holder, currentDay, currentDate, State.SELECTED_FIRST);
+            bindDayItem(holder, currentDay, currentDate, State.SELECTED_FIRST, dateState);
             return;
         }
         if (endSelectionPosition != null && position == endSelectionPosition) {
-            bindDayItem(holder, currentDay, currentDate, State.SELECTED_LAST);
+            bindDayItem(holder, currentDay, currentDate, State.SELECTED_LAST, dateState);
             return;
         }
         if (startSelectionPosition != null && endSelectionPosition != null
                 && position >= startSelectionPosition && position <= endSelectionPosition) {
-            bindDayItem(holder, currentDay, currentDate, State.SELECTED_MIDDLE);
+            bindDayItem(holder, currentDay, currentDate, State.SELECTED_MIDDLE, dateState);
             return;
         }
 
-        bindDayItem(holder, currentDay, currentDate, State.NOT_SELECTED);
+        bindDayItem(holder, currentDay, currentDate, State.NOT_SELECTED, dateState);
     }
 
     @Override
@@ -195,10 +197,6 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
     @Override
     public int getItemCount() {
         return calendarItems.isEmpty() ? 0 : calendarItems.get(calendarItems.size() - 1).getEndRange();
-    }
-
-    protected boolean isToday(@NonNull final Date currentDate, @NonNull final Date date) {
-        return currentDate.getTime() / ONE_DAY_LENGTH == date.getTime() / ONE_DAY_LENGTH;
     }
 
 }
