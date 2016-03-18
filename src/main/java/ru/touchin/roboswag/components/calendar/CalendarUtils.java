@@ -158,7 +158,7 @@ public final class CalendarUtils {
 
         while (true) {
             final int daysInCurrentMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-            long firstRangeDate = calendar.getTimeInMillis() / CalendarAdapter.ONE_DAY_LENGTH + 1;
+            final long firstRangeDate = calendar.getTimeInMillis() / CalendarAdapter.ONE_DAY_LENGTH + 1;
 
             if ((daysEnded + (daysInCurrentMonth - firstDate)) <= totalDaysCount) {
                 calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH),
@@ -201,7 +201,6 @@ public final class CalendarUtils {
     private static List<CalendarItem> fillCalendarTillCurrentDate(final Calendar cleanStartDate, final Calendar calendar) {
         final List<CalendarItem> calendarItems = new ArrayList<>();
         int shift = 0;
-        int firstDate = calendar.get(Calendar.DAY_OF_MONTH) - 1;
 
         // add first month header
         calendarItems.add(new CalendarHeaderItem(calendar.get(Calendar.MONTH), 0, 0));
@@ -217,6 +216,7 @@ public final class CalendarUtils {
         shift += firstDayInTheWeek;
 
         // add range with days before today
+        final int firstDate = calendar.get(Calendar.DAY_OF_MONTH) - 1;
         calendarItems.add(new CalendarDayItem(calendar.getTimeInMillis() / CalendarAdapter.ONE_DAY_LENGTH + 1,
                 1, shift, shift + firstDate - 1, CalendarDateState.BEFORE_TODAY));
         shift += firstDate - 1;
@@ -224,7 +224,7 @@ public final class CalendarUtils {
         // add today item
         calendar.setTime(cleanStartDate.getTime());
         calendarItems.add(new CalendarDayItem(calendar.getTimeInMillis() / CalendarAdapter.ONE_DAY_LENGTH + 1,
-                firstDate+1, shift + 1, shift + 1, CalendarDateState.TODAY));
+                firstDate + 1, shift + 1, shift + 1, CalendarDateState.TODAY));
 
         return calendarItems;
     }
