@@ -201,6 +201,7 @@ public final class CalendarUtils {
     private static List<CalendarItem> fillCalendarTillCurrentDate(final Calendar cleanStartDate, final Calendar calendar) {
         final List<CalendarItem> calendarItems = new ArrayList<>();
         int shift = 0;
+        final int firstDate = calendar.get(Calendar.DAY_OF_MONTH) - 1;
 
         // add first month header
         calendarItems.add(new CalendarHeaderItem(calendar.get(Calendar.MONTH), 0, 0));
@@ -216,7 +217,6 @@ public final class CalendarUtils {
         shift += firstDayInTheWeek;
 
         // add range with days before today
-        final int firstDate = calendar.get(Calendar.DAY_OF_MONTH) - 1;
         calendarItems.add(new CalendarDayItem(calendar.getTimeInMillis() / CalendarAdapter.ONE_DAY_LENGTH + 1,
                 1, shift, shift + firstDate - 1, CalendarDateState.BEFORE_TODAY));
         shift += firstDate - 1;
@@ -236,12 +236,6 @@ public final class CalendarUtils {
         }
         return firstDateStart;
     }
-
-
-    public static boolean isToday(@NonNull final Date currentDate, @NonNull final Date date) {
-        return currentDate.getTime() / CalendarAdapter.ONE_DAY_LENGTH == date.getTime() / CalendarAdapter.ONE_DAY_LENGTH;
-    }
-
 
     @NonNull
     private static Calendar getCleanDate(@NonNull final Calendar calendar) {
