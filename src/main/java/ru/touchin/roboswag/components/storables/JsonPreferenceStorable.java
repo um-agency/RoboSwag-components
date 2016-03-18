@@ -57,13 +57,15 @@ public class JsonPreferenceStorable<T> extends Storable<String, T, String> {
 
         @Nullable
         @Override
-        public String toStoreObject(@NonNull final Class<T> tClass, @NonNull final Class<String> stringClass, @Nullable final T t)
+        public String toStoreObject(@NonNull final Class<T> objectClass,
+                                    @NonNull final Class<String> stringClass,
+                                    @Nullable final T object)
                 throws ConversionException {
             final StringWriter stringWriter = new StringWriter();
             JsonGenerator generator = null;
             try {
                 generator = DEFAULT_JSON_FACTORY.createJsonGenerator(stringWriter);
-                generator.serialize(t);
+                generator.serialize(object);
                 generator.flush();
                 return stringWriter.toString();
             } catch (final IOException exception) {
@@ -81,14 +83,14 @@ public class JsonPreferenceStorable<T> extends Storable<String, T, String> {
 
         @Nullable
         @Override
-        public T toObject(@NonNull final Class<T> tClass, @NonNull final Class<String> stringClass, @Nullable final String source)
+        public T toObject(@NonNull final Class<T> objectClass, @NonNull final Class<String> stringClass, @Nullable final String source)
                 throws ConversionException {
             if (source == null) {
                 return null;
             }
-            final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(source.getBytes());
+            final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(source.getBytes(Charsets.UTF_8));
             try {
-                return DEFAULT_JSON_FACTORY.createJsonObjectParser().parseAndClose(byteArrayInputStream, Charsets.UTF_8, tClass);
+                return DEFAULT_JSON_FACTORY.createJsonObjectParser().parseAndClose(byteArrayInputStream, Charsets.UTF_8, objectClass);
             } catch (final Exception exception) {
                 throw new ConversionException("Parsing error", exception);
             }
