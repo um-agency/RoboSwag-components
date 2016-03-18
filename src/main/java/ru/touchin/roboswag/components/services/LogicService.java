@@ -35,10 +35,15 @@ import ru.touchin.roboswag.core.utils.android.ServiceBinder;
  */
 public abstract class LogicService<TLogicBridge> extends IntentService {
 
-    private final TLogicBridge logicBridge;
+    private TLogicBridge logicBridge;
 
     protected LogicService() {
         super("LogicService");
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
         this.logicBridge = createLogicBridge();
     }
 

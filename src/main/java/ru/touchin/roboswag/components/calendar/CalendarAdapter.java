@@ -1,3 +1,5 @@
+
+
 package ru.touchin.roboswag.components.calendar;
 
 import android.content.Context;
@@ -12,7 +14,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@SuppressWarnings("PMD.CyclomaticComplexity")
+/**
+ * Created by Ilia Kurtov on 17.03.2016.
+ * * //TODO: fill description
+ */
+@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.GodClass"})
 public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHolder, THeaderViewHolder extends RecyclerView.ViewHolder,
         TEmptyViewHolder extends RecyclerView.ViewHolder> extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
