@@ -144,6 +144,8 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
         state = savedInstanceState != null
                 ? (TState) savedInstanceState.getSerializable(VIEW_CONTROLLER_STATE_EXTRA)
                 : (getArguments() != null ? (TState) getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
+
+        viewControllerSubscription = viewControllerObservable.subscribe(this::onViewControllerChanged, Lc::assertion);
     }
 
     @Deprecated
@@ -159,7 +161,6 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     public void onViewCreated(@NonNull final View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewSubject.onNext(new Pair<>(new FrameLayout(view.getContext()), savedInstanceState));
-        viewControllerSubscription = viewControllerObservable.subscribe(this::onViewControllerChanged, Lc::assertion);
     }
 
     @Override
@@ -212,8 +213,6 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
 
     @Override
     protected void onDestroyView(@NonNull final View view) {
-        viewControllerSubscription.unsubscribe();
-        viewControllerSubscription = null;
         viewSubject.onNext(null);
         super.onDestroyView(view);
     }
@@ -222,6 +221,16 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     public void onDetach() {
         activitySubject.onNext(null);
         super.onDetach();
+    }
+
+    @Override
+    public void onDestroy() {
+        viewControllerSubscription.unsubscribe();
+        if (viewController != null && !viewController.isDestroyed()) {
+            viewController.onDestroy();
+            viewController = null;
+        }
+        super.onDestroy();
     }
 
     private static class PlaceholderView extends FrameLayout {

@@ -54,7 +54,7 @@ public class ViewController<TLogicBridge,
     @NonNull
     private final ViewGroup container;
     @NonNull
-    private final BehaviorSubject<Boolean> isDestroyed = BehaviorSubject.create(false);
+    private final BehaviorSubject<Boolean> isDestroyedSubject = BehaviorSubject.create(false);
 
     public ViewController(@NonNull final CreationContext<TLogicBridge, TActivity, TFragment> creationContext,
                           @Nullable final Bundle savedInstanceState) {
@@ -67,6 +67,10 @@ public class ViewController<TLogicBridge,
                 .first()
                 .filter(savedState -> savedState != null))
                 .subscribe(this::onRestoreSavedState);
+    }
+
+    public boolean isDestroyed() {
+        return isDestroyedSubject.getValue();
     }
 
     /**
@@ -143,7 +147,7 @@ public class ViewController<TLogicBridge,
                     return Observable.empty();
                 })
                 .observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(isDestroyed.filter(isDestroyed -> isDestroyed).first());
+                .takeUntil(isDestroyedSubject.filter(isDestroyed -> isDestroyed).first());
     }
 
     /**
@@ -163,7 +167,7 @@ public class ViewController<TLogicBridge,
     }
 
     public void onDestroy() {
-        isDestroyed.onNext(true);
+        isDestroyedSubject.onNext(true);
     }
 
     public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
