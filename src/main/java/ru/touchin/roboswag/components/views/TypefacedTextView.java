@@ -87,11 +87,11 @@ public class TypefacedTextView extends TextView implements TypefacedView {
                 do {
                     switch (scaleAction) {
                         case SCALE_DOWN:
-                            difference /= 2;
+                            difference = Math.round(difference / 2);
                             setTextSize(TypedValue.COMPLEX_UNIT_PX, getTextSize() - difference);
                             break;
                         case SCALE_UP:
-                            difference /= 2;
+                            difference = (int) (difference / 2);
                             setTextSize(TypedValue.COMPLEX_UNIT_PX, getTextSize() + difference);
                             break;
                         case DO_NOTHING:
