@@ -69,47 +69,10 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
 
     private final BehaviorSubject<TActivity> activitySubject = BehaviorSubject.create();
     private final BehaviorSubject<Pair<ViewGroup, Bundle>> viewSubject = BehaviorSubject.create();
-    private Scheduler backgroundScheduler;
     @Nullable
     private ViewController viewController;
     private Subscription viewControllerSubscription;
     private TState state;
-
-    private final Observable<ViewController> viewControllerObservable = Observable
-            .combineLatest(activitySubject
-                            .switchMap(activity -> activity != null ? activity.observeLogicBridge() : Observable.just(null))
-                            .distinctUntilChanged()
-                            .observeOn(backgroundScheduler),
-                    activitySubject.distinctUntilChanged().observeOn(backgroundScheduler),
-                    viewSubject.distinctUntilChanged().observeOn(backgroundScheduler),
-                    (logicBridge, activity, viewInfo) -> {
-                        if (logicBridge == null || activity == null || viewInfo == null) {
-                            return null;
-                        }
-
-                        final ViewController.CreationContext<TLogicBridge, TActivity,
-                                ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>> creationContext
-                                = new ViewController.CreationContext<>(logicBridge, activity, this, viewInfo.first);
-                        if (getViewControllerClass().getConstructors().length != 1) {
-                            throw OnErrorThrowable
-                                    .from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
-                        }
-                        final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
-                        try {
-                            switch (constructor.getParameterTypes().length) {
-                                case 2:
-                                    return (ViewController) constructor.newInstance(creationContext, viewInfo.second);
-                                case 3:
-                                    return (ViewController) constructor.newInstance(this, creationContext, viewInfo.second);
-                                default:
-                                    Lc.assertion("Wrong constructor parameters count: " + constructor.getParameterTypes().length);
-                                    return null;
-                            }
-                        } catch (final Exception exception) {
-                            throw OnErrorThrowable.from(exception);
-                        }
-                    })
-            .observeOn(AndroidSchedulers.mainThread());
 
     /**
      * Override it to enable inflation of view and creation of {@link ViewController} in background.
@@ -153,10 +116,49 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
         state = savedInstanceState != null
                 ? (TState) savedInstanceState.getSerializable(VIEW_CONTROLLER_STATE_EXTRA)
                 : (getArguments() != null ? (TState) getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
+        viewControllerSubscription = createViewControllerObservable().subscribe(this::onViewControllerChanged, Lc::assertion);
+    }
 
-        backgroundScheduler = isCreationInBackgroundEnabled() ? RxAndroidUtils.createLooperScheduler() : AndroidSchedulers.mainThread();
+    @NonNull
+    private Observable<ViewController> createViewControllerObservable() {
+        final Scheduler backgroundScheduler = isCreationInBackgroundEnabled()
+                ? RxAndroidUtils.createLooperScheduler()
+                : AndroidSchedulers.mainThread();
+        return Observable
+                .combineLatest(activitySubject
+                                .switchMap(activity -> activity != null ? activity.observeLogicBridge() : Observable.just(null))
+                                .distinctUntilChanged()
+                                .observeOn(backgroundScheduler),
+                        activitySubject.distinctUntilChanged().observeOn(backgroundScheduler),
+                        viewSubject.distinctUntilChanged().observeOn(backgroundScheduler),
+                        (logicBridge, activity, viewInfo) -> {
+                            if (logicBridge == null || activity == null || viewInfo == null) {
+                                return null;
+                            }
 
-        viewControllerSubscription = viewControllerObservable.subscribe(this::onViewControllerChanged, Lc::assertion);
+                            final ViewController.CreationContext<TLogicBridge, TActivity,
+                                    ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>> creationContext
+                                    = new ViewController.CreationContext<>(logicBridge, activity, this, viewInfo.first);
+                            if (getViewControllerClass().getConstructors().length != 1) {
+                                throw OnErrorThrowable
+                                        .from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
+                            }
+                            final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
+                            try {
+                                switch (constructor.getParameterTypes().length) {
+                                    case 2:
+                                        return (ViewController) constructor.newInstance(creationContext, viewInfo.second);
+                                    case 3:
+                                        return (ViewController) constructor.newInstance(this, creationContext, viewInfo.second);
+                                    default:
+                                        Lc.assertion("Wrong constructor parameters count: " + constructor.getParameterTypes().length);
+                                        return null;
+                                }
+                            } catch (final Exception exception) {
+                                throw OnErrorThrowable.from(exception);
+                            }
+                        })
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
     @Deprecated
