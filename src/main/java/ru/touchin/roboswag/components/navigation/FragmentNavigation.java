@@ -108,7 +108,7 @@ public class FragmentNavigation {
     }
 
     public boolean back() {
-        if (fragmentManager.getBackStackEntryCount() > 0) {
+        if (fragmentManager.getBackStackEntryCount() > 1) {
             fragmentManager.popBackStack();
             return true;
         }

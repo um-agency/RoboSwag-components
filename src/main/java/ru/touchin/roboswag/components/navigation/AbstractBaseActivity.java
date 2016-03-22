@@ -303,7 +303,7 @@ public abstract class AbstractBaseActivity extends BaseActivity
         }
 
         if (fragmentManager.getBackStackEntryCount() != 0) {
-            fragmentManager.popBackStack();
+            fragmentManager.popBackStackImmediate();
             return true;
         }
         return false;

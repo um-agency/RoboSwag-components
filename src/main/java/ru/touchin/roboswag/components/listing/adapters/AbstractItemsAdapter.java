@@ -19,9 +19,6 @@
 
 package ru.touchin.roboswag.components.listing.adapters;
 
-import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -53,7 +50,6 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
     private static final int LOADED_ITEM_TYPE = R.id.LOADED_ITEM_TYPE;
     private static final int NOT_LOADED_ITEM_TYPE = R.id.NOT_LOADED_ITEM_TYPE;
 
-    private final Handler postHandler = new Handler(Looper.getMainLooper());
     @Nullable
     private OnItemClickListener<TItem> onItemClickListener;
     @Nullable
@@ -146,20 +142,9 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             itemsProvider.loadRange(Math.max(0, position - PRE_LOADING_COUNT), position + PRE_LOADING_COUNT).first()
                     .subscribe(Actions.empty(), Actions.empty());
             if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
-                UiUtils.setOnRippleClickListener(holder.itemView, () -> {
-                    //TODO: fix multitap
-                    postHandler.removeCallbacksAndMessages(null);
-                    postHandler.postDelayed(() -> onItemClickListener.onItemClicked(item, position),
-                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? UiUtils.RIPPLE_EFFECT_DELAY : 0);
-                });
+                UiUtils.setOnRippleClickListener(holder.itemView, () -> onItemClickListener.onItemClicked(item, position));
             }
         }
-    }
-
-    @Override
-    public void onDetachedFromRecyclerView(final RecyclerView recyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView);
-        postHandler.removeCallbacksAndMessages(null);
     }
 
     protected abstract void onBindItemToViewHolder(@NonNull final TViewHolder holder, final int position, @NonNull TItem item);
