@@ -69,7 +69,7 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
 
     private final BehaviorSubject<TActivity> activitySubject = BehaviorSubject.create();
     private final BehaviorSubject<Pair<ViewGroup, Bundle>> viewSubject = BehaviorSubject.create();
-    private final Scheduler backgroundScheduler = RxAndroidUtils.createLooperScheduler();
+    private Scheduler backgroundScheduler;
     @Nullable
     private ViewController viewController;
     private Subscription viewControllerSubscription;
@@ -112,6 +112,15 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
             .observeOn(AndroidSchedulers.mainThread());
 
     /**
+     * Override it to enable inflation of view and creation of {@link ViewController} in background.
+     *
+     * @return Returns if it should do work in background. False by default.
+     */
+    protected boolean isCreationInBackgroundEnabled() {
+        return false;
+    }
+
+    /**
      * Returns specific object which contains state of ViewController.
      *
      * @return Object of TState type.
@@ -144,6 +153,8 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
         state = savedInstanceState != null
                 ? (TState) savedInstanceState.getSerializable(VIEW_CONTROLLER_STATE_EXTRA)
                 : (getArguments() != null ? (TState) getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
+
+        backgroundScheduler = isCreationInBackgroundEnabled() ? RxAndroidUtils.createLooperScheduler() : AndroidSchedulers.mainThread();
 
         viewControllerSubscription = viewControllerObservable.subscribe(this::onViewControllerChanged, Lc::assertion);
     }
