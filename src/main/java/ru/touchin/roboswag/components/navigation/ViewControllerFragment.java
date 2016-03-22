@@ -131,34 +131,39 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
                                 .observeOn(backgroundScheduler),
                         activitySubject.distinctUntilChanged().observeOn(backgroundScheduler),
                         viewSubject.distinctUntilChanged().observeOn(backgroundScheduler),
-                        (logicBridge, activity, viewInfo) -> {
-                            if (logicBridge == null || activity == null || viewInfo == null) {
-                                return null;
-                            }
-
-                            final ViewController.CreationContext<TLogicBridge, TActivity,
-                                    ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>> creationContext
-                                    = new ViewController.CreationContext<>(logicBridge, activity, this, viewInfo.first);
-                            if (getViewControllerClass().getConstructors().length != 1) {
-                                throw OnErrorThrowable
-                                        .from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
-                            }
-                            final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
-                            try {
-                                switch (constructor.getParameterTypes().length) {
-                                    case 2:
-                                        return (ViewController) constructor.newInstance(creationContext, viewInfo.second);
-                                    case 3:
-                                        return (ViewController) constructor.newInstance(this, creationContext, viewInfo.second);
-                                    default:
-                                        Lc.assertion("Wrong constructor parameters count: " + constructor.getParameterTypes().length);
-                                        return null;
-                                }
-                            } catch (final Exception exception) {
-                                throw OnErrorThrowable.from(exception);
-                            }
-                        })
+                        this::getViewController)
                 .observeOn(AndroidSchedulers.mainThread());
+    }
+
+    @Nullable
+    private ViewController getViewController(@Nullable final TLogicBridge logicBridge,
+                                             @Nullable final TActivity activity,
+                                             @Nullable final Pair<ViewGroup, Bundle> viewInfo) {
+        if (logicBridge == null || activity == null || viewInfo == null) {
+            return null;
+        }
+
+        if (getViewControllerClass().getConstructors().length != 1) {
+            throw OnErrorThrowable
+                    .from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
+        }
+        final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
+        final ViewController.CreationContext<TLogicBridge, TActivity,
+                ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>> creationContext
+                = new ViewController.CreationContext<>(logicBridge, activity, this, viewInfo.first);
+        try {
+            switch (constructor.getParameterTypes().length) {
+                case 2:
+                    return (ViewController) constructor.newInstance(creationContext, viewInfo.second);
+                case 3:
+                    return (ViewController) constructor.newInstance(this, creationContext, viewInfo.second);
+                default:
+                    Lc.assertion("Wrong constructor parameters count: " + constructor.getParameterTypes().length);
+                    return null;
+            }
+        } catch (final Exception exception) {
+            throw OnErrorThrowable.from(exception);
+        }
     }
 
     @Deprecated
