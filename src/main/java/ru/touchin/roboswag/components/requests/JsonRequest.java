@@ -33,7 +33,6 @@ import com.squareup.okhttp.RequestBody;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 
 import ru.touchin.roboswag.core.log.Lc;
 
