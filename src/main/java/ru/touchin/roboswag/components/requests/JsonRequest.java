@@ -44,14 +44,14 @@ public abstract class JsonRequest<T> extends HttpRequest<T> {
 
     protected static final JsonFactory DEFAULT_JSON_FACTORY = new JacksonFactory();
 
+    protected JsonRequest(@NonNull final Class<T> responseResultType) {
+        super(responseResultType);
+    }
+
     @NonNull
     @Override
     protected ObjectParser getParser() {
         return DEFAULT_JSON_FACTORY.createJsonObjectParser();
-    }
-
-    protected JsonRequest(@NonNull final Class<T> responseResultType) {
-        super(responseResultType);
     }
 
     @NonNull
@@ -62,15 +62,14 @@ public abstract class JsonRequest<T> extends HttpRequest<T> {
                 if (getContent() == null) {
                     Lc.assertion("Do you forget to implement getContent() class during POST-request?");
                     return super.createHttpRequest().get();
-                } else {
-                    final AbstractHttpContent content = new JsonHttpContent(DEFAULT_JSON_FACTORY, getContent());
-                    final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    content.writeTo(byteArrayOutputStream);
-                    return super.createHttpRequest().post(RequestBody.create(
-                            MediaType.parse(content.getMediaType().build()), byteArrayOutputStream.toByteArray()));
                 }
-            default:
+                final AbstractHttpContent content = new JsonHttpContent(DEFAULT_JSON_FACTORY, getContent());
+                final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                content.writeTo(byteArrayOutputStream);
+                return super.createHttpRequest().post(RequestBody.create(
+                        MediaType.parse(content.getMediaType().build()), byteArrayOutputStream.toByteArray()));
             case GET:
+            default:
                 return super.createHttpRequest().get();
 
         }
@@ -78,14 +77,14 @@ public abstract class JsonRequest<T> extends HttpRequest<T> {
 
     protected abstract RequestType getRequestType();
 
-    protected enum RequestType {
-        GET,
-        POST
-    }
-
     @Nullable
     protected Object getContent() {
         return null;
+    }
+
+    protected enum RequestType {
+        GET,
+        POST
     }
 
 }
