@@ -20,10 +20,22 @@
 package ru.touchin.roboswag.components.requests;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.google.api.client.http.AbstractHttpContent;
+import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ObjectParser;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
+import ru.touchin.roboswag.core.log.Lc;
 
 /**
  * Created by Gavriil Sitnikov on 07/14.
@@ -41,6 +53,40 @@ public abstract class JsonRequest<T> extends HttpRequest<T> {
 
     protected JsonRequest(@NonNull final Class<T> responseResultType) {
         super(responseResultType);
+    }
+
+    @NonNull
+    @Override
+    protected Request.Builder createHttpRequest() throws IOException {
+        switch (getRequestType()) {
+            case POST:
+                if (getContent() == null) {
+                    Lc.assertion("Do you forget to implement getContent() class during POST-request?");
+                    return super.createHttpRequest().get();
+                } else {
+                    final AbstractHttpContent content = new JsonHttpContent(DEFAULT_JSON_FACTORY, getContent());
+                    final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                    content.writeTo(byteArrayOutputStream);
+                    return super.createHttpRequest().post(RequestBody.create(
+                            MediaType.parse(content.getMediaType().build()), byteArrayOutputStream.toByteArray()));
+                }
+            default:
+            case GET:
+                return super.createHttpRequest().get();
+
+        }
+    }
+
+    protected abstract RequestType getRequestType();
+
+    protected enum RequestType {
+        GET,
+        POST
+    }
+
+    @Nullable
+    protected Object getContent() {
+        return null;
     }
 
 }
