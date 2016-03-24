@@ -110,7 +110,11 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
 
     @NonNull
     private Observable<ViewController> createViewControllerObservable() {
-        return Observable.combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(), this::createViewController);
+        return Observable.combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(), this::createViewController)
+                .onErrorResumeNext(throwable -> {
+                    Lc.assertion(throwable);
+                    return Observable.empty();
+                });
     }
 
     @Nullable
@@ -134,8 +138,8 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
                 case 3:
                     return (ViewController) constructor.newInstance(this, creationContext, viewInfo.second);
                 default:
-                    Lc.assertion("Wrong constructor parameters count: " + constructor.getParameterTypes().length);
-                    return null;
+                    throw OnErrorThrowable
+                            .from(new ShouldNotHappenException("Wrong constructor parameters count: " + constructor.getParameterTypes().length));
             }
         } catch (final Exception exception) {
             throw OnErrorThrowable.from(exception);
