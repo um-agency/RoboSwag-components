@@ -37,9 +37,7 @@ import java.lang.reflect.Constructor;
 
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
-import ru.touchin.roboswag.core.utils.android.RxAndroidUtils;
 import rx.Observable;
-import rx.Scheduler;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.exceptions.OnErrorThrowable;
@@ -68,20 +66,11 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     }
 
     private final BehaviorSubject<TActivity> activitySubject = BehaviorSubject.create();
-    private final BehaviorSubject<Pair<ViewGroup, Bundle>> viewSubject = BehaviorSubject.create();
+    private final BehaviorSubject<Pair<PlaceholderView, Bundle>> viewSubject = BehaviorSubject.create();
     @Nullable
     private ViewController viewController;
     private Subscription viewControllerSubscription;
     private TState state;
-
-    /**
-     * Override it to enable inflation of view and creation of {@link ViewController} in background.
-     *
-     * @return Returns if it should do work in background. False by default.
-     */
-    protected boolean isCreationInBackgroundEnabled() {
-        return false;
-    }
 
     /**
      * Returns specific object which contains state of ViewController.
@@ -121,31 +110,26 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
 
     @NonNull
     private Observable<ViewController> createViewControllerObservable() {
-        final Scheduler backgroundScheduler = isCreationInBackgroundEnabled()
-                ? RxAndroidUtils.createLooperScheduler()
-                : AndroidSchedulers.mainThread();
         return Observable
                 .combineLatest(activitySubject
                                 .switchMap(activity -> activity != null ? activity.observeLogicBridge() : Observable.just(null))
                                 .distinctUntilChanged()
-                                .observeOn(backgroundScheduler),
-                        activitySubject.distinctUntilChanged().observeOn(backgroundScheduler),
-                        viewSubject.distinctUntilChanged().observeOn(backgroundScheduler),
-                        this::getViewController)
-                .observeOn(AndroidSchedulers.mainThread());
+                                .observeOn(AndroidSchedulers.mainThread()),
+                        activitySubject.distinctUntilChanged().observeOn(AndroidSchedulers.mainThread()),
+                        viewSubject.distinctUntilChanged().observeOn(AndroidSchedulers.mainThread()),
+                        this::getViewController);
     }
 
     @Nullable
     private ViewController getViewController(@Nullable final TLogicBridge logicBridge,
                                              @Nullable final TActivity activity,
-                                             @Nullable final Pair<ViewGroup, Bundle> viewInfo) {
+                                             @Nullable final Pair<PlaceholderView, Bundle> viewInfo) {
         if (logicBridge == null || activity == null || viewInfo == null) {
             return null;
         }
 
         if (getViewControllerClass().getConstructors().length != 1) {
-            throw OnErrorThrowable
-                    .from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
+            throw OnErrorThrowable.from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
         }
         final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
         final ViewController.CreationContext<TLogicBridge, TActivity,
@@ -178,7 +162,11 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     @Override
     public void onViewCreated(@NonNull final View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        viewSubject.onNext(new Pair<>(new FrameLayout(view.getContext()), savedInstanceState));
+        if(view instanceof PlaceholderView) {
+            viewSubject.onNext(new Pair<>((PlaceholderView) view, savedInstanceState));
+        } else {
+            Lc.assertion("View should be instanceof PlaceholderView");
+        }
     }
 
     @Override
@@ -208,13 +196,6 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
         if (this.viewController == null) {
             return;
         }
-        if (!(getView() instanceof PlaceholderView)) {
-            Lc.assertion("View of fragment should be PlaceholderView");
-            return;
-        }
-        ((PlaceholderView) getView()).removeAllViews();
-        ((PlaceholderView) getView())
-                .addView(this.viewController.getContainer(), ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         viewController.getActivity().supportInvalidateOptionsMenu();
     }
 
