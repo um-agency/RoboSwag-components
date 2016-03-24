@@ -91,7 +91,7 @@ public class ViewController<TLogic extends Logic,
      * @return Returns logic;
      */
     @NonNull
-    public TLogic getLogic(){
+    public TLogic getLogic() {
         return getActivity().getLogic();
     }
 

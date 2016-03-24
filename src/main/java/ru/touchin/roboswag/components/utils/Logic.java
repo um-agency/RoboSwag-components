@@ -12,11 +12,14 @@ import java.util.Map;
  * Created by Gavriil Sitnikov on 24/03/16.
  * TODO: description
  */
+@SuppressWarnings({"PMD.SingletonClassReturningNewInstance", "PMD.AbstractClassWithoutAbstractMethod"})
+//AbstractClassWithoutAbstractMethod, SingletonClassReturningNewInstance: it is needed to force developer to make new class of logic
 public abstract class Logic {
 
-    private final static Map<Class<? extends Logic>, WeakReference<Logic>> LOGIC_INSTANCES = new HashMap<>();
+    private static final Map<Class<? extends Logic>, WeakReference<Logic>> LOGIC_INSTANCES = new HashMap<>();
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "PMD.SingletonClassReturningNewInstance"})
+    //SingletonClassReturningNewInstance: it is OK to create instance every time if WeakReference have died
     @NonNull
     public static <T extends Logic> T getInstance(@NonNull final Context context, @NonNull final Class<T> logicClass) {
         T result;
@@ -44,6 +47,8 @@ public abstract class Logic {
         }
     }
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
+    // UnusedFormalParameter: contex is needed to suggest this constructor
     public Logic(@NonNull final Context context) {
         //do nothing
     }
