@@ -59,13 +59,12 @@ public abstract class JsonRequest<T> extends HttpRequest<T> {
                     Lc.assertion("Do you forget to implement getBody() class during POST-request?");
                     return super.createHttpRequest().get();
                 }
-
                 return super.createHttpRequest().post(getBody());
             case GET:
                 return super.createHttpRequest().get();
             default:
-                Lc.assertion("unknown request type");
-                return null;
+                Lc.assertion("Unknown request type" + getRequestType());
+                return super.createHttpRequest().get();
         }
     }
 
