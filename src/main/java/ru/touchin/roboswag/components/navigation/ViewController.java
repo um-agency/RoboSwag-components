@@ -30,6 +30,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 
+import ru.touchin.roboswag.components.utils.Logic;
 import ru.touchin.roboswag.core.log.Lc;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -39,14 +40,12 @@ import rx.subjects.BehaviorSubject;
  * Created by Gavriil Sitnikov on 21/10/2015.
  * Class to control view of specific fragment, activity and application by logic bridge.
  */
-public class ViewController<TLogicBridge,
-        TActivity extends ViewControllerActivity<TLogicBridge>,
-        TFragment extends ViewControllerFragment<?, TLogicBridge, TActivity>> {
+public class ViewController<TLogic extends Logic,
+        TActivity extends ViewControllerActivity<TLogic>,
+        TFragment extends ViewControllerFragment<?, TLogic, TActivity>> {
 
     private static final String SUPPORT_FRAGMENT_VIEW_STATE_EXTRA = "android:view_state";
 
-    @NonNull
-    private final TLogicBridge logicBridge;
     @NonNull
     private final TActivity activity;
     @NonNull
@@ -56,9 +55,8 @@ public class ViewController<TLogicBridge,
     @NonNull
     private final BehaviorSubject<Boolean> isDestroyedSubject = BehaviorSubject.create(false);
 
-    public ViewController(@NonNull final CreationContext<TLogicBridge, TActivity, TFragment> creationContext,
+    public ViewController(@NonNull final CreationContext<TLogic, TActivity, TFragment> creationContext,
                           @Nullable final Bundle savedInstanceState) {
-        this.logicBridge = creationContext.logicBridge;
         this.activity = creationContext.activity;
         this.fragment = creationContext.fragment;
         this.container = creationContext.container;
@@ -82,19 +80,19 @@ public class ViewController<TLogicBridge,
      * @return {@link Observable} to get restore time to.
      */
     @NonNull
-    protected Observable<Bundle> getRestoreSavedStateObservable(@NonNull final CreationContext<TLogicBridge, TActivity, TFragment> creationContext,
+    protected Observable<Bundle> getRestoreSavedStateObservable(@NonNull final CreationContext<TLogic, TActivity, TFragment> creationContext,
                                                                 @Nullable final Bundle savedInstanceState) {
         return Observable.just(savedInstanceState);
     }
 
     /**
-     * Returns logic bridge to use and affect application logic.
+     * Returns application's logic.
      *
-     * @return Returns logic bridge object.
+     * @return Returns logic;
      */
     @NonNull
-    public TLogicBridge getLogicBridge() {
-        return logicBridge;
+    public TLogic getLogic(){
+        return getActivity().getLogic();
     }
 
     /**
@@ -177,12 +175,10 @@ public class ViewController<TLogicBridge,
     /**
      * Class to simplify constructor override.
      */
-    public static class CreationContext<TLogicBridge,
-            TActivity extends ViewControllerActivity<TLogicBridge>,
-            TFragment extends ViewControllerFragment<?, TLogicBridge, TActivity>> {
+    public static class CreationContext<TLogic extends Logic,
+            TActivity extends ViewControllerActivity<TLogic>,
+            TFragment extends ViewControllerFragment<?, TLogic, TActivity>> {
 
-        @NonNull
-        private final TLogicBridge logicBridge;
         @NonNull
         private final TActivity activity;
         @NonNull
@@ -190,19 +186,12 @@ public class ViewController<TLogicBridge,
         @NonNull
         private final ViewGroup container;
 
-        public CreationContext(@NonNull final TLogicBridge logicBridge,
-                               @NonNull final TActivity activity,
+        public CreationContext(@NonNull final TActivity activity,
                                @NonNull final TFragment fragment,
                                @NonNull final ViewGroup container) {
-            this.logicBridge = logicBridge;
             this.activity = activity;
             this.fragment = fragment;
             this.container = container;
-        }
-
-        @NonNull
-        public TLogicBridge getLogicBridge() {
-            return logicBridge;
         }
 
         @NonNull

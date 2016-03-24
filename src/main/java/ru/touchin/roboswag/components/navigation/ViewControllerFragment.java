@@ -35,11 +35,11 @@ import android.widget.FrameLayout;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
+import ru.touchin.roboswag.components.utils.Logic;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
 import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.exceptions.OnErrorThrowable;
 import rx.subjects.BehaviorSubject;
 
@@ -47,7 +47,7 @@ import rx.subjects.BehaviorSubject;
  * Created by Gavriil Sitnikov on 21/10/2015.
  * Fragment instantiated in specific activity of {@link TActivity} type that is holding {@link ViewController} inside.
  */
-public abstract class ViewControllerFragment<TState extends Serializable, TLogicBridge, TActivity extends ViewControllerActivity<TLogicBridge>>
+public abstract class ViewControllerFragment<TState extends Serializable, TLogic extends Logic, TActivity extends ViewControllerActivity<TLogic>>
         extends ViewFragment<TActivity> {
 
     private static final String VIEW_CONTROLLER_STATE_EXTRA = "VIEW_CONTROLLER_STATE_EXTRA";
@@ -82,13 +82,13 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     }
 
     /**
-     * It should return specific ViewController class to control instantiated view by logic bridge after activity creation.
+     * It should return specific ViewController class to control instantiated view by logic after activity creation.
      *
      * @return Returns class of specific ViewController.
      */
     @NonNull
-    public abstract Class<? extends ViewController<TLogicBridge, TActivity,
-            ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>>> getViewControllerClass();
+    public abstract Class<? extends ViewController<TLogic, TActivity,
+            ? extends ViewControllerFragment<TState, TLogic, TActivity>>> getViewControllerClass();
 
     @SuppressWarnings("unchecked")
     @Override
@@ -110,21 +110,13 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
 
     @NonNull
     private Observable<ViewController> createViewControllerObservable() {
-        return Observable
-                .combineLatest(activitySubject
-                                .switchMap(activity -> activity != null ? activity.observeLogicBridge() : Observable.just(null))
-                                .distinctUntilChanged()
-                                .observeOn(AndroidSchedulers.mainThread()),
-                        activitySubject.distinctUntilChanged().observeOn(AndroidSchedulers.mainThread()),
-                        viewSubject.distinctUntilChanged().observeOn(AndroidSchedulers.mainThread()),
-                        this::getViewController);
+        return Observable.combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(), this::createViewController);
     }
 
     @Nullable
-    private ViewController getViewController(@Nullable final TLogicBridge logicBridge,
-                                             @Nullable final TActivity activity,
-                                             @Nullable final Pair<PlaceholderView, Bundle> viewInfo) {
-        if (logicBridge == null || activity == null || viewInfo == null) {
+    private ViewController createViewController(@Nullable final TActivity activity,
+                                                @Nullable final Pair<PlaceholderView, Bundle> viewInfo) {
+        if (activity == null || viewInfo == null) {
             return null;
         }
 
@@ -132,9 +124,9 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
             throw OnErrorThrowable.from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
         }
         final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
-        final ViewController.CreationContext<TLogicBridge, TActivity,
-                ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>> creationContext
-                = new ViewController.CreationContext<>(logicBridge, activity, this, viewInfo.first);
+        final ViewController.CreationContext<TLogic, TActivity,
+                ? extends ViewControllerFragment<TState, TLogic, TActivity>> creationContext
+                = new ViewController.CreationContext<>(activity, this, viewInfo.first);
         try {
             switch (constructor.getParameterTypes().length) {
                 case 2:
@@ -193,10 +185,9 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
             this.viewController.onDestroy();
         }
         this.viewController = viewController;
-        if (this.viewController == null) {
-            return;
+        if (this.viewController != null) {
+            this.viewController.getActivity().supportInvalidateOptionsMenu();
         }
-        viewController.getActivity().supportInvalidateOptionsMenu();
     }
 
     @Override

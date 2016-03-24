@@ -2,33 +2,29 @@ package ru.touchin.roboswag.components.navigation;
 
 import android.support.annotation.NonNull;
 
-import ru.touchin.roboswag.components.services.LogicService;
-import ru.touchin.roboswag.core.utils.android.RxAndroidUtils;
-import rx.Observable;
+import ru.touchin.roboswag.components.utils.Logic;
 
 /**
  * Created by Gavriil Sitnikov on 07/03/2016.
  * TODO: fill description
  */
-public abstract class ViewControllerActivity<TLogicBridge> extends BaseActivity {
+public abstract class ViewControllerActivity<TLogic extends Logic> extends BaseActivity {
 
     /**
-     * It should return specific Service class where from this fragment should get interface to logic.
+     * It should return specific class where from all logic will be.
      *
-     * @return Returns class of specific LogicService.
+     * @return Returns class of specific Logic.
      */
     @NonNull
-    protected abstract Class<? extends LogicService<TLogicBridge>> getLogicServiceClass();
+    protected abstract Class<TLogic> getLogicClass();
 
     /**
-     * Returns {@link Observable} which will connect to {@link LogicService} and get object of {@link TLogicBridge} type from it.
+     * Returns or creates application's logic.
      *
-     * @return {@link Observable} which will provide changes of object of type {@link TLogicBridge};
+     * @return Object which represents application's logic.
      */
-    @NonNull
-    public Observable<TLogicBridge> observeLogicBridge() {
-        return RxAndroidUtils.observeService(this, getLogicServiceClass())
-                .map(service -> service != null ? service.getLogicBridge() : null);
+    public TLogic getLogic() {
+        return Logic.getInstance(this, getLogicClass());
     }
 
 }

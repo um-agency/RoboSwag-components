@@ -25,12 +25,14 @@ import android.support.annotation.Nullable;
 
 import java.io.Serializable;
 
+import ru.touchin.roboswag.components.utils.Logic;
+
 /**
  * Created by Gavriil Sitnikov on 07/03/2016.
  * TODO: fill description
  */
-public class SimpleViewControllerFragment<TState extends Serializable, TLogicBridge, TActivity extends ViewControllerActivity<TLogicBridge>>
-        extends ViewControllerFragment<TState, TLogicBridge, TActivity> {
+public class SimpleViewControllerFragment<TState extends Serializable, TLogic extends Logic, TActivity extends ViewControllerActivity<TLogic>>
+        extends ViewControllerFragment<TState, TLogic, TActivity> {
 
     private static final String VIEW_CONTROLLER_CLASS_EXTRA = "VIEW_CONTROLLER_CLASS_EXTRA";
 
@@ -49,13 +51,13 @@ public class SimpleViewControllerFragment<TState extends Serializable, TLogicBri
         return result;
     }
 
-    private Class<? extends ViewController<TLogicBridge, TActivity,
-            ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>>> viewControllerClass;
+    private Class<? extends ViewController<TLogic, TActivity,
+            ? extends ViewControllerFragment<TState, TLogic, TActivity>>> viewControllerClass;
 
     @NonNull
     @Override
-    public Class<? extends ViewController<TLogicBridge, TActivity,
-            ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>>> getViewControllerClass() {
+    public Class<? extends ViewController<TLogic, TActivity,
+            ? extends ViewControllerFragment<TState, TLogic, TActivity>>> getViewControllerClass() {
         return viewControllerClass;
     }
 
@@ -63,8 +65,8 @@ public class SimpleViewControllerFragment<TState extends Serializable, TLogicBri
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        viewControllerClass = (Class<? extends ViewController<TLogicBridge, TActivity,
-                ? extends ViewControllerFragment<TState, TLogicBridge, TActivity>>>) getArguments().getSerializable(VIEW_CONTROLLER_CLASS_EXTRA);
+        viewControllerClass = (Class<? extends ViewController<TLogic, TActivity,
+                ? extends ViewControllerFragment<TState, TLogic, TActivity>>>) getArguments().getSerializable(VIEW_CONTROLLER_CLASS_EXTRA);
     }
 
 }
