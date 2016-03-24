@@ -162,7 +162,7 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     @Override
     public void onViewCreated(@NonNull final View view, @Nullable final Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if(view instanceof PlaceholderView) {
+        if (view instanceof PlaceholderView) {
             viewSubject.onNext(new Pair<>((PlaceholderView) view, savedInstanceState));
         } else {
             Lc.assertion("View should be instanceof PlaceholderView");
