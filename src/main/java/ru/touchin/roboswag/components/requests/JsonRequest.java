@@ -22,16 +22,12 @@ package ru.touchin.roboswag.components.requests;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.google.api.client.http.AbstractHttpContent;
-import com.google.api.client.http.json.JsonHttpContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ObjectParser;
-import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import ru.touchin.roboswag.core.log.Lc;
@@ -59,26 +55,24 @@ public abstract class JsonRequest<T> extends HttpRequest<T> {
     protected Request.Builder createHttpRequest() throws IOException {
         switch (getRequestType()) {
             case POST:
-                if (getContent() == null) {
-                    Lc.assertion("Do you forget to implement getContent() class during POST-request?");
+                if (getBody() == null) {
+                    Lc.assertion("Do you forget to implement getBody() class during POST-request?");
                     return super.createHttpRequest().get();
                 }
-                final AbstractHttpContent content = new JsonHttpContent(DEFAULT_JSON_FACTORY, getContent());
-                final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                content.writeTo(byteArrayOutputStream);
-                return super.createHttpRequest().post(RequestBody.create(
-                        MediaType.parse(content.getMediaType().build()), byteArrayOutputStream.toByteArray()));
-            case GET:
-            default:
-                return super.createHttpRequest().get();
 
+                return super.createHttpRequest().post(getBody());
+            case GET:
+                return super.createHttpRequest().get();
+            default:
+                Lc.assertion("unknown request type");
+                return null;
         }
     }
 
     protected abstract RequestType getRequestType();
 
     @Nullable
-    protected Object getContent() {
+    protected RequestBody getBody() throws IOException {
         return null;
     }
 
