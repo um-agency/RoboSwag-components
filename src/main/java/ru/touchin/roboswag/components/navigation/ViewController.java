@@ -139,11 +139,6 @@ public class ViewController<TLogic extends Logic,
     @NonNull
     protected <T> Observable<T> bind(@NonNull final Observable<T> observable) {
         return observable
-                .onErrorResumeNext(throwable -> {
-                    // there should be no exceptions during binding
-                    Lc.assertion(throwable);
-                    return Observable.empty();
-                })
                 .observeOn(AndroidSchedulers.mainThread())
                 .takeUntil(isDestroyedSubject.filter(isDestroyed -> isDestroyed).first());
     }
