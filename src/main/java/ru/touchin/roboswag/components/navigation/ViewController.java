@@ -31,7 +31,6 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 
 import ru.touchin.roboswag.components.utils.Logic;
-import ru.touchin.roboswag.core.log.Lc;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.subjects.BehaviorSubject;
