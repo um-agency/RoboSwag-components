@@ -19,8 +19,12 @@
 
 package ru.touchin.roboswag.components.navigation;
 
+import android.animation.ValueAnimator;
 import android.content.res.Configuration;
+import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -33,23 +37,36 @@ import android.view.View;
  */
 public class SidebarController implements FragmentManager.OnBackStackChangedListener, BaseActivity.OnBackPressedListener {
 
+    @NonNull
     private final DrawerLayout drawerLayout;
-    private final ActionBarDrawerToggle drawerToggle;
+    @NonNull
+    private final ActionBarDrawerToggleImpl drawerToggle;
+    @NonNull
     private final View sidebar;
 
     private boolean isHamburgerShowed;
     private boolean isSidebarDisabled;
+    @Nullable
+    private ValueAnimator hamburgerAnimator;
 
     public SidebarController(@NonNull final BaseActivity activity,
                              @NonNull final DrawerLayout drawerLayout,
                              @NonNull final View sidebar) {
         this.drawerLayout = drawerLayout;
         this.sidebar = sidebar;
-        drawerToggle = new MyActionBarDrawerToggle(activity, drawerLayout);
+        drawerToggle = new ActionBarDrawerToggleImpl(activity, drawerLayout);
 
         drawerLayout.addDrawerListener(drawerToggle);
         activity.getSupportFragmentManager().addOnBackStackChangedListener(this);
         activity.addOnBackPressedListener(this);
+    }
+
+    private boolean shouldShowHamburger() {
+        return !isHamburgerShowed && !isSidebarDisabled;
+    }
+
+    public void onPostCreate(@Nullable final Bundle savedInstanceState) {
+        drawerToggle.syncState();
     }
 
     public void onConfigurationChanged(@NonNull final Configuration newConfig) {
@@ -57,14 +74,28 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
     }
 
     public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
-        return drawerToggle.onOptionsItemSelected(item);
+        return shouldShowHamburger() && drawerToggle.onOptionsItemSelected(item);
     }
 
     private void update() {
-        final boolean showHamburger = !isHamburgerShowed && !isSidebarDisabled;
-        drawerToggle.setDrawerIndicatorEnabled(!showHamburger);
-        drawerToggle.setDrawerIndicatorEnabled(showHamburger);
-        drawerToggle.syncState();
+        final boolean showHamburger = shouldShowHamburger();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            drawerToggle.setDrawerIndicatorEnabled(true);
+            if (hamburgerAnimator != null) {
+                hamburgerAnimator.cancel();
+            }
+            if (showHamburger) {
+                hamburgerAnimator = ValueAnimator.ofFloat(drawerToggle.slideOffset, 0f);
+            } else {
+                hamburgerAnimator = ValueAnimator.ofFloat(drawerToggle.slideOffset, 1f);
+            }
+            hamburgerAnimator.addUpdateListener(animation -> drawerToggle.onDrawerSlide(drawerLayout, (Float) animation.getAnimatedValue()));
+            hamburgerAnimator.start();
+        } else {
+            drawerToggle.onDrawerSlide(drawerLayout, showHamburger ? 0f : 1f);
+        }
+        drawerToggle.slidePosition = showHamburger ? 0f : 1f;
         drawerLayout.setDrawerLockMode(isSidebarDisabled ? DrawerLayout.LOCK_MODE_LOCKED_CLOSED : DrawerLayout.LOCK_MODE_UNLOCKED);
     }
 
@@ -109,11 +140,13 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
         return false;
     }
 
-    private static class MyActionBarDrawerToggle extends ActionBarDrawerToggle {
+    private static class ActionBarDrawerToggleImpl extends ActionBarDrawerToggle {
 
         private final BaseActivity activity;
+        private float slideOffset;
+        private float slidePosition;
 
-        public MyActionBarDrawerToggle(final BaseActivity activity, final DrawerLayout drawerLayout) {
+        public ActionBarDrawerToggleImpl(final BaseActivity activity, final DrawerLayout drawerLayout) {
             super(activity, drawerLayout, 0, 0);
             this.activity = activity;
         }
@@ -131,7 +164,11 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
 
         @Override
         public void onDrawerSlide(final View drawerView, final float slideOffset) {
-            super.onDrawerSlide(drawerView, 0);
+            if (slideOffset >= this.slideOffset && slideOffset <= this.slidePosition
+                    || slideOffset <= this.slideOffset && slideOffset >= this.slidePosition) {
+                this.slideOffset = slideOffset;
+            }
+            super.onDrawerSlide(drawerView, this.slideOffset);
         }
 
     }
