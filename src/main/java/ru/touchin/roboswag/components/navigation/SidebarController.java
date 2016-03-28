@@ -22,7 +22,6 @@ package ru.touchin.roboswag.components.navigation;
 import android.animation.ValueAnimator;
 import android.content.res.Configuration;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
@@ -46,8 +45,6 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
 
     private boolean isHamburgerShowed;
     private boolean isSidebarDisabled;
-    @Nullable
-    private ValueAnimator hamburgerAnimator;
 
     public SidebarController(@NonNull final BaseActivity activity,
                              @NonNull final DrawerLayout drawerLayout,
@@ -55,6 +52,7 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
         this.drawerLayout = drawerLayout;
         this.sidebar = sidebar;
         drawerToggle = new ActionBarDrawerToggleImpl(activity, drawerLayout);
+        drawerToggle.setDrawerIndicatorEnabled(true);
 
         drawerLayout.addDrawerListener(drawerToggle);
         activity.getSupportFragmentManager().addOnBackStackChangedListener(this);
@@ -65,7 +63,7 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
         return !isHamburgerShowed && !isSidebarDisabled;
     }
 
-    public void onPostCreate(@Nullable final Bundle savedInstanceState) {
+    public void onPostCreate() {
         drawerToggle.syncState();
     }
 
@@ -78,24 +76,7 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
     }
 
     private void update() {
-        final boolean showHamburger = shouldShowHamburger();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            drawerToggle.setDrawerIndicatorEnabled(true);
-            if (hamburgerAnimator != null) {
-                hamburgerAnimator.cancel();
-            }
-            if (showHamburger) {
-                hamburgerAnimator = ValueAnimator.ofFloat(drawerToggle.slideOffset, 0f);
-            } else {
-                hamburgerAnimator = ValueAnimator.ofFloat(drawerToggle.slideOffset, 1f);
-            }
-            hamburgerAnimator.addUpdateListener(animation -> drawerToggle.onDrawerSlide(drawerLayout, (Float) animation.getAnimatedValue()));
-            hamburgerAnimator.start();
-        } else {
-            drawerToggle.onDrawerSlide(drawerLayout, showHamburger ? 0f : 1f);
-        }
-        drawerToggle.slidePosition = showHamburger ? 0f : 1f;
+        drawerToggle.setHamburgerState(shouldShowHamburger());
         drawerLayout.setDrawerLockMode(isSidebarDisabled ? DrawerLayout.LOCK_MODE_LOCKED_CLOSED : DrawerLayout.LOCK_MODE_UNLOCKED);
     }
 
@@ -142,18 +123,53 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
 
     private static class ActionBarDrawerToggleImpl extends ActionBarDrawerToggle {
 
+        private final DrawerLayout drawerLayout;
         private final BaseActivity activity;
         private float slideOffset;
         private float slidePosition;
+        @Nullable
+        private ValueAnimator hamburgerAnimator;
 
-        public ActionBarDrawerToggleImpl(final BaseActivity activity, final DrawerLayout drawerLayout) {
+        public ActionBarDrawerToggleImpl(@NonNull final BaseActivity activity, @NonNull final DrawerLayout drawerLayout) {
             super(activity, drawerLayout, 0, 0);
+            this.drawerLayout = drawerLayout;
             this.activity = activity;
+        }
+
+        public void setHamburgerState(final boolean showHamburger) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                cancelAnimation();
+                if (showHamburger) {
+                    hamburgerAnimator = ValueAnimator.ofFloat(slideOffset, 0f);
+                } else {
+                    hamburgerAnimator = ValueAnimator.ofFloat(slideOffset, 1f);
+                }
+                hamburgerAnimator.addUpdateListener(animation -> onDrawerSlide(drawerLayout, (Float) animation.getAnimatedValue()));
+                hamburgerAnimator.start();
+            } else {
+                onDrawerSlide(drawerLayout, showHamburger ? 0f : 1f);
+            }
+            slidePosition = showHamburger ? 0f : 1f;
+        }
+
+        private void cancelAnimation() {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                return;
+            }
+            if (hamburgerAnimator != null) {
+                hamburgerAnimator.cancel();
+            }
         }
 
         @Override
         public void onDrawerClosed(final View view) {
             activity.supportInvalidateOptionsMenu();
+        }
+
+        @Override
+        public void syncState() {
+            cancelAnimation();
+            super.syncState();
         }
 
         @Override
