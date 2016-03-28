@@ -126,7 +126,7 @@ public class FragmentNavigation {
             }
         }
         if (id != null) {
-            fragmentManager.popBackStackImmediate(id, 0);
+            fragmentManager.popBackStack(id, 0);
             return true;
         }
         return false;
@@ -230,7 +230,7 @@ public class FragmentNavigation {
         }
 
         if (fragmentManager.getBackStackEntryCount() > 0) {
-            fragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
         }
     }
 
