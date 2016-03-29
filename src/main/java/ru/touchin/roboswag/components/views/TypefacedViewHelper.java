@@ -37,7 +37,7 @@ public final class TypefacedViewHelper {
                 final Typeface typeface = typefacedText.getTypeface();
                 typefacedText.setTypeface(customTypeface, typeface == null ? Typeface.NORMAL : typeface.getStyle());
             }
-        } else if (!allowEmptyCustomTypeface) {
+        } else if (attrs != null && !allowEmptyCustomTypeface) {
             Lc.assertion("TypefacedText has no customTypeface attribute: " + typefacedText);
         }
     }
