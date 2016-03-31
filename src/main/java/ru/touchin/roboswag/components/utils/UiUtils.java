@@ -56,6 +56,10 @@ public final class UiUtils {
         return result;
     }
 
+    public static float dpToPixels(@NonNull final Context context, final float sizeInDp) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, sizeInDp, getDisplayMetrics(context));
+    }
+
     public static int getActionBarHeight(@NonNull final Context context) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 56, getDisplayMetrics(context));
     }
