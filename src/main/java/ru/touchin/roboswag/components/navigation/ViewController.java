@@ -53,6 +53,8 @@ public class ViewController<TLogic extends Logic,
     private final ViewGroup container;
     @NonNull
     private final BehaviorSubject<Boolean> isDestroyedSubject = BehaviorSubject.create(false);
+    @NonNull
+    private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create(false);
 
     public ViewController(@NonNull final CreationContext<TLogic, TActivity, TFragment> creationContext,
                           @Nullable final Bundle savedInstanceState) {
@@ -137,9 +139,9 @@ public class ViewController<TLogic extends Logic,
 
     @NonNull
     protected <T> Observable<T> bind(@NonNull final Observable<T> observable) {
-        return observable
-                .observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(isDestroyedSubject.filter(isDestroyed -> isDestroyed).first());
+        return isStartedSubject
+                .switchMap(isStarted -> isStarted ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
+                .takeUntil(isDestroyedSubject.filter(isDestroyed -> isDestroyed));
     }
 
     /**
@@ -154,8 +156,16 @@ public class ViewController<TLogic extends Logic,
         }
     }
 
+    public void onStart() {
+        isStartedSubject.onNext(true);
+    }
+
     public void onSaveInstanceState(@NonNull final Bundle savedInstanceState) {
         // do nothing
+    }
+
+    public void onStop() {
+        isStartedSubject.onNext(false);
     }
 
     public void onDestroy() {

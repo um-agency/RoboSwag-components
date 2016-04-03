@@ -71,6 +71,7 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     private ViewController viewController;
     private Subscription viewControllerSubscription;
     private TState state;
+    private boolean isStarted;
 
     /**
      * Returns specific object which contains state of ViewController.
@@ -95,26 +96,13 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     public void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (getContext() == null) {
-            Lc.assertion("Context is null in onCreate");
-            return;
-        }
-
         setHasOptionsMenu(getParentFragment() == null);
 
         state = savedInstanceState != null
                 ? (TState) savedInstanceState.getSerializable(VIEW_CONTROLLER_STATE_EXTRA)
                 : (getArguments() != null ? (TState) getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
-        viewControllerSubscription = createViewControllerObservable().subscribe(this::onViewControllerChanged, Lc::assertion);
-    }
-
-    @NonNull
-    private Observable<ViewController> createViewControllerObservable() {
-        return Observable.combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(), this::createViewController)
-                .onErrorResumeNext(throwable -> {
-                    Lc.assertion(throwable);
-                    return Observable.empty();
-                });
+        viewControllerSubscription = Observable.combineLatest(activitySubject, viewSubject, this::createViewController)
+                .subscribe(this::onViewControllerChanged, Lc::assertion);
     }
 
     @Nullable
@@ -172,6 +160,15 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
     }
 
     @Override
+    protected void onStart(@NonNull final View view, @NonNull final TActivity activity) {
+        super.onStart(view, activity);
+        isStarted = true;
+        if (viewController != null) {
+            viewController.onStart();
+        }
+    }
+
+    @Override
     public void onCreateOptionsMenu(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         if (viewController != null) {
@@ -190,6 +187,9 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
         }
         this.viewController = viewController;
         if (this.viewController != null) {
+            if (isStarted) {
+                this.viewController.onStart();
+            }
             this.viewController.getActivity().supportInvalidateOptionsMenu();
         }
     }
@@ -203,6 +203,15 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
         } else if (getArguments() != null && getArguments().containsKey(VIEW_CONTROLLER_STATE_EXTRA)) {
             savedInstanceState.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA));
         }
+    }
+
+    @Override
+    protected void onStop(@NonNull final View view, @NonNull final TActivity activity) {
+        isStarted = false;
+        if (viewController != null) {
+            viewController.onStop();
+        }
+        super.onStop(view, activity);
     }
 
     @Override
