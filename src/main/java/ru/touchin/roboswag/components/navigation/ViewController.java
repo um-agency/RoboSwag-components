@@ -20,11 +20,9 @@
 package ru.touchin.roboswag.components.navigation;
 
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.SparseArray;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -43,8 +41,6 @@ public class ViewController<TLogic extends Logic,
         TActivity extends ViewControllerActivity<TLogic>,
         TFragment extends ViewControllerFragment<?, TLogic, TActivity>> {
 
-    private static final String SUPPORT_FRAGMENT_VIEW_STATE_EXTRA = "android:view_state";
-
     @NonNull
     private final TActivity activity;
     @NonNull
@@ -56,34 +52,17 @@ public class ViewController<TLogic extends Logic,
     @NonNull
     private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create(false);
 
+    @SuppressWarnings("PMD.UnusedFormalParameter")
+    //UnusedFormalParameter: savedInstanceState could be used by children
     public ViewController(@NonNull final CreationContext<TLogic, TActivity, TFragment> creationContext,
                           @Nullable final Bundle savedInstanceState) {
         this.activity = creationContext.activity;
         this.fragment = creationContext.fragment;
         this.container = creationContext.container;
-
-        bind(getRestoreSavedStateObservable(creationContext, savedInstanceState)
-                .first()
-                .filter(savedState -> savedState != null))
-                .subscribe(this::onRestoreSavedState);
     }
 
     public boolean isDestroyed() {
         return isDestroyedSubject.getValue();
-    }
-
-    /**
-     * Sets {@link Observable} which will be used to get a moment when controller should restore it's state.
-     * It will be waits for first non-null {@link Bundle} that contains saved state.
-     *
-     * @param creationContext    Context passed into {@link ViewController} constructor.
-     * @param savedInstanceState Saved state of {@link ViewController}.
-     * @return {@link Observable} to get restore time to.
-     */
-    @NonNull
-    protected Observable<Bundle> getRestoreSavedStateObservable(@NonNull final CreationContext<TLogic, TActivity, TFragment> creationContext,
-                                                                @Nullable final Bundle savedInstanceState) {
-        return Observable.just(savedInstanceState);
     }
 
     /**
@@ -142,18 +121,6 @@ public class ViewController<TLogic extends Logic,
         return isStartedSubject
                 .switchMap(isStarted -> isStarted ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
                 .takeUntil(isDestroyedSubject.filter(isDestroyed -> isDestroyed));
-    }
-
-    /**
-     * Called when savedInstanceState is ready to be restored.
-     *
-     * @param savedInstanceState Saved state.
-     */
-    protected void onRestoreSavedState(@NonNull final Bundle savedInstanceState) {
-        final SparseArray<Parcelable> viewStates = savedInstanceState.getSparseParcelableArray(SUPPORT_FRAGMENT_VIEW_STATE_EXTRA);
-        if (viewStates != null) {
-            container.restoreHierarchyState(viewStates);
-        }
     }
 
     public void onStart() {

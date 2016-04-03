@@ -101,7 +101,8 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
         state = savedInstanceState != null
                 ? (TState) savedInstanceState.getSerializable(VIEW_CONTROLLER_STATE_EXTRA)
                 : (getArguments() != null ? (TState) getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
-        viewControllerSubscription = Observable.combineLatest(activitySubject, viewSubject, this::createViewController)
+        viewControllerSubscription = Observable
+                .combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(), this::createViewController)
                 .subscribe(this::onViewControllerChanged, Lc::assertion);
     }
 
