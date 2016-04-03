@@ -52,7 +52,6 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
         this.drawerLayout = drawerLayout;
         this.sidebar = sidebar;
         drawerToggle = new ActionBarDrawerToggleImpl(activity, drawerLayout);
-        drawerToggle.setDrawerIndicatorEnabled(true);
 
         drawerLayout.addDrawerListener(drawerToggle);
         activity.getSupportFragmentManager().addOnBackStackChangedListener(this);
@@ -92,11 +91,13 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
     }
 
     public void hideHamburger() {
+        drawerToggle.syncState();
         isHamburgerShowed = true;
         update();
     }
 
     public void showHamburger() {
+        drawerToggle.syncState();
         isHamburgerShowed = false;
         update();
     }
