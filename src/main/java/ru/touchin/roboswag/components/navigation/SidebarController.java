@@ -130,6 +130,7 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
         private float slidePosition;
         @Nullable
         private ValueAnimator hamburgerAnimator;
+        private boolean firstAnimation = true;
 
         public ActionBarDrawerToggleImpl(@NonNull final BaseActivity activity, @NonNull final DrawerLayout drawerLayout) {
             super(activity, drawerLayout, 0, 0);
@@ -138,7 +139,7 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
         }
 
         public void setHamburgerState(final boolean showHamburger) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            if (!firstAnimation && Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
                 cancelAnimation();
                 if (showHamburger) {
                     hamburgerAnimator = ValueAnimator.ofFloat(slideOffset, 0f);
@@ -148,9 +149,11 @@ public class SidebarController implements FragmentManager.OnBackStackChangedList
                 hamburgerAnimator.addUpdateListener(animation -> onDrawerSlide(drawerLayout, (Float) animation.getAnimatedValue()));
                 hamburgerAnimator.start();
             } else {
-                onDrawerSlide(drawerLayout, showHamburger ? 0f : 1f);
+                slideOffset = showHamburger ? 0f : 1f;
+                onDrawerSlide(drawerLayout, slideOffset);
             }
             slidePosition = showHamburger ? 0f : 1f;
+            firstAnimation = false;
         }
 
         private void cancelAnimation() {
