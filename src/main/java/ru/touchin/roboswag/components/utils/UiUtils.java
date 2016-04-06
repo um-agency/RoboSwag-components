@@ -107,7 +107,8 @@ public final class UiUtils {
 
     @NonNull
     public static View inflateAndAdd(@LayoutRes final int layoutId, @NonNull final ViewGroup parent) {
-        return LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, true);
+        LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, true);
+        return parent.getChildAt(parent.getChildCount() - 1);
     }
 
     public static boolean tryForeachFragment(@NonNull final FragmentManager fragmentManager,
