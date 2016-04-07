@@ -135,7 +135,8 @@ public class FragmentNavigation {
 
     @SuppressWarnings("PMD.ShortMethodName")
     public boolean up() {
-        return backTo(backStackEntry -> backStackEntry.getName().endsWith(TOP_FRAGMENT_TAG_MARK));
+        return backTo(backStackEntry ->
+                backStackEntry.getName() != null && backStackEntry.getName().endsWith(TOP_FRAGMENT_TAG_MARK));
     }
 
     public void push(@NonNull final Class<? extends Fragment> fragmentClass) {

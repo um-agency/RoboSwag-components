@@ -123,6 +123,12 @@ public class ViewController<TLogic extends Logic,
                 .takeUntil(isDestroyedSubject.filter(isDestroyed -> isDestroyed));
     }
 
+    @NonNull
+    protected <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
+        return observable.observeOn(AndroidSchedulers.mainThread())
+                .takeUntil(isStartedSubject.filter(isStarted -> !isStarted));
+    }
+
     public void onStart() {
         isStartedSubject.onNext(true);
     }
