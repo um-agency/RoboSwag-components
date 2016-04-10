@@ -22,6 +22,7 @@ package ru.touchin.roboswag.components.navigation;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -91,6 +92,26 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     @NonNull
     public ViewGroup getContainer() {
         return container;
+    }
+
+    /**
+     * Return a localized string from the application's package's default string table.
+     *
+     * @param resId Resource id for the string
+     */
+    public final String getString(@StringRes final int resId) {
+        return getActivity().getString(resId);
+    }
+
+    /**
+     * Return a localized formatted string from the application's package's default string table, substituting the format arguments as defined in
+     * {@link java.util.Formatter} and {@link java.lang.String#format}.
+     *
+     * @param resId      Resource id for the format string
+     * @param formatArgs The format arguments that will be used for substitution.
+     */
+    public final String getString(@StringRes final int resId, final Object... formatArgs) {
+        return getActivity().getString(resId, formatArgs);
     }
 
     /**
