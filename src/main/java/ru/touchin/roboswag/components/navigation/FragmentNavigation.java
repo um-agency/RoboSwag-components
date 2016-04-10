@@ -28,6 +28,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.view.MenuItem;
 
 import ru.touchin.roboswag.core.log.Lc;
 import rx.functions.Func1;
@@ -78,6 +79,11 @@ public class FragmentNavigation {
                 .getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1)
                 .getName();
         return topFragmentTag != null && topFragmentTag.contains(TOP_FRAGMENT_TAG_MARK);
+    }
+
+    @SuppressLint("InlinedApi")//TODO?
+    public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
+        return item.getItemId() == android.R.id.home && back();
     }
 
     @SuppressLint("CommitTransaction")
