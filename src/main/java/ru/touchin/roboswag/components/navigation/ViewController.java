@@ -49,7 +49,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     @NonNull
     private final BehaviorSubject<Boolean> isDestroyedSubject = BehaviorSubject.create(false);
     @NonNull
-    private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create(false);
+    private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
     //UnusedFormalParameter: savedInstanceState could be used by children

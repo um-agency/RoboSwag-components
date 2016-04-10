@@ -8,6 +8,10 @@ import android.view.inputmethod.InputMethodManager;
 
 import java.util.ArrayList;
 
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.subjects.BehaviorSubject;
+
 /**
  * Created by Gavriil Sitnikov on 08/03/2016.
  * TODO: fill description
@@ -15,6 +19,26 @@ import java.util.ArrayList;
 public class BaseActivity extends AppCompatActivity {
 
     private final ArrayList<OnBackPressedListener> onBackPressedListeners = new ArrayList<>();
+    @NonNull
+    private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        isStartedSubject.onNext(true);
+    }
+
+    @Override
+    protected void onStop() {
+        isStartedSubject.onNext(false);
+        super.onStop();
+    }
+
+    @NonNull
+    protected <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
+        return observable.observeOn(AndroidSchedulers.mainThread())
+                .takeUntil(isStartedSubject.filter(isStarted -> !isStarted));
+    }
 
     /**
      * Hides device keyboard that is showing over {@link Activity}.
