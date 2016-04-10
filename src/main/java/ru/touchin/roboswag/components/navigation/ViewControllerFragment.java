@@ -35,7 +35,6 @@ import android.widget.FrameLayout;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
-import ru.touchin.roboswag.components.utils.Logic;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
@@ -47,7 +46,7 @@ import rx.subjects.BehaviorSubject;
  * Created by Gavriil Sitnikov on 21/10/2015.
  * Fragment instantiated in specific activity of {@link TActivity} type that is holding {@link ViewController} inside.
  */
-public abstract class ViewControllerFragment<TState extends Serializable, TLogic extends Logic, TActivity extends ViewControllerActivity<TLogic>>
+public abstract class ViewControllerFragment<TState extends Serializable, TActivity extends ViewControllerActivity<?>>
         extends ViewFragment<TActivity> {
 
     private static final String VIEW_CONTROLLER_STATE_EXTRA = "VIEW_CONTROLLER_STATE_EXTRA";
@@ -88,8 +87,8 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
      * @return Returns class of specific ViewController.
      */
     @NonNull
-    public abstract Class<? extends ViewController<TLogic, TActivity,
-            ? extends ViewControllerFragment<TState, TLogic, TActivity>>> getViewControllerClass();
+    public abstract Class<? extends ViewController<TActivity,
+            ? extends ViewControllerFragment<TState, TActivity>>> getViewControllerClass();
 
     @SuppressWarnings("unchecked")
     @Override
@@ -117,8 +116,8 @@ public abstract class ViewControllerFragment<TState extends Serializable, TLogic
             throw OnErrorThrowable.from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
         }
         final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
-        final ViewController.CreationContext<TLogic, TActivity,
-                ? extends ViewControllerFragment<TState, TLogic, TActivity>> creationContext
+        final ViewController.CreationContext<TActivity,
+                ? extends ViewControllerFragment<TState, TActivity>> creationContext
                 = new ViewController.CreationContext<>(activity, this, viewInfo.first);
         try {
             switch (constructor.getParameterTypes().length) {

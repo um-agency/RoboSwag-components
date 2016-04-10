@@ -28,7 +28,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 
-import ru.touchin.roboswag.components.utils.Logic;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.subjects.BehaviorSubject;
@@ -37,9 +36,8 @@ import rx.subjects.BehaviorSubject;
  * Created by Gavriil Sitnikov on 21/10/2015.
  * Class to control view of specific fragment, activity and application by logic bridge.
  */
-public class ViewController<TLogic extends Logic,
-        TActivity extends ViewControllerActivity<TLogic>,
-        TFragment extends ViewControllerFragment<?, TLogic, TActivity>> {
+public class ViewController<TActivity extends ViewControllerActivity<?>,
+        TFragment extends ViewControllerFragment<?, TActivity>> {
 
     @NonNull
     private final TActivity activity;
@@ -54,7 +52,7 @@ public class ViewController<TLogic extends Logic,
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
     //UnusedFormalParameter: savedInstanceState could be used by children
-    public ViewController(@NonNull final CreationContext<TLogic, TActivity, TFragment> creationContext,
+    public ViewController(@NonNull final CreationContext<TActivity, TFragment> creationContext,
                           @Nullable final Bundle savedInstanceState) {
         this.activity = creationContext.activity;
         this.fragment = creationContext.fragment;
@@ -63,16 +61,6 @@ public class ViewController<TLogic extends Logic,
 
     public boolean isDestroyed() {
         return isDestroyedSubject.getValue();
-    }
-
-    /**
-     * Returns application's logic.
-     *
-     * @return Returns logic;
-     */
-    @NonNull
-    public TLogic getLogic() {
-        return getActivity().getLogic();
     }
 
     /**
@@ -152,9 +140,8 @@ public class ViewController<TLogic extends Logic,
     /**
      * Class to simplify constructor override.
      */
-    public static class CreationContext<TLogic extends Logic,
-            TActivity extends ViewControllerActivity<TLogic>,
-            TFragment extends ViewControllerFragment<?, TLogic, TActivity>> {
+    public static class CreationContext<TActivity extends ViewControllerActivity<?>,
+            TFragment extends ViewControllerFragment<?, TActivity>> {
 
         @NonNull
         private final TActivity activity;
@@ -169,21 +156,6 @@ public class ViewController<TLogic extends Logic,
             this.activity = activity;
             this.fragment = fragment;
             this.container = container;
-        }
-
-        @NonNull
-        public TActivity getActivity() {
-            return activity;
-        }
-
-        @NonNull
-        public TFragment getFragment() {
-            return fragment;
-        }
-
-        @NonNull
-        public ViewGroup getContainer() {
-            return container;
         }
 
     }

@@ -1,6 +1,7 @@
 package ru.touchin.roboswag.components.navigation;
 
 import android.support.annotation.NonNull;
+import android.view.Menu;
 
 import ru.touchin.roboswag.components.utils.Logic;
 
@@ -25,6 +26,21 @@ public abstract class ViewControllerActivity<TLogic extends Logic> extends BaseA
      */
     public TLogic getLogic() {
         return Logic.getInstance(this, getLogicClass());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        onConfigureNavigation(menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    /**
+     * Calls when activity configuring ActionBar, Toolbar, Sidebar etc. Before internal ViewControllers.
+     *
+     * @param menu The options menu in which you place your items;
+     */
+    public void onConfigureNavigation(@NonNull final Menu menu) {
+        // do nothing
     }
 
 }

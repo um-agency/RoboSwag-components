@@ -21,12 +21,10 @@ package ru.touchin.roboswag.components.navigation;
 
 import java.io.Serializable;
 
-import ru.touchin.roboswag.components.utils.Logic;
-
 /**
  * Created by Gavriil Sitnikov on 12/03/2016.
  * TODO: fill description
  */
-public class StatelessViewControllerFragment<TLogic extends Logic, TActivity extends ViewControllerActivity<TLogic>>
-        extends SimpleViewControllerFragment<Serializable, TLogic, TActivity> {
+public class StatelessViewControllerFragment<TActivity extends ViewControllerActivity<?>>
+        extends SimpleViewControllerFragment<Serializable, TActivity> {
 }
