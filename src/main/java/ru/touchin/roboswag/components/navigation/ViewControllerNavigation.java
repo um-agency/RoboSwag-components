@@ -9,6 +9,10 @@ import android.support.v4.app.FragmentTransaction;
 
 import java.io.Serializable;
 
+import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
+import ru.touchin.roboswag.components.navigation.fragments.SimpleViewControllerFragment;
+import ru.touchin.roboswag.components.navigation.fragments.StatelessViewControllerFragment;
+import ru.touchin.roboswag.components.navigation.fragments.ViewControllerFragment;
 import rx.functions.Func1;
 
 /**

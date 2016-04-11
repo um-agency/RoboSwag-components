@@ -1,4 +1,4 @@
-package ru.touchin.roboswag.components.navigation;
+package ru.touchin.roboswag.components.navigation.activities;
 
 import android.app.Activity;
 import android.support.annotation.NonNull;

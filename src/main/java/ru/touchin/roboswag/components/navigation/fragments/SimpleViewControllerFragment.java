@@ -17,13 +17,16 @@
  *
  */
 
-package ru.touchin.roboswag.components.navigation;
+package ru.touchin.roboswag.components.navigation.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.io.Serializable;
+
+import ru.touchin.roboswag.components.navigation.ViewController;
+import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
 
 /**
  * Created by Gavriil Sitnikov on 07/03/2016.
@@ -44,7 +47,7 @@ public class SimpleViewControllerFragment<TState extends Serializable, TActivity
     @NonNull
     public static Bundle createState(@NonNull final Class<? extends ViewController> viewControllerClass,
                                      @Nullable final Serializable state) {
-        final Bundle result = ViewControllerFragment.createState(state);
+        final Bundle result = createState(state);
         result.putSerializable(VIEW_CONTROLLER_CLASS_EXTRA, viewControllerClass);
         return result;
     }

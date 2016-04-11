@@ -37,6 +37,7 @@ import android.view.MenuItem;
 import java.util.HashMap;
 import java.util.Map;
 
+import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
 import ru.touchin.roboswag.components.utils.PermissionState;
 import ru.touchin.roboswag.components.utils.UiUtils;
 import rx.Observable;
@@ -47,6 +48,7 @@ import rx.subjects.PublishSubject;
  * TODO: fill description
  */
 @SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods"})
+@Deprecated
 public abstract class AbstractBaseActivity extends BaseActivity
         implements FragmentManager.OnBackStackChangedListener,
         OnFragmentStartedListener {

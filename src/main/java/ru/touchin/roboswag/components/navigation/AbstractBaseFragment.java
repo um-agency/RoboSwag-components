@@ -44,6 +44,7 @@ import java.util.Map;
  */
 // Yes, it's a God class with a lot of methods. Deal with it
 @SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods"})
+@Deprecated
 public abstract class AbstractBaseFragment<TViewController extends AbstractBaseFragment.ViewController> extends Fragment
         implements OnFragmentStartedListener {
 

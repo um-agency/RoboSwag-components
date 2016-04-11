@@ -29,6 +29,8 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.view.MenuItem;
 import android.view.View;
 
+import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
+
 /**
  * Created by Gavriil Sitnikov on 11/03/16.
  * TODO: descriptions

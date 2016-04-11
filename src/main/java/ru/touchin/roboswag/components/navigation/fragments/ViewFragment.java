@@ -17,7 +17,7 @@
  *
  */
 
-package ru.touchin.roboswag.components.navigation;
+package ru.touchin.roboswag.components.navigation.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -28,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import ru.touchin.roboswag.components.navigation.OnFragmentStartedListener;
 import ru.touchin.roboswag.core.log.Lc;
 import rx.functions.Action2;
 

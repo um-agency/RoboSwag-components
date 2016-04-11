@@ -17,7 +17,7 @@
  *
  */
 
-package ru.touchin.roboswag.components.navigation;
+package ru.touchin.roboswag.components.navigation.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -35,6 +35,8 @@ import android.widget.FrameLayout;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
+import ru.touchin.roboswag.components.navigation.ViewController;
+import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;

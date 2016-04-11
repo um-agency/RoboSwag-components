@@ -17,9 +17,11 @@
  *
  */
 
-package ru.touchin.roboswag.components.navigation;
+package ru.touchin.roboswag.components.navigation.fragments;
 
 import java.io.Serializable;
+
+import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
 
 /**
  * Created by Gavriil Sitnikov on 12/03/2016.

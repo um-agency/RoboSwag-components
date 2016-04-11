@@ -29,6 +29,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 
+import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
+import ru.touchin.roboswag.components.navigation.fragments.ViewControllerFragment;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.subjects.BehaviorSubject;
