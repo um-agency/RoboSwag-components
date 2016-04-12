@@ -17,7 +17,7 @@
  *
  */
 
-package ru.touchin.roboswag.components.storables;
+package ru.touchin.roboswag.components.storeables;
 
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
@@ -32,8 +32,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import ru.touchin.roboswag.core.data.storable.Converter;
-import ru.touchin.roboswag.core.data.storable.Storeable;
+import ru.touchin.roboswag.core.data.storeable.Converter;
+import ru.touchin.roboswag.core.data.storeable.Storeable;
 import ru.touchin.roboswag.core.data.exceptions.ConversionException;
 import ru.touchin.roboswag.core.log.Lc;
 
