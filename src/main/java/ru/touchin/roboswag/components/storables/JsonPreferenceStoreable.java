@@ -33,22 +33,22 @@ import java.io.IOException;
 import java.io.StringWriter;
 
 import ru.touchin.roboswag.core.data.storable.Converter;
-import ru.touchin.roboswag.core.data.storable.Storable;
-import ru.touchin.roboswag.core.data.storable.exceptions.ConversionException;
+import ru.touchin.roboswag.core.data.storable.Storeable;
+import ru.touchin.roboswag.core.data.exceptions.ConversionException;
 import ru.touchin.roboswag.core.log.Lc;
 
 /**
  * Created by Gavriil Sitnikov on 18/03/16.
  * TODO: description
  */
-public class JsonPreferenceStorable<T> extends Storable<String, T, String> {
+public class JsonPreferenceStoreable<T> extends Storeable<String, T, String> {
 
     private static final JsonFactory DEFAULT_JSON_FACTORY = new JacksonFactory();
 
-    public JsonPreferenceStorable(@NonNull final String name,
-                                  @NonNull final Class<T> objectClass,
-                                  @NonNull final SharedPreferences preferences,
-                                  @Nullable final T defaultValue) {
+    public JsonPreferenceStoreable(@NonNull final String name,
+                                   @NonNull final Class<T> objectClass,
+                                   @NonNull final SharedPreferences preferences,
+                                   @Nullable final T defaultValue) {
         super(name, name, objectClass, String.class, new PreferenceStore<>(preferences), new JsonConverter<>(),
                 false, null, null, defaultValue);
     }
