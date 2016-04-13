@@ -23,14 +23,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
-import ru.touchin.roboswag.core.log.Lc;
-import ru.touchin.roboswag.core.utils.android.RxAndroidUtils;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import ru.touchin.roboswag.core.log.Lc;
+import ru.touchin.roboswag.core.utils.android.RxAndroidUtils;
 import rx.Observable;
 import rx.Scheduler;
 
@@ -73,6 +72,20 @@ public class SimplePagingProvider<T> extends ItemsProvider<T> {
             return (maxLoadedPage != null ? maxLoadedPage * pageSize + loadedPages.get(maxLoadedPage).size() : 0)
                     + (isLastPageLoaded ? 0 : 1);
         }
+    }
+
+    @NonNull
+    public List<T> getLoadedItems() {
+        final List<T> result = new ArrayList<>();
+        if (maxLoadedPage != null) {
+            for (int i = 0; i < maxLoadedPage; i++) {
+                final List<T> page = loadedPages.get(i);
+                if (page != null) {
+                    result.addAll(page);
+                }
+            }
+        }
+        return result;
     }
 
     private int pageIndexOf(final int position) {
