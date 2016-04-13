@@ -17,15 +17,21 @@
  *
  */
 
-package ru.touchin.roboswag.components.navigation.fragments;
+package ru.touchin.roboswag.components.navigation;
 
-import ru.touchin.roboswag.components.navigation.AbstractState;
-import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
+import java.io.Serializable;
 
 /**
- * Created by Gavriil Sitnikov on 12/03/2016.
- * TODO: fill description
+ * Created by Ilia Kurtov on 13.04.2016.
  */
-public class StatelessViewControllerFragment<TActivity extends ViewControllerActivity<?>>
-        extends SimpleViewControllerFragment<AbstractState, TActivity> {
+@SuppressWarnings("PMD.AbstractClassWithoutAbstractMethod")
+//AbstractClassWithoutAbstractMethod: objects of this class actually shouldn't exist
+public abstract class AbstractState implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    public void onCreate(){
+        // do nothing
+    }
+
 }

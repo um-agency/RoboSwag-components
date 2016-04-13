@@ -35,6 +35,7 @@ import android.widget.FrameLayout;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
+import ru.touchin.roboswag.components.navigation.AbstractState;
 import ru.touchin.roboswag.components.navigation.ViewController;
 import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
 import ru.touchin.roboswag.core.log.Lc;
@@ -48,7 +49,7 @@ import rx.subjects.BehaviorSubject;
  * Created by Gavriil Sitnikov on 21/10/2015.
  * Fragment instantiated in specific activity of {@link TActivity} type that is holding {@link ViewController} inside.
  */
-public abstract class ViewControllerFragment<TState extends Serializable, TActivity extends ViewControllerActivity<?>>
+public abstract class ViewControllerFragment<TState extends AbstractState, TActivity extends ViewControllerActivity<?>>
         extends ViewFragment<TActivity> {
 
     private static final String VIEW_CONTROLLER_STATE_EXTRA = "VIEW_CONTROLLER_STATE_EXTRA";
@@ -102,6 +103,9 @@ public abstract class ViewControllerFragment<TState extends Serializable, TActiv
         state = savedInstanceState != null
                 ? (TState) savedInstanceState.getSerializable(VIEW_CONTROLLER_STATE_EXTRA)
                 : (getArguments() != null ? (TState) getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
+        if (state != null) {
+            state.onCreate();
+        }
         viewControllerSubscription = Observable
                 .combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(), this::createViewController)
                 .subscribe(this::onViewControllerChanged, Lc::assertion);

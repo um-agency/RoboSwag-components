@@ -29,14 +29,13 @@ import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.SeekBar;
 
-import ru.touchin.roboswag.core.log.Lc;
-import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import ru.touchin.roboswag.core.log.Lc;
+import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;

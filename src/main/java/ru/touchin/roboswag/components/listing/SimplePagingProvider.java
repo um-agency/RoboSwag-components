@@ -23,14 +23,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.SparseArray;
 
-import ru.touchin.roboswag.core.log.Lc;
-import ru.touchin.roboswag.core.utils.android.RxAndroidUtils;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import ru.touchin.roboswag.core.log.Lc;
+import ru.touchin.roboswag.core.utils.android.RxAndroidUtils;
 import rx.Observable;
 import rx.Scheduler;
 

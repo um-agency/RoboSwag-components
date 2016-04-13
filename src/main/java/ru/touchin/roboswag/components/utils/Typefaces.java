@@ -24,14 +24,14 @@ import android.content.res.AssetManager;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
 
-import ru.touchin.roboswag.core.log.Lc;
-import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import ru.touchin.roboswag.core.log.Lc;
+import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 
 /**
  * Created by Gavriil Sitnikov on 18/07/2014.

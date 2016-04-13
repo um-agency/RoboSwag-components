@@ -25,6 +25,7 @@ import android.support.annotation.Nullable;
 
 import java.io.Serializable;
 
+import ru.touchin.roboswag.components.navigation.AbstractState;
 import ru.touchin.roboswag.components.navigation.ViewController;
 import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
 
@@ -32,7 +33,7 @@ import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivi
  * Created by Gavriil Sitnikov on 07/03/2016.
  * TODO: fill description
  */
-public class SimpleViewControllerFragment<TState extends Serializable, TActivity extends ViewControllerActivity<?>>
+public class SimpleViewControllerFragment<TState extends AbstractState, TActivity extends ViewControllerActivity<?>>
         extends ViewControllerFragment<TState, TActivity> {
 
     private static final String VIEW_CONTROLLER_CLASS_EXTRA = "VIEW_CONTROLLER_CLASS_EXTRA";

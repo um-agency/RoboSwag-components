@@ -30,13 +30,13 @@ import android.support.v4.app.Fragment;
 import android.view.Menu;
 import android.view.View;
 
-import ru.touchin.roboswag.components.savestate.AbstractSavedStateController;
-import ru.touchin.roboswag.components.utils.UiUtils;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import ru.touchin.roboswag.components.savestate.AbstractSavedStateController;
+import ru.touchin.roboswag.components.utils.UiUtils;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
