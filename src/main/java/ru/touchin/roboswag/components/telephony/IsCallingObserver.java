@@ -21,7 +21,6 @@ package ru.touchin.roboswag.components.telephony;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 
@@ -34,27 +33,14 @@ import rx.subjects.BehaviorSubject;
  */
 public final class IsCallingObserver {
 
-    @Nullable
-    private static IsCallingObserver instance;
-
     private static boolean isCallingState(final int state) {
         return state != TelephonyManager.CALL_STATE_IDLE;
-    }
-
-    @NonNull
-    public static IsCallingObserver getInstance(@NonNull final Context context) {
-        synchronized (IsCallingObserver.class) {
-            if (instance == null) {
-                instance = new IsCallingObserver(context);
-            }
-            return instance;
-        }
     }
 
     private final BehaviorSubject<Boolean> isCallingSubject = BehaviorSubject.create();
     private final Observable<Boolean> isCallingObservable;
 
-    private IsCallingObserver(@NonNull final Context context) {
+    public IsCallingObserver(@NonNull final Context context) {
         final TelephonyManager phoneStateManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         phoneStateManager.listen(new PhoneStateListener() {
             @Override
