@@ -28,7 +28,7 @@ public abstract class ViewControllerActivity<TLogic extends Logic> extends BaseA
      * @return Object which represents application's logic.
      */
     public TLogic getLogic() {
-        synchronized (getClass()) {
+        synchronized (ViewControllerActivity.class) {
             if (reference == null) {
                 reference = Logic.getInstance(this, getLogicClass());
             }
