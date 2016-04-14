@@ -23,10 +23,10 @@ import android.Manifest;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresPermission;
+import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 
 import rx.Observable;
-import rx.Subscriber;
 
 /**
  * Created by Gavriil Sitnikov on 02/11/2015.
@@ -38,13 +38,22 @@ public final class IsCallingObserver {
         return state != TelephonyManager.CALL_STATE_IDLE;
     }
 
+    @NonNull
+    private final TelephonyManager phoneStateManager;
+    @NonNull
     private final Observable<Boolean> isCallingObservable;
 
     public IsCallingObserver(@NonNull final Context context) {
+        phoneStateManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         isCallingObservable = Observable
                 .<Boolean>create(subscriber -> {
-                    final TelephonyManager phoneStateManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-                    phoneStateManager.listen(new PhoneStateListener(subscriber), PhoneStateListener.LISTEN_CALL_STATE);
+                    phoneStateManager.listen(new PhoneStateListener() {
+                        @Override
+                        public void onCallStateChanged(final int state, final String incomingNumber) {
+                            super.onCallStateChanged(state, incomingNumber);
+                            subscriber.onNext(isCallingState(phoneStateManager.getCallState()));
+                        }
+                    }, PhoneStateListener.LISTEN_CALL_STATE);
                     subscriber.onNext(isCallingState(phoneStateManager.getCallState()));
                 })
                 .distinctUntilChanged()
@@ -56,24 +65,6 @@ public final class IsCallingObserver {
     @NonNull
     public Observable<Boolean> observeIsCalling() {
         return isCallingObservable;
-    }
-
-    private static class PhoneStateListener extends android.telephony.PhoneStateListener {
-
-        @NonNull
-        private final Subscriber<? super Boolean> subscriber;
-
-        public PhoneStateListener(@NonNull final Subscriber<? super Boolean> subscriber) {
-            super();
-            this.subscriber = subscriber;
-        }
-
-        @Override
-        public void onCallStateChanged(final int state, final String incomingNumber) {
-            super.onCallStateChanged(state, incomingNumber);
-            subscriber.onNext(isCallingState(state));
-        }
-
     }
 
 }
