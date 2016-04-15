@@ -61,6 +61,10 @@ public class JsonPreferenceStorable<T> extends Storable<String, T, String> {
                                     @NonNull final Class<String> stringClass,
                                     @Nullable final T object)
                 throws ConversionException {
+            if (object == null) {
+                return null;
+            }
+
             final StringWriter stringWriter = new StringWriter();
             JsonGenerator generator = null;
             try {
