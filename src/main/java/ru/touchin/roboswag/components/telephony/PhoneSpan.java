@@ -20,7 +20,6 @@ public class PhoneSpan extends URLSpan {
         super(phoneNumber);
     }
 
-    @SuppressWarnings("PMD.AvoidCatchingThrowable")
     @Override
     public void onClick(@NonNull final View widget) {
         super.onClick(widget);
