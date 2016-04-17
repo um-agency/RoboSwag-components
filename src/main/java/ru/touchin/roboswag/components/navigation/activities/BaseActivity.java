@@ -1,6 +1,8 @@
 package ru.touchin.roboswag.components.navigation.activities;
 
 import android.app.Activity;
+import android.os.Bundle;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -21,6 +23,14 @@ public class BaseActivity extends AppCompatActivity {
     private final ArrayList<OnBackPressedListener> onBackPressedListeners = new ArrayList<>();
     @NonNull
     private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
+    @NonNull
+    private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create();
+
+    @Override
+    public void onCreate(final Bundle savedInstanceState, final PersistableBundle persistentState) {
+        super.onCreate(savedInstanceState, persistentState);
+        isCreatedSubject.onNext(true);
+    }
 
     @Override
     protected void onStart() {
@@ -34,10 +44,22 @@ public class BaseActivity extends AppCompatActivity {
         super.onStop();
     }
 
+    @Override
+    protected void onDestroy() {
+        isCreatedSubject.onNext(false);
+        super.onDestroy();
+    }
+
     @NonNull
     protected <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
         return observable.observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(isStartedSubject.filter(isStarted -> !isStarted));
+                .takeUntil(isStartedSubject.filter(started -> !started));
+    }
+
+    @NonNull
+    protected <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
+        return observable.observeOn(AndroidSchedulers.mainThread())
+                .takeUntil(isCreatedSubject.filter(created -> !created));
     }
 
     /**

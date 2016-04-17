@@ -19,14 +19,14 @@
 
 package ru.touchin.roboswag.components.telephony;
 
+import android.Manifest;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.annotation.RequiresPermission;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 
 import rx.Observable;
-import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 02/11/2015.
@@ -34,42 +34,34 @@ import rx.subjects.BehaviorSubject;
  */
 public final class IsCallingObserver {
 
-    @Nullable
-    private static IsCallingObserver instance;
-
     private static boolean isCallingState(final int state) {
         return state != TelephonyManager.CALL_STATE_IDLE;
     }
 
     @NonNull
-    public static IsCallingObserver getInstance(@NonNull final Context context) {
-        synchronized (IsCallingObserver.class) {
-            if (instance == null) {
-                instance = new IsCallingObserver(context);
-            }
-            return instance;
-        }
-    }
-
-    private final BehaviorSubject<Boolean> isCallingSubject = BehaviorSubject.create();
+    private final TelephonyManager phoneStateManager;
+    @NonNull
     private final Observable<Boolean> isCallingObservable;
 
-    private IsCallingObserver(@NonNull final Context context) {
-        final TelephonyManager phoneStateManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        phoneStateManager.listen(new PhoneStateListener() {
-            @Override
-            public void onCallStateChanged(final int state, final String incomingNumber) {
-                super.onCallStateChanged(state, incomingNumber);
-                isCallingSubject.onNext(isCallingState(state));
-            }
-        }, PhoneStateListener.LISTEN_CALL_STATE);
-        isCallingSubject.onNext(isCallingState(phoneStateManager.getCallState()));
-        isCallingObservable = isCallingSubject
+    public IsCallingObserver(@NonNull final Context context) {
+        phoneStateManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        isCallingObservable = Observable
+                .<Boolean>create(subscriber -> {
+                    phoneStateManager.listen(new PhoneStateListener() {
+                        @Override
+                        public void onCallStateChanged(final int state, final String incomingNumber) {
+                            super.onCallStateChanged(state, incomingNumber);
+                            subscriber.onNext(isCallingState(phoneStateManager.getCallState()));
+                        }
+                    }, PhoneStateListener.LISTEN_CALL_STATE);
+                    subscriber.onNext(isCallingState(phoneStateManager.getCallState()));
+                })
                 .distinctUntilChanged()
                 .replay(1)
                 .refCount();
     }
 
+    @RequiresPermission(Manifest.permission.READ_PHONE_STATE)
     @NonNull
     public Observable<Boolean> observeIsCalling() {
         return isCallingObservable;

@@ -74,6 +74,20 @@ public class SimplePagingProvider<T> extends ItemsProvider<T> {
         }
     }
 
+    @NonNull
+    public List<T> getLoadedItems() {
+        final List<T> result = new ArrayList<>();
+        if (maxLoadedPage != null) {
+            for (int i = 0; i <= maxLoadedPage; i++) {
+                final List<T> page = loadedPages.get(i);
+                if (page != null) {
+                    result.addAll(page);
+                }
+            }
+        }
+        return result;
+    }
+
     private int pageIndexOf(final int position) {
         return position / pageSize;
     }

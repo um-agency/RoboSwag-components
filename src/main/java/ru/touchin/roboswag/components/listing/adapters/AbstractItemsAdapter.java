@@ -57,6 +57,10 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
     @Nullable
     private Subscription itemsProviderSubscription;
 
+    protected long getItemClickDelay() {
+        return UiUtils.RIPPLE_EFFECT_DELAY;
+    }
+
     public void setItems(@NonNull final List<TItem> items) {
         setItemsProvider(new ListProvider<>(items));
     }
@@ -142,7 +146,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             itemsProvider.loadRange(Math.max(0, position - PRE_LOADING_COUNT), position + PRE_LOADING_COUNT).first()
                     .subscribe(Actions.empty(), Actions.empty());
             if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
-                UiUtils.setOnRippleClickListener(holder.itemView, () -> onItemClickListener.onItemClicked(item, position));
+                UiUtils.setOnRippleClickListener(holder.itemView, () -> onItemClickListener.onItemClicked(item, position), getItemClickDelay());
             }
         }
     }

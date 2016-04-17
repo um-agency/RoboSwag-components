@@ -11,6 +11,9 @@ import ru.touchin.roboswag.components.utils.Logic;
  */
 public abstract class ViewControllerActivity<TLogic extends Logic> extends BaseActivity {
 
+    //it is needed to hold strong reference to logic
+    private TLogic reference;
+
     /**
      * It should return specific class where from all logic will be.
      *
@@ -25,7 +28,12 @@ public abstract class ViewControllerActivity<TLogic extends Logic> extends BaseA
      * @return Object which represents application's logic.
      */
     public TLogic getLogic() {
-        return Logic.getInstance(this, getLogicClass());
+        synchronized (ViewControllerActivity.class) {
+            if (reference == null) {
+                reference = Logic.getInstance(this, getLogicClass());
+            }
+        }
+        return reference;
     }
 
     @Override

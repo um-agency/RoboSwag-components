@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import rx.Observable;
 import rx.subjects.BehaviorSubject;
@@ -17,24 +16,11 @@ import rx.subjects.BehaviorSubject;
  */
 public final class HeadsetStateObserver {
 
-    @Nullable
-    private static HeadsetStateObserver instance;
-
-    @NonNull
-    public static HeadsetStateObserver getInstance(@NonNull final Context context) {
-        synchronized (HeadsetStateObserver.class) {
-            if (instance == null) {
-                instance = new HeadsetStateObserver(context);
-            }
-            return instance;
-        }
-    }
-
     private final AudioManager audioManager;
     private final BehaviorSubject<Boolean> isPluggedInSubject;
     private final Observable<Boolean> isPluggedInObservable;
 
-    private HeadsetStateObserver(@NonNull final Context context) {
+    public HeadsetStateObserver(@NonNull final Context context) {
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         isPluggedInSubject = BehaviorSubject.create();
         final IsPluggedInReceiver isPluggedInReceiver = new IsPluggedInReceiver();
