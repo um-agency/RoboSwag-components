@@ -17,7 +17,7 @@
  *
  */
 
-package ru.touchin.roboswag.components.storeables;
+package ru.touchin.roboswag.components.storables;
 
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;

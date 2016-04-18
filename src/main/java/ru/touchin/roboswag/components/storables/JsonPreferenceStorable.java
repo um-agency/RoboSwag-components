@@ -17,7 +17,7 @@
  *
  */
 
-package ru.touchin.roboswag.components.storeables;
+package ru.touchin.roboswag.components.storables;
 
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
@@ -41,14 +41,14 @@ import ru.touchin.roboswag.core.log.Lc;
  * Created by Gavriil Sitnikov on 18/03/16.
  * TODO: description
  */
-public class JsonPreferenceStoreable<T> extends Storeable<String, T, String> {
+public class JsonPreferenceStorable<T> extends Storeable<String, T, String> {
 
     private static final JsonFactory DEFAULT_JSON_FACTORY = new JacksonFactory();
 
-    public JsonPreferenceStoreable(@NonNull final String name,
-                                   @NonNull final Class<T> objectClass,
-                                   @NonNull final SharedPreferences preferences,
-                                   @Nullable final T defaultValue) {
+    public JsonPreferenceStorable(@NonNull final String name,
+                                  @NonNull final Class<T> objectClass,
+                                  @NonNull final SharedPreferences preferences,
+                                  @Nullable final T defaultValue) {
         super(name, name, objectClass, String.class, new PreferenceStore<>(preferences), new JsonConverter<>(),
                 false, null, null, defaultValue);
     }
