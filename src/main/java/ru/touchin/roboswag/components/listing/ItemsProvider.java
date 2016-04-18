@@ -63,7 +63,9 @@ public abstract class ItemsProvider<T> {
             itemsRequests.add(Observable.combineLatest(limitedPageRequests, args -> {
                 final List<T> resultPart = new ArrayList<>(args.length);
                 for (final Object item : args) {
-                    resultPart.add((T) item);
+                    if (item != null) {
+                        resultPart.add((T) item);
+                    }
                 }
                 return resultPart;
             }));
