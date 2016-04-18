@@ -61,13 +61,13 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     @NonNull
-    public <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
-        return baseUiBindable.untilStop(observable);
+    public <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
+        return baseUiBindable.untilDestroy(observable);
     }
 
     @NonNull
-    public <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
-        return baseUiBindable.untilDestroy(observable);
+    public <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
+        return baseUiBindable.untilStop(observable);
     }
 
     /**
