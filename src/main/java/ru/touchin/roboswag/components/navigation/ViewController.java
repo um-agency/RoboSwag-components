@@ -32,7 +32,6 @@ import android.view.ViewGroup;
 import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
 import ru.touchin.roboswag.components.navigation.fragments.ViewControllerFragment;
 import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.subjects.BehaviorSubject;
 
 /**
@@ -53,6 +52,8 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create(true);
     @NonNull
     private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
+    @NonNull
+    private final BaseUiBindable baseUiBindable = new BaseUiBindable(isCreatedSubject, isStartedSubject);
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
     //UnusedFormalParameter: savedInstanceState could be used by children
@@ -130,22 +131,18 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
 
     @NonNull
     public <T> Observable<T> bind(@NonNull final Observable<T> observable) {
-        return isStartedSubject
-                .switchMap(isStarted -> isStarted ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
-                .takeUntil(isCreatedSubject.filter(created -> !created));
+        return baseUiBindable.bind(observable);
     }
 
     @NonNull
     public <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
-        return observable.observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(isStartedSubject.filter(started -> !started));
+        return baseUiBindable.untilStop(observable);
     }
 
     @NonNull
     @Override
     public <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
-        return observable.observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(isCreatedSubject.filter(created -> !created));
+        return baseUiBindable.untilDestroy(observable);
     }
 
     public void onStart() {

@@ -10,9 +10,9 @@ import android.view.inputmethod.InputMethodManager;
 
 import java.util.ArrayList;
 
+import ru.touchin.roboswag.components.navigation.BaseUiBindable;
 import ru.touchin.roboswag.components.navigation.UiBindable;
 import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.subjects.BehaviorSubject;
 
 /**
@@ -24,9 +24,11 @@ public abstract class BaseActivity extends AppCompatActivity
 
     private final ArrayList<OnBackPressedListener> onBackPressedListeners = new ArrayList<>();
     @NonNull
+    private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create();
+    @NonNull
     private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
     @NonNull
-    private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create();
+    private final BaseUiBindable baseUiBindable = new BaseUiBindable(isCreatedSubject, isStartedSubject);
 
     @Override
     public void onCreate(final Bundle savedInstanceState, final PersistableBundle persistentState) {
@@ -55,21 +57,17 @@ public abstract class BaseActivity extends AppCompatActivity
     @NonNull
     @Override
     public <T> Observable<T> bind(@NonNull final Observable<T> observable) {
-        return isStartedSubject
-                .switchMap(isStarted -> isStarted ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
-                .takeUntil(isCreatedSubject.filter(created -> !created));
+        return baseUiBindable.bind(observable);
     }
 
     @NonNull
     public <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
-        return observable.observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(isStartedSubject.filter(started -> !started));
+        return baseUiBindable.untilStop(observable);
     }
 
     @NonNull
     public <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
-        return observable.observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(isCreatedSubject.filter(created -> !created));
+        return baseUiBindable.untilDestroy(observable);
     }
 
     /**
