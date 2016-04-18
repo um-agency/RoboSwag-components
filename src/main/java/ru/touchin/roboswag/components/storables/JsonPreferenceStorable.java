@@ -32,8 +32,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import ru.touchin.roboswag.core.data.storeable.Converter;
-import ru.touchin.roboswag.core.data.storeable.Storeable;
+import ru.touchin.roboswag.core.data.storable.Converter;
+import ru.touchin.roboswag.core.data.storable.Storable;
 import ru.touchin.roboswag.core.data.exceptions.ConversionException;
 import ru.touchin.roboswag.core.log.Lc;
 
@@ -41,7 +41,7 @@ import ru.touchin.roboswag.core.log.Lc;
  * Created by Gavriil Sitnikov on 18/03/16.
  * TODO: description
  */
-public class JsonPreferenceStorable<T> extends Storeable<String, T, String> {
+public class JsonPreferenceStorable<T> extends Storable<String, T, String> {
 
     private static final JsonFactory DEFAULT_JSON_FACTORY = new JacksonFactory();
 
