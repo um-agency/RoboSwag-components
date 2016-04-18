@@ -10,6 +10,7 @@ import android.view.inputmethod.InputMethodManager;
 
 import java.util.ArrayList;
 
+import ru.touchin.roboswag.components.navigation.UiBindable;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.subjects.BehaviorSubject;
@@ -18,7 +19,8 @@ import rx.subjects.BehaviorSubject;
  * Created by Gavriil Sitnikov on 08/03/2016.
  * TODO: fill description
  */
-public class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity extends AppCompatActivity
+        implements UiBindable {
 
     private final ArrayList<OnBackPressedListener> onBackPressedListeners = new ArrayList<>();
     @NonNull
@@ -51,13 +53,21 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     @NonNull
-    protected <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
+    @Override
+    public <T> Observable<T> bind(@NonNull final Observable<T> observable) {
+        return isStartedSubject
+                .switchMap(isStarted -> isStarted ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
+                .takeUntil(isCreatedSubject.filter(created -> !created));
+    }
+
+    @NonNull
+    public <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
         return observable.observeOn(AndroidSchedulers.mainThread())
                 .takeUntil(isStartedSubject.filter(started -> !started));
     }
 
     @NonNull
-    protected <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
+    public <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
         return observable.observeOn(AndroidSchedulers.mainThread())
                 .takeUntil(isCreatedSubject.filter(created -> !created));
     }

@@ -40,7 +40,8 @@ import rx.subjects.BehaviorSubject;
  * Class to control view of specific fragment, activity and application by logic bridge.
  */
 public class ViewController<TActivity extends ViewControllerActivity<?>,
-        TFragment extends ViewControllerFragment<?, TActivity>> {
+        TFragment extends ViewControllerFragment<?, TActivity>>
+        implements UiBindable {
 
     @NonNull
     private final TActivity activity;
@@ -49,7 +50,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     @NonNull
     private final ViewGroup container;
     @NonNull
-    private final BehaviorSubject<Boolean> isDestroyedSubject = BehaviorSubject.create(false);
+    private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create(true);
     @NonNull
     private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
 
@@ -63,7 +64,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     }
 
     public boolean isDestroyed() {
-        return isDestroyedSubject.getValue();
+        return !isCreatedSubject.getValue();
     }
 
     /**
@@ -128,16 +129,23 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     }
 
     @NonNull
-    protected <T> Observable<T> bind(@NonNull final Observable<T> observable) {
+    public <T> Observable<T> bind(@NonNull final Observable<T> observable) {
         return isStartedSubject
                 .switchMap(isStarted -> isStarted ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
-                .takeUntil(isDestroyedSubject.filter(isDestroyed -> isDestroyed));
+                .takeUntil(isCreatedSubject.filter(created -> !created));
     }
 
     @NonNull
-    protected <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
+    public <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
         return observable.observeOn(AndroidSchedulers.mainThread())
-                .takeUntil(isStartedSubject.filter(isStarted -> !isStarted));
+                .takeUntil(isStartedSubject.filter(started -> !started));
+    }
+
+    @NonNull
+    @Override
+    public <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
+        return observable.observeOn(AndroidSchedulers.mainThread())
+                .takeUntil(isCreatedSubject.filter(created -> !created));
     }
 
     public void onStart() {
@@ -153,7 +161,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     }
 
     public void onDestroy() {
-        isDestroyedSubject.onNext(true);
+        isCreatedSubject.onNext(false);
     }
 
     public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
