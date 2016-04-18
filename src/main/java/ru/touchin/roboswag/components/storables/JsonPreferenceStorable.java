@@ -32,9 +32,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import ru.touchin.roboswag.core.data.exceptions.ConversionException;
 import ru.touchin.roboswag.core.data.storable.Converter;
 import ru.touchin.roboswag.core.data.storable.Storable;
-import ru.touchin.roboswag.core.data.exceptions.ConversionException;
 import ru.touchin.roboswag.core.log.Lc;
 
 /**
