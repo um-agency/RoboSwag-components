@@ -31,8 +31,8 @@ dependencies {
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
     provided 'com.squareup.okhttp:okhttp:2.7.5'
-    provided 'com.facebook.fresco:fbcore:0.9.0'
-    provided 'com.facebook.fresco:imagepipeline-okhttp:0.9.0'
+    provided 'com.facebook.fresco:fbcore:0.10.0'
+    provided 'com.facebook.fresco:imagepipeline-okhttp3:0.10.0'
 
     provided('io.socket:socket.io-client:0.7.0') {
         exclude group: 'org.json', module: 'json'
