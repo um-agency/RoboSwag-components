@@ -65,11 +65,16 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
         setItemsProvider(new ListProvider<>(items));
     }
 
+    @Nullable
+    public ItemsProvider<TItem> getItemsProvider() {
+        return itemsProvider;
+    }
+
     protected int itemsOffset() {
         return 0;
     }
 
-    public void setItemsProvider(@NonNull final ItemsProvider<TItem> itemsProvider) {
+    public void setItemsProvider(@Nullable final ItemsProvider<TItem> itemsProvider) {
         if (itemsProviderSubscription != null) {
             itemsProviderSubscription.unsubscribe();
             itemsProviderSubscription = null;
@@ -77,7 +82,7 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
         this.itemsProvider = itemsProvider;
         notifyDataSetChanged();
         if (this.itemsProvider != null) {
-            itemsProviderSubscription = itemsProvider.observeListChanges()
+            itemsProviderSubscription = this.itemsProvider.observeListChanges()
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(this::onItemsChanged);
         }
