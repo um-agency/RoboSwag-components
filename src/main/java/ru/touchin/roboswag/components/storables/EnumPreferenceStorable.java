@@ -18,8 +18,8 @@ public class EnumPreferenceStorable<T extends Enum<T>> extends Storable<String, 
                                   @NonNull final Class<T> enumClass,
                                   @NonNull final SharedPreferences preferences,
                                   @Nullable final T defaultValue) {
-        super(name, name, enumClass, String.class, new PreferenceStore<>(preferences), new EnumToStringConverter<>(),
-                false, null, null, defaultValue);
+        super(name, enumClass, String.class, new PreferenceStore<>(preferences), new EnumToStringConverter<>(),
+                false, null, defaultValue);
     }
 
     private static class EnumToStringConverter<T extends Enum<T>> implements Converter<T, String> {

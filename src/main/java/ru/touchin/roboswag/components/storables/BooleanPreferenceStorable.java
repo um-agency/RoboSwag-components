@@ -16,8 +16,8 @@ public class BooleanPreferenceStorable extends Storable<String, Boolean, Boolean
     public BooleanPreferenceStorable(@NonNull final String name,
                                      @NonNull final SharedPreferences preferences,
                                      @Nullable final Boolean defaultValue) {
-        super(name, name, Boolean.class, Boolean.class, new PreferenceStore<>(preferences), new SameTypesConverter<>(),
-                false, null, null, defaultValue);
+        super(name, Boolean.class, Boolean.class, new PreferenceStore<>(preferences), new SameTypesConverter<>(),
+                false, null, defaultValue);
     }
 
 }

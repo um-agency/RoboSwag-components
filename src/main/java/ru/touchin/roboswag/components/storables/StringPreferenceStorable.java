@@ -16,8 +16,8 @@ public class StringPreferenceStorable extends Storable<String, String, String> {
     public StringPreferenceStorable(@NonNull final String name,
                                     @NonNull final SharedPreferences preferences,
                                     @Nullable final String defaultValue) {
-        super(name, name, String.class, String.class, new PreferenceStore<>(preferences), new SameTypesConverter<>(),
-                false, null, null, defaultValue);
+        super(name, String.class, String.class, new PreferenceStore<>(preferences), new SameTypesConverter<>(),
+                false, null, defaultValue);
     }
 
 }
