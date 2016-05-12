@@ -22,26 +22,17 @@ package ru.touchin.roboswag.components.navigation;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.view.MenuItem;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
-import ru.touchin.roboswag.components.utils.PermissionState;
 import ru.touchin.roboswag.components.utils.UiUtils;
-import rx.Observable;
-import rx.subjects.PublishSubject;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
@@ -55,15 +46,7 @@ public abstract class AbstractBaseActivity extends BaseActivity
 
     private static final String TOP_FRAGMENT_TAG_MARK = "TOP_FRAGMENT";
 
-    private static final String REQUESTED_PERMISSION_EXTRA = "REQUESTED_PERMISSION_EXTRA";
-    private static final int REQUESTED_PERMISSION_REQUEST_CODE = 17;
-
-    private final Map<String, PermissionState> permissionsMap = new HashMap<>();
-
     private boolean isPaused;
-    @Nullable
-    private String requestedPermission;
-    private final PublishSubject<PermissionState> requestPermissionsEvent = PublishSubject.create();
 
     /* Returns id of main fragments container where navigation-node fragments should be */
     protected int getFragmentContainerId() {
@@ -99,49 +82,10 @@ public abstract class AbstractBaseActivity extends BaseActivity
         return false;
     }
 
-    @NonNull
-    public Observable<PermissionState> requestPermission(@NonNull final String permission, final boolean usePreviousRequest) {
-        final PermissionState permissionState = permissionsMap.get(permission);
-        if (permissionState != null && ((permissionState == PermissionState.GRANTED) || usePreviousRequest)) {
-            return Observable.just(permissionState);
-        }
-        if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
-            permissionsMap.put(permission, PermissionState.GRANTED);
-            return Observable.just(PermissionState.GRANTED);
-        }
-        requestedPermission = permission;
-        ActivityCompat.requestPermissions(this, new String[]{permission}, REQUESTED_PERMISSION_REQUEST_CODE);
-        return requestPermissionsEvent.first();
-    }
-
-    @SuppressWarnings("PMD.UseVarargs")
-    @Override
-    public void onRequestPermissionsResult(final int requestCode, @NonNull final String[] permissions, @NonNull final int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUESTED_PERMISSION_REQUEST_CODE) {
-            final PermissionState permissionState;
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                permissionState = PermissionState.GRANTED;
-            } else if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
-                permissionState = ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[0])
-                        ? PermissionState.DENIED_THIS_TIME
-                        : PermissionState.DENIED_COMPLETELY;
-            } else {
-                permissionState = PermissionState.DENIED_THIS_TIME;
-            }
-            permissionsMap.put(requestedPermission, permissionState);
-            requestedPermission = null;
-            requestPermissionsEvent.onNext(permissionState);
-        }
-    }
-
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getSupportFragmentManager().addOnBackStackChangedListener(this);
-        if (savedInstanceState != null) {
-            requestedPermission = savedInstanceState.getString(REQUESTED_PERMISSION_EXTRA);
-        }
     }
 
     @Override
@@ -154,12 +98,6 @@ public abstract class AbstractBaseActivity extends BaseActivity
     protected void onPause() {
         isPaused = true;
         super.onPause();
-    }
-
-    @Override
-    public void onSaveInstanceState(final Bundle stateToSave) {
-        super.onSaveInstanceState(stateToSave);
-        stateToSave.putString(REQUESTED_PERMISSION_EXTRA, requestedPermission);
     }
 
     @Override
@@ -276,20 +214,6 @@ public abstract class AbstractBaseActivity extends BaseActivity
                 getSupportFragmentManager().popBackStackImmediate();
             }
         }
-    }
-
-    @Deprecated
-    @Override
-    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        onActivityResultProcess(requestCode, resultCode, data);
-    }
-
-    public boolean onActivityResultProcess(final int requestCode, final int resultCode, final Intent data) {
-        return requestCode == REQUESTED_PERMISSION_REQUEST_CODE
-                || UiUtils.tryForeachFragment(getSupportFragmentManager(),
-                fragment -> fragment.onActivityResultProcess(requestCode, resultCode, data),
-                false);
     }
 
     @Override
