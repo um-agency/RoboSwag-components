@@ -61,7 +61,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
      * @return Returns bundle with state inside.
      */
     @NonNull
-    public static Bundle createState(@Nullable final Serializable state) {
+    public static Bundle createState(@Nullable final AbstractState state) {
         final Bundle result = new Bundle();
         result.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, state);
         return result;
@@ -174,12 +174,16 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         }
     }
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
+    protected void onConfigureNavigation(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
         if (viewController != null) {
             viewController.onConfigureNavigation(menu, inflater);
         }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        onConfigureNavigation(menu, inflater);
     }
 
     @Override

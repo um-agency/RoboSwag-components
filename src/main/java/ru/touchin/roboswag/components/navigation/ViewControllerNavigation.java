@@ -1,5 +1,6 @@
 package ru.touchin.roboswag.components.navigation;
 
+import android.content.Context;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -19,7 +20,7 @@ import rx.functions.Func1;
  */
 public class ViewControllerNavigation<TActivity extends ViewControllerActivity<?>> extends FragmentNavigation {
 
-    public ViewControllerNavigation(@NonNull final TActivity context,
+    public ViewControllerNavigation(@NonNull final Context context,
                                     @NonNull final FragmentManager fragmentManager,
                                     @IdRes final int containerViewId) {
         super(context, fragmentManager, containerViewId);

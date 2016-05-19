@@ -47,7 +47,7 @@ public class SimpleViewControllerFragment<TState extends AbstractState, TActivit
      */
     @NonNull
     public static Bundle createState(@NonNull final Class<? extends ViewController> viewControllerClass,
-                                     @Nullable final Serializable state) {
+                                     @Nullable final AbstractState state) {
         final Bundle result = createState(state);
         result.putSerializable(VIEW_CONTROLLER_CLASS_EXTRA, viewControllerClass);
         return result;
