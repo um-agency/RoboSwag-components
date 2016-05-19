@@ -23,14 +23,14 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import ru.touchin.roboswag.core.data.storable.Store;
-import ru.touchin.roboswag.core.data.exceptions.StoreException;
+import ru.touchin.roboswag.core.data.storable.SafeStore;
+import ru.touchin.roboswag.core.log.Lc;
 
 /**
  * Created by Gavriil Sitnikov on 18/03/16.
  * TODO: description
  */
-public class PreferenceStore<T> implements Store<String, T> {
+public class PreferenceStore<T> implements SafeStore<String, T> {
 
     @NonNull
     private final SharedPreferences preferences;
@@ -45,8 +45,7 @@ public class PreferenceStore<T> implements Store<String, T> {
     }
 
     @Override
-    public void storeObject(@NonNull final Class<T> storeObjectClass, @NonNull final String key, @Nullable final T storeObject)
-            throws StoreException {
+    public void storeObject(@NonNull final Class<T> storeObjectClass, @NonNull final String key, @Nullable final T storeObject) {
         if (storeObject == null) {
             preferences.edit().remove(key).apply();
             return;
@@ -63,14 +62,14 @@ public class PreferenceStore<T> implements Store<String, T> {
         } else if (storeObjectClass.equals(Float.class)) {
             preferences.edit().putFloat(key, (Float) storeObject).apply();
         } else {
-            throw new StoreException("Unsupported type of object " + storeObjectClass);
+            Lc.assertion("Unsupported type of object " + storeObjectClass);
         }
     }
 
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
-    public T loadObject(@NonNull final Class<T> storeObjectClass, @NonNull final String key) throws StoreException {
+    public T loadObject(@NonNull final Class<T> storeObjectClass, @NonNull final String key) {
         if (!contains(key)) {
             return null;
         }
@@ -86,7 +85,8 @@ public class PreferenceStore<T> implements Store<String, T> {
         } else if (storeObjectClass.equals(Float.class)) {
             return (T) ((Float) preferences.getFloat(key, 0f));
         }
-        throw new StoreException("Unsupported type of object " + storeObjectClass);
+        Lc.assertion("Unsupported type of object " + storeObjectClass);
+        return null;
     }
 
 }
