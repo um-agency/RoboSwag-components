@@ -95,9 +95,12 @@ public final class UiUtils {
         return resourceId > 0 ? context.getResources().getDimensionPixelSize(resourceId) : 0;
     }
 
-    public static int getNavigationBarHeight(@NonNull final Context context) {
-        final int resourceId = context.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
-        return resourceId > 0 ? context.getResources().getDimensionPixelSize(resourceId) : 0;
+    public static int getNavigationBarHeight(@NonNull final Activity activity) {
+        if (hasSoftKeys(activity)) {
+            final int resourceId = activity.getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+            return resourceId > 0 ? activity.getResources().getDimensionPixelSize(resourceId) : 0;
+        }
+        return 0;
     }
 
     @NonNull
