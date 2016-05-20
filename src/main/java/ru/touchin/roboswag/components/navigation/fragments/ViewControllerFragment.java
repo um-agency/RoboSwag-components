@@ -32,7 +32,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
 import ru.touchin.roboswag.components.navigation.AbstractState;
