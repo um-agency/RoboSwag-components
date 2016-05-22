@@ -10,7 +10,9 @@ import android.support.v4.app.FragmentTransaction;
 
 import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
 import ru.touchin.roboswag.components.navigation.fragments.SimpleViewControllerFragment;
+import ru.touchin.roboswag.components.navigation.fragments.StatelessTargetedViewControllerFragment;
 import ru.touchin.roboswag.components.navigation.fragments.StatelessViewControllerFragment;
+import ru.touchin.roboswag.components.navigation.fragments.TargetedViewControllerFragment;
 import ru.touchin.roboswag.components.navigation.fragments.ViewControllerFragment;
 import rx.functions.Func1;
 
@@ -27,50 +29,50 @@ public class ViewControllerNavigation<TActivity extends ViewControllerActivity<?
     }
 
     public <TState extends AbstractState> void push(@NonNull final Class<? extends ViewControllerFragment<TState, TActivity>> fragmentClass,
-                                                   @NonNull final TState state) {
+                                                    @NonNull final TState state) {
         addToStack(fragmentClass, null, ViewControllerFragment.createState(state), null, null);
     }
 
     public <TState extends AbstractState> void push(@NonNull final Class<? extends ViewControllerFragment<TState, TActivity>> fragmentClass,
-                                                   @Nullable final TState state,
-                                                   @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                                                    @Nullable final TState state,
+                                                    @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addToStack(fragmentClass, null, ViewControllerFragment.createState(state), null, transactionSetup);
     }
 
     public <TState extends AbstractState> void pushForResult(@NonNull final Class<? extends ViewControllerFragment<TState, TActivity>> fragmentClass,
-                                                            @NonNull final Fragment targetFragment,
-                                                            @NonNull final TState state) {
+                                                             @NonNull final Fragment targetFragment,
+                                                             @NonNull final TState state) {
         addToStack(fragmentClass, targetFragment, ViewControllerFragment.createState(state),
                 fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, null);
     }
 
     public <TState extends AbstractState> void pushForResult(@NonNull final Class<? extends ViewControllerFragment<TState, TActivity>> fragmentClass,
-                                                            @NonNull final Fragment targetFragment,
-                                                            @Nullable final TState state,
-                                                            @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                                                             @NonNull final Fragment targetFragment,
+                                                             @Nullable final TState state,
+                                                             @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addToStack(fragmentClass, targetFragment, ViewControllerFragment.createState(state),
                 fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
     public <TState extends AbstractState> void setAsTop(@NonNull final Class<? extends ViewControllerFragment<TState, TActivity>> fragmentClass,
-                                                       @NonNull final TState state) {
+                                                        @NonNull final TState state) {
         setAsTop(fragmentClass, ViewControllerFragment.createState(state), null);
     }
 
     public <TState extends AbstractState> void setAsTop(@NonNull final Class<? extends ViewControllerFragment<TState, TActivity>> fragmentClass,
-                                                       @Nullable final TState state,
-                                                       @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                                                        @Nullable final TState state,
+                                                        @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
         setAsTop(fragmentClass, ViewControllerFragment.createState(state), transactionSetup);
     }
 
     public <TState extends AbstractState> void setInitial(@NonNull final Class<? extends ViewControllerFragment<TState, TActivity>> fragmentClass,
-                                                         @NonNull final TState state) {
+                                                          @NonNull final TState state) {
         setInitial(fragmentClass, ViewControllerFragment.createState(state), null);
     }
 
     public <TState extends AbstractState> void setInitial(@NonNull final Class<? extends ViewControllerFragment<TState, TActivity>> fragmentClass,
-                                                         @Nullable final TState state,
-                                                         @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                                                          @Nullable final TState state,
+                                                          @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
         setInitial(fragmentClass, ViewControllerFragment.createState(state), transactionSetup);
     }
 
@@ -81,7 +83,7 @@ public class ViewControllerNavigation<TActivity extends ViewControllerActivity<?
 
     public <TState extends AbstractState> void pushViewController(@NonNull final Class<? extends ViewController<TActivity,
             SimpleViewControllerFragment<TState, TActivity>>> viewControllerClass,
-                                                                 @NonNull final TState state) {
+                                                                  @NonNull final TState state) {
         addViewControllerToStack(viewControllerClass, null, state, null, null);
     }
 
@@ -98,35 +100,45 @@ public class ViewControllerNavigation<TActivity extends ViewControllerActivity<?
         addStatelessViewControllerToStack(viewControllerClass, null, null, transactionSetup);
     }
 
-    public void pushViewControllerForResult(
-            @NonNull final Class<? extends ViewController<TActivity, StatelessViewControllerFragment<TActivity>>> viewControllerClass,
-            @NonNull final Fragment targetFragment) {
-        addStatelessViewControllerToStack(viewControllerClass, targetFragment,
+    public <TTargetState extends AbstractState,
+            TTargetFragment extends ViewControllerFragment<TTargetState, TActivity>> void pushViewControllerForResult(
+            @NonNull final Class<? extends ViewController<TActivity,
+                    StatelessTargetedViewControllerFragment<TTargetState, TActivity>>> viewControllerClass,
+            @NonNull final TTargetFragment targetFragment) {
+        addTargetedStatelessViewControllerToStack(viewControllerClass, targetFragment,
                 viewControllerClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, null);
     }
 
-    public <TState extends AbstractState> void pushViewControllerForResult(
-            @NonNull final Class<? extends ViewController<TActivity, SimpleViewControllerFragment<TState, TActivity>>> viewControllerClass,
-            @NonNull final Fragment targetFragment,
+    @SuppressWarnings("CPD-START")
+    public <TState extends AbstractState, TTargetState extends AbstractState,
+            TTargetFragment extends ViewControllerFragment<TTargetState, TActivity>> void pushViewControllerForResult(
+            @NonNull final Class<? extends ViewController<TActivity,
+                    TargetedViewControllerFragment<TState, TTargetState, TActivity>>> viewControllerClass,
+            @NonNull final TTargetFragment targetFragment,
             @NonNull final TState state) {
-        addViewControllerToStack(viewControllerClass, targetFragment, state,
+        addTargetedViewControllerToStack(viewControllerClass, targetFragment, state,
                 viewControllerClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, null);
     }
 
-    public <TState extends AbstractState> void pushViewControllerForResult(
-            @NonNull final Class<? extends ViewController<TActivity, SimpleViewControllerFragment<TState, TActivity>>> viewControllerClass,
-            @NonNull final Fragment targetFragment,
+    @SuppressWarnings("CPD-END")
+    public <TState extends AbstractState, TTargetState extends AbstractState,
+            TTargetFragment extends ViewControllerFragment<TTargetState, TActivity>> void pushViewControllerForResult(
+            @NonNull final Class<? extends ViewController<TActivity,
+                    TargetedViewControllerFragment<TState, TTargetState, TActivity>>> viewControllerClass,
+            @NonNull final TTargetFragment targetFragment,
             @NonNull final TState state,
             @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
-        addViewControllerToStack(viewControllerClass, targetFragment, state,
+        addTargetedViewControllerToStack(viewControllerClass, targetFragment, state,
                 viewControllerClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
-    public void pushViewControllerForResult(
-            @NonNull final Class<? extends ViewController<TActivity, StatelessViewControllerFragment<TActivity>>> viewControllerClass,
-            @NonNull final Fragment targetFragment,
+    public <TTargetState extends AbstractState,
+            TTargetFragment extends ViewControllerFragment<TTargetState, TActivity>> void pushViewControllerForResult(
+            @NonNull final Class<? extends ViewController<TActivity,
+                    StatelessTargetedViewControllerFragment<TTargetState, TActivity>>> viewControllerClass,
+            @NonNull final TTargetFragment targetFragment,
             @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
-        addStatelessViewControllerToStack(viewControllerClass, targetFragment,
+        addTargetedStatelessViewControllerToStack(viewControllerClass, targetFragment,
                 viewControllerClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
@@ -191,13 +203,32 @@ public class ViewControllerNavigation<TActivity extends ViewControllerActivity<?
                 SimpleViewControllerFragment.createState(viewControllerClass, state), backStackTag, transactionSetup);
     }
 
+    protected <TState extends AbstractState> void addTargetedViewControllerToStack(
+            @NonNull final Class<? extends ViewController<TActivity, ? extends ViewControllerFragment<TState, TActivity>>> viewControllerClass,
+            @NonNull final Fragment targetFragment,
+            @NonNull final TState state,
+            @Nullable final String backStackTag,
+            @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+        addToStack(TargetedViewControllerFragment.class, targetFragment,
+                SimpleViewControllerFragment.createState(viewControllerClass, state), backStackTag, transactionSetup);
+    }
+
     protected void addStatelessViewControllerToStack(
             @NonNull final Class<? extends ViewController<TActivity, ? extends ViewControllerFragment<AbstractState, TActivity>>> viewControllerClass,
             @Nullable final Fragment targetFragment,
             @Nullable final String backStackTag,
             @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addToStack(StatelessViewControllerFragment.class, targetFragment,
-                SimpleViewControllerFragment.createState(viewControllerClass, null), backStackTag, transactionSetup);
+                StatelessViewControllerFragment.createState(viewControllerClass, null), backStackTag, transactionSetup);
+    }
+
+    protected <TState extends AbstractState> void addTargetedStatelessViewControllerToStack(
+            @NonNull final Class<? extends ViewController<TActivity, ? extends ViewControllerFragment<TState, TActivity>>> viewControllerClass,
+            @NonNull final Fragment targetFragment,
+            @Nullable final String backStackTag,
+            @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+        addToStack(StatelessTargetedViewControllerFragment.class, targetFragment,
+                StatelessTargetedViewControllerFragment.createState(viewControllerClass, null), backStackTag, transactionSetup);
     }
 
 }

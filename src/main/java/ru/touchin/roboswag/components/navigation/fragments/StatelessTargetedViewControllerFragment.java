@@ -19,28 +19,14 @@
 
 package ru.touchin.roboswag.components.navigation.fragments;
 
-import android.support.annotation.NonNull;
-
 import ru.touchin.roboswag.components.navigation.AbstractState;
 import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
-import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 
 /**
- * Created by Gavriil Sitnikov on 11/04/2016.
+ * Created by Gavriil Sitnikov on 12/03/2016.
  * TODO: fill description
  */
-public class TargetedViewControllerFragment<TState extends AbstractState,
-        TTargetState extends AbstractState,
+public class StatelessTargetedViewControllerFragment<TTargetState extends AbstractState,
         TActivity extends ViewControllerActivity<?>>
-        extends SimpleViewControllerFragment<TState, TActivity> {
-
-    @SuppressWarnings("unchecked")
-    @NonNull
-    public ViewControllerFragment<TTargetState, TActivity> getTarget() {
-        if (!(getTargetFragment() instanceof ViewControllerFragment)) {
-            throw new ShouldNotHappenException();
-        }
-        return (ViewControllerFragment<TTargetState, TActivity>) getTargetFragment();
-    }
-
+        extends TargetedViewControllerFragment<AbstractState, TTargetState, TActivity> {
 }

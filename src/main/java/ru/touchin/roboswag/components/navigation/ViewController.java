@@ -57,10 +57,10 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
 
     @SuppressWarnings("PMD.UnusedFormalParameter")
     //UnusedFormalParameter: savedInstanceState could be used by children
-    public ViewController(@NonNull final CreationContext<TActivity, TFragment> creationContext,
+    public ViewController(@NonNull final CreationContext creationContext,
                           @Nullable final Bundle savedInstanceState) {
-        this.activity = creationContext.activity;
-        this.fragment = creationContext.fragment;
+        this.activity = (TActivity) creationContext.activity;
+        this.fragment = (TFragment) creationContext.fragment;
         this.container = creationContext.container;
     }
 
@@ -168,18 +168,17 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     /**
      * Class to simplify constructor override.
      */
-    public static class CreationContext<TActivity extends ViewControllerActivity<?>,
-            TFragment extends ViewControllerFragment<?, TActivity>> {
+    public static class CreationContext {
 
         @NonNull
-        private final TActivity activity;
+        private final ViewControllerActivity activity;
         @NonNull
-        private final TFragment fragment;
+        private final ViewControllerFragment fragment;
         @NonNull
         private final ViewGroup container;
 
-        public CreationContext(@NonNull final TActivity activity,
-                               @NonNull final TFragment fragment,
+        public CreationContext(@NonNull final ViewControllerActivity activity,
+                               @NonNull final ViewControllerFragment fragment,
                                @NonNull final ViewGroup container) {
             this.activity = activity;
             this.fragment = fragment;

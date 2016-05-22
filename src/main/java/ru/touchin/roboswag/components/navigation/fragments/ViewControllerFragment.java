@@ -121,9 +121,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
             throw OnErrorThrowable.from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
         }
         final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
-        final ViewController.CreationContext<TActivity,
-                ? extends ViewControllerFragment<TState, TActivity>> creationContext
-                = new ViewController.CreationContext<>(activity, this, viewInfo.first);
+        final ViewController.CreationContext creationContext = new ViewController.CreationContext(activity, this, viewInfo.first);
         try {
             switch (constructor.getParameterTypes().length) {
                 case 2:
