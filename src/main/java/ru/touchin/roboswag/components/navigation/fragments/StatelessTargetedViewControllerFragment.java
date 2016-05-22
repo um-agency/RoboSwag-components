@@ -19,8 +19,11 @@
 
 package ru.touchin.roboswag.components.navigation.fragments;
 
+import android.support.annotation.Nullable;
+
 import ru.touchin.roboswag.components.navigation.AbstractState;
 import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
+import ru.touchin.roboswag.core.log.Lc;
 
 /**
  * Created by Gavriil Sitnikov on 12/03/2016.
@@ -29,4 +32,12 @@ import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivi
 public class StatelessTargetedViewControllerFragment<TTargetState extends AbstractState,
         TActivity extends ViewControllerActivity<?>>
         extends TargetedViewControllerFragment<AbstractState, TTargetState, TActivity> {
+
+    @Nullable
+    @Override
+    public AbstractState getState() {
+        Lc.assertion("Trying to access to state of stateless fragment of " + getViewControllerClass());
+        return null;
+    }
+
 }
