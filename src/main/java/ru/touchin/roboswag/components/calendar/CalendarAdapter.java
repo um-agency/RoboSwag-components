@@ -77,12 +77,15 @@ public abstract class CalendarAdapter<TDayViewHolder extends RecyclerView.ViewHo
     }
 
     @Nullable
-    public Integer getPositionToScroll(final boolean beginningOfSelection) {
-        if (beginningOfSelection && startSelectionPosition != null) {
+    public Integer getPositionToScroll(final boolean isDeparture) {
+        if (isDeparture && startSelectionPosition != null) {
             return CalendarUtils.findPositionOfSelectedMonth(calendarItems, startSelectionPosition);
         }
-        if (!beginningOfSelection && endSelectionPosition != null) {
+        if (!isDeparture && endSelectionPosition != null) {
             return CalendarUtils.findPositionOfSelectedMonth(calendarItems, endSelectionPosition);
+        }
+        if (!isDeparture && startSelectionPosition != null) {
+            return CalendarUtils.findPositionOfSelectedMonth(calendarItems, startSelectionPosition);
         }
         return null;
     }
