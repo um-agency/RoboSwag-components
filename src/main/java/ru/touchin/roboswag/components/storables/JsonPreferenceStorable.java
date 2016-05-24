@@ -50,7 +50,7 @@ public class JsonPreferenceStorable<T> extends Storable<String, T, String> {
                                   @NonNull final SharedPreferences preferences,
                                   @Nullable final T defaultValue) {
         super(name, name, objectClass, String.class, new PreferenceStore<>(preferences), new JsonConverter<>(),
-                false, null, null, defaultValue);
+                true, null, null, defaultValue);
     }
 
     private static class JsonConverter<T> implements Converter<T, String> {
