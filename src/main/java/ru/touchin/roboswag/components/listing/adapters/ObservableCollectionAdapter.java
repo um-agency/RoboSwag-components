@@ -22,11 +22,13 @@ package ru.touchin.roboswag.components.listing.adapters;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.List;
 
 import ru.touchin.roboswag.components.R;
+import ru.touchin.roboswag.components.navigation.UiBindable;
 import ru.touchin.roboswag.components.utils.UiUtils;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.observables.collections.Change;
@@ -34,26 +36,37 @@ import ru.touchin.roboswag.core.observables.collections.ObservableCollection;
 import ru.touchin.roboswag.core.observables.collections.ObservableList;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Actions;
 
 /**
  * Created by Gavriil Sitnikov on 20/11/2015.
  * TODO: fill description
  */
-public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends RecyclerView.ViewHolder>
+public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends ObservableCollectionAdapter.ViewHolder>
         extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int PRE_LOADING_COUNT = 10;
 
     private static final int LOADED_ITEM_TYPE = R.id.LOADED_ITEM_TYPE;
 
+    @NonNull
+    private final UiBindable uiBindable;
     @Nullable
     private OnItemClickListener<TItem> onItemClickListener;
     @Nullable
     private ObservableCollection<TItem> observableCollection;
     @Nullable
     private Subscription itemsProviderSubscription;
+
+    @NonNull
+    public UiBindable getUiBindable() {
+        return uiBindable;
+    }
+
+    public ObservableCollectionAdapter(@NonNull final UiBindable uiBindable) {
+        super();
+        this.uiBindable = uiBindable;
+    }
 
     protected long getItemClickDelay() {
         return UiUtils.RIPPLE_EFFECT_DELAY;
@@ -80,8 +93,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Rec
         this.observableCollection = observableCollection;
         notifyDataSetChanged();
         if (this.observableCollection != null) {
-            itemsProviderSubscription = this.observableCollection.observeChanges()
-                    .observeOn(AndroidSchedulers.mainThread())
+            itemsProviderSubscription = uiBindable.bind(this.observableCollection.observeChanges())
                     .subscribe(this::onItemsChanged);
         }
     }
@@ -123,14 +135,14 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Rec
     @SuppressWarnings("unchecked")
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
-        final TItem item = getItem(position);
         if (observableCollection == null) {
-            Lc.assertion(new ShouldNotHappenException("Item at" + position + " should not be null"));
+            Lc.assertion(new ShouldNotHappenException());
             return;
         }
+
+        final TItem item = getItem(position - itemsOffset());
         onBindItemToViewHolder((TViewHolder) holder, position, item);
-        observableCollection.loadRange(Math.max(0, position - PRE_LOADING_COUNT), position + PRE_LOADING_COUNT).first()
-                .subscribe(Actions.empty(), Actions.empty());
+        ((TViewHolder) holder).bindPosition(uiBindable, observableCollection, position);
         if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
             UiUtils.setOnRippleClickListener(holder.itemView, () -> onItemClickListener.onItemClicked(item, position), getItemClickDelay());
         }
@@ -158,6 +170,30 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Rec
     public interface OnItemClickListener<TItem> {
 
         void onItemClicked(@NonNull TItem item, int position);
+
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+
+        @Nullable
+        private Subscription preLoadingSubscription;
+
+        public ViewHolder(@NonNull final View itemView) {
+            super(itemView);
+        }
+
+        public void bindPosition(@NonNull final UiBindable uiBindable,
+                                 @NonNull final ObservableCollection<?> observableCollection,
+                                 final int position) {
+            if (preLoadingSubscription != null) {
+                preLoadingSubscription.unsubscribe();
+            }
+            preLoadingSubscription = uiBindable
+                    .untilStop(observableCollection
+                            .loadRange(Math.max(0, position - PRE_LOADING_COUNT), position + PRE_LOADING_COUNT)
+                            .first())
+                    .subscribe(Actions.empty(), Actions.empty());
+        }
 
     }
 

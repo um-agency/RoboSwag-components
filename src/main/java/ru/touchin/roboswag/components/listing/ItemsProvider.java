@@ -33,6 +33,7 @@ import rx.subjects.PublishSubject;
  * Created by Gavriil Sitnikov on 07/12/2015.
  * TODO: fill description
  */
+@SuppressWarnings("CPD-START")
 public abstract class ItemsProvider<T> {
 
     private final PublishSubject<List<Change>> listChangesSubject = PublishSubject.create();

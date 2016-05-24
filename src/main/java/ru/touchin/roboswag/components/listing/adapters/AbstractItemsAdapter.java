@@ -42,6 +42,7 @@ import rx.functions.Actions;
  * Created by Gavriil Sitnikov on 20/11/2015.
  * TODO: fill description
  */
+@SuppressWarnings("CPD-START")
 public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerView.ViewHolder>
         extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
