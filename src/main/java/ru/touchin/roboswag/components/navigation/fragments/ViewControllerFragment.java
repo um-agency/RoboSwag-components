@@ -32,7 +32,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
-import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
 import ru.touchin.roboswag.components.navigation.AbstractState;
@@ -61,7 +60,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
      * @return Returns bundle with state inside.
      */
     @NonNull
-    public static Bundle createState(@Nullable final Serializable state) {
+    public static Bundle createState(@Nullable final AbstractState state) {
         final Bundle result = new Bundle();
         result.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, state);
         return result;

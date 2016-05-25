@@ -22,6 +22,7 @@ package ru.touchin.roboswag.components.navigation;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Parcel;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -41,6 +42,11 @@ public class FragmentNavigation {
 
     protected static final String TOP_FRAGMENT_TAG_MARK = "TOP_FRAGMENT";
     protected static final String WITH_TARGET_FRAGMENT_TAG_MARK = "FRAGMENT_WITH_TARGET";
+    private static boolean debugMode;
+
+    public static void setDebugMode() {
+        debugMode = true;
+    }
 
     @NonNull
     private final Context context;
@@ -96,8 +102,17 @@ public class FragmentNavigation {
             Lc.assertion("FragmentManager is destroyed");
             return;
         }
+        final Bundle actualArgs;
+        if (args != null && debugMode) {
+            final Parcel p = Parcel.obtain();
+            args.writeToParcel(p, 0);
+            actualArgs = new Bundle();
+            actualArgs.readFromParcel(p);
+        } else {
+            actualArgs = args;
+        }
 
-        final Fragment fragment = Fragment.instantiate(context, fragmentClass.getName(), args);
+        final Fragment fragment = Fragment.instantiate(context, fragmentClass.getName(), actualArgs);
         if (targetFragment != null) {
             fragment.setTargetFragment(targetFragment, 0);
         }

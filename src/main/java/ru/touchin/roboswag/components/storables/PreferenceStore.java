@@ -23,8 +23,8 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import ru.touchin.roboswag.core.data.storable.Store;
 import ru.touchin.roboswag.core.data.exceptions.StoreException;
+import ru.touchin.roboswag.core.data.storable.Store;
 
 /**
  * Created by Gavriil Sitnikov on 18/03/16.
