@@ -72,7 +72,7 @@ public class MaterialProgressDrawable extends Drawable {
     public MaterialProgressDrawable(@NonNull final Context context) {
         super();
 
-        paint = new Paint();
+        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DEFAULT_STROKE_WIDTH_DP, UiUtils.getDisplayMetrics(context)));
         paint.setColor(Color.BLACK);
