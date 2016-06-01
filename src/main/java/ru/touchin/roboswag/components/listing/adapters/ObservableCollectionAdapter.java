@@ -98,20 +98,22 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
         }
     }
 
-    protected void onItemsChanged(@NonNull final Change change) {
-        switch (change.getType()) {
-            case INSERTED:
-                notifyItemRangeInserted(change.getStart() + itemsOffset(), change.getCount());
-                break;
-            case CHANGED:
-                notifyItemRangeChanged(change.getStart() + itemsOffset(), change.getCount());
-                break;
-            case REMOVED:
-                notifyItemRangeRemoved(change.getStart() + itemsOffset(), change.getCount());
-                break;
-            default:
-                Lc.assertion("Not supported " + change.getType());
-                break;
+    protected void onItemsChanged(@NonNull final List<Change> changes) {
+        for (final Change change : changes) {
+            switch (change.getType()) {
+                case INSERTED:
+                    notifyItemRangeInserted(change.getStart() + itemsOffset(), change.getCount());
+                    break;
+                case CHANGED:
+                    notifyItemRangeChanged(change.getStart() + itemsOffset(), change.getCount());
+                    break;
+                case REMOVED:
+                    notifyItemRangeRemoved(change.getStart() + itemsOffset(), change.getCount());
+                    break;
+                default:
+                    Lc.assertion("Not supported " + change.getType());
+                    break;
+            }
         }
     }
 
