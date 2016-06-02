@@ -19,12 +19,14 @@
 
 package ru.touchin.roboswag.components.listing.adapters;
 
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -50,6 +52,28 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
 
     private static final int LOADED_ITEM_TYPE = R.id.LOADED_ITEM_TYPE;
 
+    private static int getNullableCollectionSize(@Nullable final ObservableCollection collection) {
+        return collection != null ? collection.size() : 0;
+    }
+
+    @NonNull
+    private static <TItem> Collection<Change> simpleChanges(@Nullable final ObservableCollection<TItem> oldCollection,
+                                                            @Nullable final ObservableCollection<TItem> newCollection,
+                                                            final int offset) {
+        final int oldSize = getNullableCollectionSize(oldCollection);
+        final int newSize = getNullableCollectionSize(newCollection);
+        final List<Change> result = new ArrayList<>();
+        if (oldSize < newSize) {
+            result.add(new Change(Change.Type.INSERTED, oldSize + offset, newSize - oldSize));
+        } else if (newSize > oldSize) {
+            result.add(new Change(Change.Type.REMOVED, newSize + offset, oldSize - newSize));
+        }
+        if (newSize != 0 && oldSize != 0) {
+            result.add(new Change(Change.Type.CHANGED, offset, Math.min(oldSize, newSize)));
+        }
+        return result;
+    }
+
     @NonNull
     private final UiBindable uiBindable;
     @Nullable
@@ -58,15 +82,16 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     private ObservableCollection<TItem> observableCollection;
     @Nullable
     private Subscription itemsProviderSubscription;
-
-    @NonNull
-    public UiBindable getUiBindable() {
-        return uiBindable;
-    }
+    private int lastUpdatedChangeNumber;
 
     public ObservableCollectionAdapter(@NonNull final UiBindable uiBindable) {
         super();
         this.uiBindable = uiBindable;
+    }
+
+    @NonNull
+    public UiBindable getUiBindable() {
+        return uiBindable;
     }
 
     protected long getItemClickDelay() {
@@ -91,15 +116,34 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
             itemsProviderSubscription.unsubscribe();
             itemsProviderSubscription = null;
         }
+        final Collection<Change> changes = simpleChanges(this.observableCollection, observableCollection, itemsOffset());
         this.observableCollection = observableCollection;
-        notifyDataSetChanged();
+        if (!changes.isEmpty()) {
+            notifyAboutChanges(changes);
+        }
         if (this.observableCollection != null) {
             itemsProviderSubscription = uiBindable.bind(this.observableCollection.observeChanges())
                     .subscribe(this::onItemsChanged);
         }
     }
 
-    protected void onItemsChanged(@NonNull final Collection<Change> changes) {
+    protected void onItemsChanged(@NonNull final ObservableCollection.CollectionChange collectionChange) {
+        if (observableCollection == null) {
+            return;
+        }
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            Lc.assertion("Items changes called on not main thread");
+            return;
+        }
+        if (collectionChange.getNumber() != observableCollection.getChangesCount()
+                || collectionChange.getNumber() != lastUpdatedChangeNumber + 1) {
+            notifyDataSetChanged();
+            return;
+        }
+        notifyAboutChanges(collectionChange.getChanges());
+    }
+
+    private void notifyAboutChanges(@NonNull final Collection<Change> changes) {
         for (final Change change : changes) {
             switch (change.getType()) {
                 case INSERTED:
@@ -120,7 +164,9 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
 
     public void setOnItemClickListener(@Nullable final OnItemClickListener<TItem> onItemClickListener) {
         this.onItemClickListener = onItemClickListener;
-        notifyDataSetChanged();
+        if (observableCollection != null && !observableCollection.isEmpty()) {
+            notifyItemRangeChanged(itemsOffset(), observableCollection.size());
+        }
     }
 
     @Override
@@ -142,6 +188,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
             Lc.assertion(new ShouldNotHappenException());
             return;
         }
+        lastUpdatedChangeNumber = observableCollection.getChangesCount();
 
         final TItem item = getItem(position - itemsOffset());
         onBindItemToViewHolder((TViewHolder) holder, position, item);
@@ -163,7 +210,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
 
     @Override
     public int getItemCount() {
-        return observableCollection != null ? observableCollection.size() : 0;
+        return getNullableCollectionSize(observableCollection);
     }
 
     public boolean isOnClickListenerDisabled(@NonNull final TItem item) {
