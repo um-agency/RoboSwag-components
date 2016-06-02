@@ -25,6 +25,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.Collection;
 import java.util.List;
 
 import ru.touchin.roboswag.components.R;
@@ -98,7 +99,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
         }
     }
 
-    protected void onItemsChanged(@NonNull final List<Change> changes) {
+    protected void onItemsChanged(@NonNull final Collection<Change> changes) {
         for (final Change change : changes) {
             switch (change.getType()) {
                 case INSERTED:
