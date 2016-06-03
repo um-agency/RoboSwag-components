@@ -26,7 +26,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -38,8 +37,10 @@ import ru.touchin.roboswag.core.observables.collections.Change;
 import ru.touchin.roboswag.core.observables.collections.ObservableCollection;
 import ru.touchin.roboswag.core.observables.collections.ObservableList;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
+import rx.Observable;
 import rx.Subscription;
 import rx.functions.Actions;
+import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 20/11/2015.
@@ -51,42 +52,37 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     private static final int PRE_LOADING_COUNT = 10;
 
     private static final int LOADED_ITEM_TYPE = R.id.LOADED_ITEM_TYPE;
-
-    private static int getNullableCollectionSize(@Nullable final ObservableCollection collection) {
-        return collection != null ? collection.size() : 0;
-    }
+    private static final int UNKNOWN_UPDATE = -1;
 
     @NonNull
-    private static <TItem> Collection<Change> simpleChanges(@Nullable final ObservableCollection<TItem> oldCollection,
-                                                            @Nullable final ObservableCollection<TItem> newCollection,
-                                                            final int offset) {
-        final int oldSize = getNullableCollectionSize(oldCollection);
-        final int newSize = getNullableCollectionSize(newCollection);
-        final List<Change> result = new ArrayList<>();
-        if (oldSize < newSize) {
-            result.add(new Change(Change.Type.INSERTED, oldSize + offset, newSize - oldSize));
-        } else if (newSize > oldSize) {
-            result.add(new Change(Change.Type.REMOVED, newSize + offset, oldSize - newSize));
-        }
-        if (newSize != 0 && oldSize != 0) {
-            result.add(new Change(Change.Type.CHANGED, offset, Math.min(oldSize, newSize)));
-        }
-        return result;
-    }
-
+    private final BehaviorSubject<ObservableCollection<TItem>> observableCollectionSubject
+            = BehaviorSubject.create((ObservableCollection<TItem>) null);
     @NonNull
     private final UiBindable uiBindable;
     @Nullable
     private OnItemClickListener<TItem> onItemClickListener;
-    @Nullable
-    private ObservableCollection<TItem> observableCollection;
-    @Nullable
-    private Subscription itemsProviderSubscription;
-    private int lastUpdatedChangeNumber;
+    private int lastUpdatedChangeNumber = UNKNOWN_UPDATE;
+    @NonNull
+    private final Observable<?> newItemsUpdatingObservable;
+    @NonNull
+    private final Observable<?> historyPreLoadingObservable;
 
     public ObservableCollectionAdapter(@NonNull final UiBindable uiBindable) {
         super();
         this.uiBindable = uiBindable;
+        uiBindable.bind(observableCollectionSubject
+                .switchMap(observableCollection -> observableCollection != null ? observableCollection.observeChanges() : Observable.empty()))
+                .subscribe(this::onItemsChanged);
+        newItemsUpdatingObservable = uiBindable.untilStop(observableCollectionSubject
+                .switchMap(observableCollection -> observableCollection != null ? observableCollection.loadItem(0) : Observable.empty()));
+        historyPreLoadingObservable = uiBindable.untilStop(observableCollectionSubject
+                .switchMap(observableCollection -> observableCollection != null
+                        ? Observable.just(observableCollection).concatWith(observableCollection.observeChanges().map(ignored -> observableCollection))
+                        : Observable.<ObservableCollection>empty())
+                .switchMap(changedObservableCollection -> {
+                    final int size = changedObservableCollection.size();
+                    return changedObservableCollection.loadRange(size, size + PRE_LOADING_COUNT);
+                }));
     }
 
     @NonNull
@@ -103,44 +99,45 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     }
 
     @Nullable
-    public ObservableCollection<TItem> getObservableCollection() {
-        return observableCollection;
+    public ObservableCollection<TItem> getObservableCollectionSubject() {
+        return observableCollectionSubject.getValue();
     }
 
     protected int itemsOffset() {
         return 0;
     }
 
-    public void setObservableCollection(@Nullable final ObservableCollection<TItem> observableCollection) {
-        if (itemsProviderSubscription != null) {
-            itemsProviderSubscription.unsubscribe();
-            itemsProviderSubscription = null;
-        }
-        final Collection<Change> changes = simpleChanges(this.observableCollection, observableCollection, itemsOffset());
-        this.observableCollection = observableCollection;
-        if (!changes.isEmpty()) {
-            notifyAboutChanges(changes);
-        }
-        if (this.observableCollection != null) {
-            itemsProviderSubscription = uiBindable.bind(this.observableCollection.observeChanges())
-                    .subscribe(this::onItemsChanged);
+    private void refreshUpdate() {
+        notifyDataSetChanged();
+        if (observableCollectionSubject.getValue() != null) {
+            lastUpdatedChangeNumber = observableCollectionSubject.getValue().getChangesCount();
+        } else {
+            lastUpdatedChangeNumber = UNKNOWN_UPDATE;
         }
     }
 
+    public void setObservableCollection(@Nullable final ObservableCollection<TItem> observableCollection) {
+        this.observableCollectionSubject.onNext(observableCollection);
+        refreshUpdate();
+    }
+
     protected void onItemsChanged(@NonNull final ObservableCollection.CollectionChange collectionChange) {
-        if (observableCollection == null) {
+        if (observableCollectionSubject.getValue() == null) {
             return;
         }
         if (Looper.myLooper() != Looper.getMainLooper()) {
             Lc.assertion("Items changes called on not main thread");
             return;
         }
-        if (collectionChange.getNumber() != observableCollection.getChangesCount()
+        if (collectionChange.getNumber() != observableCollectionSubject.getValue().getChangesCount()
                 || collectionChange.getNumber() != lastUpdatedChangeNumber + 1) {
-            notifyDataSetChanged();
+            if (lastUpdatedChangeNumber < collectionChange.getNumber()) {
+                refreshUpdate();
+            }
             return;
         }
         notifyAboutChanges(collectionChange.getChanges());
+        lastUpdatedChangeNumber = observableCollectionSubject.getValue().getChangesCount();
     }
 
     private void notifyAboutChanges(@NonNull final Collection<Change> changes) {
@@ -164,9 +161,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
 
     public void setOnItemClickListener(@Nullable final OnItemClickListener<TItem> onItemClickListener) {
         this.onItemClickListener = onItemClickListener;
-        if (observableCollection != null && !observableCollection.isEmpty()) {
-            notifyItemRangeChanged(itemsOffset(), observableCollection.size());
-        }
+        refreshUpdate();
     }
 
     @Override
@@ -184,15 +179,16 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     @SuppressWarnings("unchecked")
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
-        if (observableCollection == null) {
+        if (observableCollectionSubject.getValue() == null) {
             Lc.assertion(new ShouldNotHappenException());
             return;
         }
-        lastUpdatedChangeNumber = observableCollection.getChangesCount();
+
+        lastUpdatedChangeNumber = observableCollectionSubject.getValue().getChangesCount();
 
         final TItem item = getItem(position - itemsOffset());
         onBindItemToViewHolder((TViewHolder) holder, position, item);
-        ((TViewHolder) holder).bindPosition(uiBindable, observableCollection, position);
+        ((TViewHolder) holder).bindPosition(observableCollectionSubject.getValue(), this, position);
         if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
             UiUtils.setOnRippleClickListener(holder.itemView, () -> onItemClickListener.onItemClicked(item, position), getItemClickDelay());
         }
@@ -202,15 +198,15 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
 
     @NonNull
     public TItem getItem(final int position) {
-        if (observableCollection == null) {
+        if (observableCollectionSubject.getValue() == null) {
             throw new ShouldNotHappenException();
         }
-        return observableCollection.get(position);
+        return observableCollectionSubject.getValue().get(position);
     }
 
     @Override
     public int getItemCount() {
-        return getNullableCollectionSize(observableCollection);
+        return observableCollectionSubject.getValue() != null ? observableCollectionSubject.getValue().size() : 0;
     }
 
     public boolean isOnClickListenerDisabled(@NonNull final TItem item) {
@@ -226,23 +222,32 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         @Nullable
-        private Subscription preLoadingSubscription;
+        private Subscription newItemsUpdatingSubscription;
+        @Nullable
+        private Subscription historyPreLoadingSubscription;
 
         public ViewHolder(@NonNull final View itemView) {
             super(itemView);
         }
 
-        public void bindPosition(@NonNull final UiBindable uiBindable,
-                                 @NonNull final ObservableCollection<?> observableCollection,
+        @SuppressWarnings("unchecked")
+        public void bindPosition(@NonNull final ObservableCollection<?> observableCollection,
+                                 @NonNull final ObservableCollectionAdapter adapter,
                                  final int position) {
-            if (preLoadingSubscription != null) {
-                preLoadingSubscription.unsubscribe();
+            if (newItemsUpdatingSubscription != null) {
+                newItemsUpdatingSubscription.unsubscribe();
+                newItemsUpdatingSubscription = null;
             }
-            preLoadingSubscription = uiBindable
-                    .untilStop(observableCollection
-                            .loadRange(Math.max(0, position - PRE_LOADING_COUNT), position + PRE_LOADING_COUNT)
-                            .first())
-                    .subscribe(Actions.empty(), Actions.empty());
+            if (historyPreLoadingSubscription != null) {
+                historyPreLoadingSubscription.unsubscribe();
+                historyPreLoadingSubscription = null;
+            }
+            if (position == adapter.itemsOffset()) {
+                newItemsUpdatingSubscription = adapter.newItemsUpdatingObservable.subscribe(Actions.empty(), Actions.empty());
+            }
+            if (position - adapter.itemsOffset() > observableCollection.size() - PRE_LOADING_COUNT) {
+                historyPreLoadingSubscription = adapter.historyPreLoadingObservable.subscribe(Actions.empty(), Actions.empty());
+            }
         }
 
     }
