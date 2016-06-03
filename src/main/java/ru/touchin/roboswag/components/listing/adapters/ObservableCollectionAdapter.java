@@ -99,7 +99,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     }
 
     @Nullable
-    public ObservableCollection<TItem> getObservableCollectionSubject() {
+    public ObservableCollection<TItem> getObservableCollection() {
         return observableCollectionSubject.getValue();
     }
 
