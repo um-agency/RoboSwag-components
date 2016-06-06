@@ -54,6 +54,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     private static final int LOADED_ITEM_TYPE = R.id.LOADED_ITEM_TYPE;
     private static final int UNKNOWN_UPDATE = -1;
 
+    //TODO: replace with wrapper
     @NonNull
     private final BehaviorSubject<ObservableCollection<TItem>> observableCollectionSubject
             = BehaviorSubject.create((ObservableCollection<TItem>) null);
