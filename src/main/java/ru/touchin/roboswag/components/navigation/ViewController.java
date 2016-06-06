@@ -149,6 +149,10 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
         isStartedSubject.onNext(true);
     }
 
+    public void onAppear(@NonNull final ViewControllerFragment.AppearType appearType) {
+        //do nothing
+    }
+
     public void onSaveInstanceState(@NonNull final Bundle savedInstanceState) {
         // do nothing
     }

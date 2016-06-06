@@ -73,6 +73,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     private Subscription viewControllerSubscription;
     private TState state;
     private boolean isStarted;
+    private boolean startedAtLeastOnce;
 
     /**
      * Returns specific object which contains state of ViewController.
@@ -170,7 +171,19 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         isStarted = true;
         if (viewController != null) {
             viewController.onStart();
+            if (isMenuVisible()) {
+                viewController.onAppear(!startedAtLeastOnce ? AppearType.STARTED : AppearType.STARTED_AGAIN);
+            }
         }
+        startedAtLeastOnce = true;
+    }
+
+    @Override
+    public void setMenuVisibility(final boolean menuVisible) {
+        if (menuVisible && !isMenuVisible() && viewController != null) {
+            viewController.onAppear(AppearType.ACTIVATED);
+        }
+        super.setMenuVisibility(menuVisible);
     }
 
     @Override
@@ -247,6 +260,15 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
             super(context);
         }
 
+    }
+
+    public enum AppearType {
+        // fragment just started first time
+        STARTED,
+        // fragment started after stop
+        STARTED_AGAIN,
+        // fragment activated (started and menu visibility is true)
+        ACTIVATED
     }
 
 }
