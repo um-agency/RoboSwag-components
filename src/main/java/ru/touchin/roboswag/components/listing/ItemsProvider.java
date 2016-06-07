@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import rx.Observable;
-import rx.internal.util.RxRingBuffer;
 import rx.subjects.PublishSubject;
 
 /**
@@ -51,34 +50,11 @@ public abstract class ItemsProvider<T> {
 
     @SuppressWarnings("unchecked")
     public Observable<List<T>> loadRange(final int first, final int last) {
-        final List<Observable<List<T>>> itemsRequests = new ArrayList<>();
-
-        int index = first;
-        while (index <= last) {
-            final List<Observable<T>> limitedPageRequests = new ArrayList<>();
-            final int maxIndex = index + RxRingBuffer.SIZE - 1;
-            while (index <= Math.min(last, maxIndex)) {
-                limitedPageRequests.add(loadItem(index));
-                index++;
-            }
-            itemsRequests.add(Observable.combineLatest(limitedPageRequests, args -> {
-                final List<T> resultPart = new ArrayList<>(args.length);
-                for (final Object item : args) {
-                    if (item != null) {
-                        resultPart.add((T) item);
-                    }
-                }
-                return resultPart;
-            }));
+        final List<Observable<T>> itemsRequests = new ArrayList<>();
+        for (int i = first; i <= last; i++) {
+            itemsRequests.add(loadItem(i));
         }
-
-        return Observable.combineLatest(itemsRequests, args -> {
-            final List<T> result = new ArrayList<>();
-            for (final Object resultPart : args) {
-                result.addAll((List<T>) resultPart);
-            }
-            return result;
-        });
+        return Observable.concatEager(itemsRequests).toList();
     }
 
     @NonNull
