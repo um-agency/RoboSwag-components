@@ -104,6 +104,11 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
         return observableCollectionSubject.getValue();
     }
 
+    @NonNull
+    public Observable<ObservableCollection<TItem>> observeObservableCollection() {
+        return observableCollectionSubject.distinctUntilChanged();
+    }
+
     protected int itemsOffset() {
         return 0;
     }
