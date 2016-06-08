@@ -106,7 +106,14 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
             state.onCreate();
         }
         viewControllerSubscription = Observable
-                .combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(), this::createViewController)
+                .combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(),
+                        (activity, viewInfo) -> {
+                            final ViewController newViewController = createViewController(activity, viewInfo);
+                            if (newViewController != null) {
+                                newViewController.onCreate();
+                            }
+                            return newViewController;
+                        })
                 .subscribe(this::onViewControllerChanged, Lc::assertion);
     }
 

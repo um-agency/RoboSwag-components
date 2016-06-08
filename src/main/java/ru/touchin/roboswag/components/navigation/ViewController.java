@@ -49,7 +49,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     @NonNull
     private final ViewGroup container;
     @NonNull
-    private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create(true);
+    private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create();
     @NonNull
     private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
     @NonNull
@@ -65,7 +65,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     }
 
     public boolean isDestroyed() {
-        return !isCreatedSubject.getValue();
+        return isCreatedSubject.getValue() != null && !isCreatedSubject.getValue();
     }
 
     /**
@@ -143,6 +143,10 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     @Override
     public <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
         return baseUiBindable.untilDestroy(observable);
+    }
+
+    public void onCreate() {
+        isCreatedSubject.onNext(true);
     }
 
     public void onStart() {

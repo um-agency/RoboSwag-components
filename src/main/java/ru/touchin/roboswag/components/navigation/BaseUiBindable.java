@@ -32,14 +32,16 @@ public class BaseUiBindable implements UiBindable {
 
     @NonNull
     public <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
-        return observable.observeOn(AndroidSchedulers.mainThread())
+        return isCreatedSubject.first()
+                .switchMap(isCreated -> isCreated ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.empty())
                 .takeUntil(isStartedSubject.filter(started -> !started));
     }
 
     @NonNull
     @Override
     public <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
-        return observable.observeOn(AndroidSchedulers.mainThread())
+        return isCreatedSubject.first()
+                .switchMap(isCreated -> isCreated ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.empty())
                 .takeUntil(isCreatedSubject.filter(created -> !created));
     }
 
