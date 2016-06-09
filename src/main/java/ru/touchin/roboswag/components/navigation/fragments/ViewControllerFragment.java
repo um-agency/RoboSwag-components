@@ -178,7 +178,16 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         }
     }
 
+    @Override
+    public void setMenuVisibility(final boolean menuVisible) {
+        if (menuVisible && !isMenuVisible() && viewController != null) {
+            viewController.onAppear(AppearType.ACTIVATED);
+        }
+        super.setMenuVisibility(menuVisible);
+    }
+
     protected void onConfigureNavigation(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
         if (viewController != null) {
             viewController.onConfigureNavigation(menu, inflater);
         }
@@ -203,6 +212,9 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         if (this.viewController != null) {
             if (isStarted) {
                 this.viewController.onStart();
+            }
+            if (isMenuVisible()) {
+                viewController.onAppear(AppearType.STARTED);
             }
             this.viewController.getActivity().supportInvalidateOptionsMenu();
         }
@@ -254,6 +266,13 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
             super(context);
         }
 
+    }
+
+    public enum AppearType {
+        // fragment just started first time
+        STARTED,
+        // fragment activated (started and menu visibility is true)
+        ACTIVATED
     }
 
 }

@@ -32,6 +32,7 @@ import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.android.RxAndroidUtils;
 import rx.Observable;
 import rx.Scheduler;
+import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Ilia Kurtov on 12.05.2016.
@@ -48,12 +49,24 @@ public abstract class AbstractSimplePagingProvider<T> extends ItemsProvider<T> {
     private final SparseArray<Observable<List<T>>> loadingPages = new SparseArray<>();
     @Nullable
     private Integer maxLoadedPage;
-    private boolean isLastPageLoaded;
+    private final BehaviorSubject<Boolean> isLastPageLoadedSubject = BehaviorSubject.create(false);
 
     public AbstractSimplePagingProvider(final int pageSize) {
         super();
         this.pageSize = pageSize;
     }
+
+    public void updateLoadedPages(@NonNull final List<T> startedDataList) {
+        for (int page = 0; page < startedDataList.size() / pageSize; page++) {
+            final List<T> pageList = new ArrayList<>();
+            for (int i = pageSize * page; i < pageSize * (page + 1); i++) {
+                pageList.add(startedDataList.get(i));
+            }
+            loadedPages.put(page, pageList);
+        }
+        maxLoadedPage = startedDataList.size() / pageSize - 1;
+    }
+
 
     public int getPageSize() {
         return pageSize;
@@ -63,7 +76,7 @@ public abstract class AbstractSimplePagingProvider<T> extends ItemsProvider<T> {
     public int getSize() {
         synchronized (lock) {
             return (maxLoadedPage != null ? maxLoadedPage * pageSize + loadedPages.get(maxLoadedPage).size() : 0)
-                    + (isLastPageLoaded ? 0 : 1);
+                    + (isLastPageLoadedSubject.getValue() ? 0 : 1);
         }
     }
 
@@ -109,7 +122,7 @@ public abstract class AbstractSimplePagingProvider<T> extends ItemsProvider<T> {
             subscriber.onNext(page != null && page.size() > indexOnPage ? page.get(indexOnPage) : null);
             subscriber.onCompleted();
         }).switchMap(item -> {
-            if (item != null || (isLastPageLoaded && maxLoadedPage != null && maxLoadedPage <= indexOfPage)) {
+            if (item != null || (isLastPageLoadedSubject.getValue() && maxLoadedPage != null && maxLoadedPage <= indexOfPage)) {
                 return Observable.just(item);
             }
             Observable<List<T>> loadingPage = loadingPages.get(indexOfPage);
@@ -142,19 +155,18 @@ public abstract class AbstractSimplePagingProvider<T> extends ItemsProvider<T> {
                 .doOnNext(pageItems -> {
                     synchronized (lock) {
                         final int oldSize = getSize();
-                        final boolean oldIsLastPageLoaded = isLastPageLoaded;
+                        final boolean oldIsLastPageLoaded = isLastPageLoadedSubject.getValue();
                         if (pageItems.size() < pageSize) {
                             if (maxLoadedPage != null && maxLoadedPage > indexOfPage) {
                                 maxLoadedPage = indexOfPage == 0 || !pageItems.isEmpty() ? indexOfPage : null;
                                 downgradeMaxLoadedPages(indexOfPage);
-                                isLastPageLoaded = false;
+                                isLastPageLoadedSubject.onNext(false);
                             }
                             if (shouldReplaceMaxLoaded(pageItems, indexOfPage)) {
                                 maxLoadedPage = indexOfPage;
                             }
-                            isLastPageLoaded = isLastPageLoaded
-                                    || (maxLoadedPage != null
-                                    && (maxLoadedPage == indexOfPage || maxLoadedPage == indexOfPage - 1));
+                            isLastPageLoadedSubject.onNext(isLastPageLoadedSubject.getValue()
+                                    || (maxLoadedPage != null && (maxLoadedPage == indexOfPage || maxLoadedPage == indexOfPage - 1)));
                         } else if (shouldReplaceMaxLoaded(pageItems, indexOfPage)) {
                             maxLoadedPage = indexOfPage;
                         }
@@ -198,7 +210,7 @@ public abstract class AbstractSimplePagingProvider<T> extends ItemsProvider<T> {
             changes.add(new Change(Change.Type.INSERTED, oldSize, size - oldSize));
         } else {
             changes.add(new Change(Change.Type.REMOVED, size, oldSize - size));
-            if (!isLastPageLoaded) {
+            if (!isLastPageLoadedSubject.getValue()) {
                 changes.add(new Change(Change.Type.CHANGED, size - 1, 1));
             }
         }
@@ -215,6 +227,11 @@ public abstract class AbstractSimplePagingProvider<T> extends ItemsProvider<T> {
         } else {
             return Collections.unmodifiableList(new ArrayList<>(pageItems));
         }
+    }
+
+    @NonNull
+    public Observable<Boolean> observeListLoadingFinished() {
+        return isLastPageLoadedSubject.distinctUntilChanged();
     }
 
 }

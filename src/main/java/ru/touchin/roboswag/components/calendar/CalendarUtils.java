@@ -219,14 +219,35 @@ public final class CalendarUtils {
         // add range with days before today
         calendarItems.add(new CalendarDayItem(calendar.getTimeInMillis() / CalendarAdapter.ONE_DAY_LENGTH + 1,
                 1, shift, shift + firstDate - 1, CalendarDateState.BEFORE_TODAY));
-        shift += firstDate - 1;
+        shift += firstDate;
 
         // add today item
         calendar.setTime(cleanStartDate.getTime());
         calendarItems.add(new CalendarDayItem(calendar.getTimeInMillis() / CalendarAdapter.ONE_DAY_LENGTH + 1,
-                firstDate + 1, shift + 1, shift + 1, CalendarDateState.TODAY));
+                firstDate + 1, shift, shift, CalendarDateState.TODAY));
+        shift += 1;
+
+        //add empty items and header if current day the last day in the month
+        if (calendar.get(Calendar.DAY_OF_MONTH) == calendar.getActualMaximum(Calendar.DAY_OF_MONTH)) {
+            addItemsIfCurrentDayTheLastDayInTheMonth(calendar, calendarItems, shift);
+        }
 
         return calendarItems;
+    }
+
+    private static void addItemsIfCurrentDayTheLastDayInTheMonth(@NonNull final Calendar calendar,
+                                                                 @NonNull final List<CalendarItem> calendarItems,
+                                                                 final int initialShift) {
+        int shift = initialShift;
+        final Calendar newMonthCalendar = Calendar.getInstance();
+        newMonthCalendar.setTime(calendar.getTime());
+        newMonthCalendar.add(Calendar.DAY_OF_MONTH, 1);
+        final int firstFayInNextMonth = getFirstDateStart(newMonthCalendar);
+        calendarItems.add(new CalendarEmptyItem(shift, shift + (7 - firstFayInNextMonth) - 1));
+        shift += 7 - firstFayInNextMonth;
+        calendarItems.add(new CalendarHeaderItem(calendar.get(Calendar.MONTH) + 1, shift, shift));
+        shift += 1;
+        calendarItems.add(new CalendarEmptyItem(shift, shift + firstFayInNextMonth - 1));
     }
 
     private static int getFirstDateStart(@NonNull final Calendar calendar) {
