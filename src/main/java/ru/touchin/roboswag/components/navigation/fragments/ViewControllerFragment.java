@@ -187,7 +187,6 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     }
 
     protected void onConfigureNavigation(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
         if (viewController != null) {
             viewController.onConfigureNavigation(menu, inflater);
         }
