@@ -213,10 +213,8 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         super.onSaveInstanceState(savedInstanceState);
         if (viewController != null) {
             viewController.onSaveInstanceState(savedInstanceState);
-            savedInstanceState.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, state);
-        } else if (getArguments() != null && getArguments().containsKey(VIEW_CONTROLLER_STATE_EXTRA)) {
-            savedInstanceState.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA));
         }
+        savedInstanceState.putSerializable(VIEW_CONTROLLER_STATE_EXTRA, state);
     }
 
     @Override
