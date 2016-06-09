@@ -77,12 +77,9 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
         newItemsUpdatingObservable = uiBindable.untilStop(observableCollectionSubject
                 .switchMap(observableCollection -> observableCollection != null ? observableCollection.loadItem(0) : Observable.empty()));
         historyPreLoadingObservable = uiBindable.untilStop(observableCollectionSubject
-                .switchMap(observableCollection -> observableCollection != null
-                        ? Observable.just(observableCollection).concatWith(observableCollection.observeChanges().map(ignored -> observableCollection))
-                        : Observable.<ObservableCollection>empty())
-                .switchMap(changedObservableCollection -> {
-                    final int size = changedObservableCollection.size();
-                    return changedObservableCollection.loadRange(size, size + PRE_LOADING_COUNT);
+                .switchMap(observableCollection -> {
+                    final int size = observableCollection.size();
+                    return observableCollection.loadRange(size, size + PRE_LOADING_COUNT);
                 }));
     }
 
