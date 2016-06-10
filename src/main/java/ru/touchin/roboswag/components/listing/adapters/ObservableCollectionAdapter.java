@@ -26,6 +26,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -39,6 +40,7 @@ import ru.touchin.roboswag.core.observables.collections.ObservableList;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
 import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Actions;
 import rx.subjects.BehaviorSubject;
 
@@ -68,11 +70,51 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     @NonNull
     private final Observable<?> historyPreLoadingObservable;
 
+    private final ObservableList<TItem> innerCollection = new ObservableList<>();
+
     public ObservableCollectionAdapter(@NonNull final UiBindable uiBindable) {
         super();
         this.uiBindable = uiBindable;
-        uiBindable.bind(observableCollectionSubject
-                .switchMap(observableCollection -> observableCollection != null ? observableCollection.observeChanges() : Observable.empty()))
+        observableCollectionSubject
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(collection -> innerCollection.set(collection != null ? collection.getItems() : new ArrayList<>()))
+                .switchMap(observableCollection -> observableCollection != null
+                        ? observableCollection.observeChanges().observeOn(AndroidSchedulers.mainThread())
+                        : Observable.empty())
+                .subscribe(changes -> {
+                    for (final Change<TItem> change : changes.getChanges()) {
+                        switch (change.getType()) {
+                            case INSERTED:
+                                int i = 0;
+                                for (TItem item : change.getChangedItems()) {
+                                    Lc.d("added " + item + " at " + (change.getStart() + i));
+                                    i++;
+                                }
+                                innerCollection.addAll(change.getStart(), change.getChangedItems());
+                                break;
+                            case CHANGED:
+                                int j = 0;
+                                for (TItem item : change.getChangedItems()) {
+                                    Lc.d("changed " + item + " at " + (change.getStart() + j));
+                                    j++;
+                                }
+                                innerCollection.update(change.getStart(), change.getChangedItems());
+                                break;
+                            case REMOVED:
+                                int k = 0;
+                                for (TItem item : change.getChangedItems()) {
+                                    Lc.d("removed " + item + " at " + (change.getStart() + k));
+                                    k++;
+                                }
+                                innerCollection.remove(change.getStart(), change.getCount());
+                                break;
+                            default:
+                                Lc.assertion("Not supported " + change.getType());
+                                break;
+                        }
+                    }
+                });
+        innerCollection.observeChanges()
                 .subscribe(this::onItemsChanged);
         newItemsUpdatingObservable = uiBindable.untilStop(observableCollectionSubject
                 .switchMap(observableCollection -> observableCollection != null ? observableCollection.loadItem(0) : Observable.empty()));
@@ -113,7 +155,8 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     private void refreshUpdate() {
         notifyDataSetChanged();
         if (observableCollectionSubject.getValue() != null) {
-            lastUpdatedChangeNumber = observableCollectionSubject.getValue().getChangesCount();
+            lastUpdatedChangeNumber = innerCollection.getChangesCount();
+            Lc.d("refresh update " + lastUpdatedChangeNumber);
         } else {
             lastUpdatedChangeNumber = UNKNOWN_UPDATE;
         }
@@ -124,7 +167,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
         refreshUpdate();
     }
 
-    protected void onItemsChanged(@NonNull final ObservableCollection.CollectionChange collectionChange) {
+    protected void onItemsChanged(@NonNull final ObservableCollection.CollectionChange<TItem> collectionChange) {
         if (observableCollectionSubject.getValue() == null) {
             return;
         }
@@ -132,18 +175,21 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
             Lc.assertion("Items changes called on not main thread");
             return;
         }
-        if (collectionChange.getNumber() != observableCollectionSubject.getValue().getChangesCount()
+        if (collectionChange.getNumber() != innerCollection.getChangesCount()
                 || collectionChange.getNumber() != lastUpdatedChangeNumber + 1) {
             if (lastUpdatedChangeNumber < collectionChange.getNumber()) {
+                Lc.d("refresh update of inconsistence ");
                 refreshUpdate();
             }
             return;
         }
+        Lc.d("applied changes start " + lastUpdatedChangeNumber);
         notifyAboutChanges(collectionChange.getChanges());
-        lastUpdatedChangeNumber = observableCollectionSubject.getValue().getChangesCount();
+        lastUpdatedChangeNumber = innerCollection.getChangesCount();
+        Lc.d("applied changes end " + lastUpdatedChangeNumber);
     }
 
-    private void notifyAboutChanges(@NonNull final Collection<Change> changes) {
+    private void notifyAboutChanges(@NonNull final Collection<Change<TItem>> changes) {
         for (final Change change : changes) {
             switch (change.getType()) {
                 case INSERTED:
@@ -187,7 +233,8 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
             return;
         }
 
-        lastUpdatedChangeNumber = observableCollectionSubject.getValue().getChangesCount();
+        lastUpdatedChangeNumber = innerCollection.getChangesCount();
+        Lc.d("bind changes " + lastUpdatedChangeNumber);
 
         final TItem item = getItem(position - itemsOffset());
         onBindItemToViewHolder((TViewHolder) holder, position, item);
