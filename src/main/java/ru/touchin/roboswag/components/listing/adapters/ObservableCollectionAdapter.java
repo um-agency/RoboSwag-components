@@ -54,9 +54,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     private static final int PRE_LOADING_COUNT = 10;
 
     private static final int LOADED_ITEM_TYPE = R.id.LOADED_ITEM_TYPE;
-    private static final int UNKNOWN_UPDATE = -1;
 
-    //TODO: replace with wrapper
     @NonNull
     private final BehaviorSubject<ObservableCollection<TItem>> observableCollectionSubject
             = BehaviorSubject.create((ObservableCollection<TItem>) null);
@@ -64,7 +62,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     private final UiBindable uiBindable;
     @Nullable
     private OnItemClickListener<TItem> onItemClickListener;
-    private int lastUpdatedChangeNumber = UNKNOWN_UPDATE;
+    private int lastUpdatedChangeNumber = -1;
     @NonNull
     private final Observable<?> newItemsUpdatingObservable;
     @NonNull
@@ -102,6 +100,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
                                 break;
                             case REMOVED:
                                 int k = 0;
+                                Lc.d("removed " + change.getCount());
                                 for (TItem item : change.getChangedItems()) {
                                     Lc.d("removed " + item + " at " + (change.getStart() + k));
                                     k++;
@@ -154,12 +153,8 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
 
     private void refreshUpdate() {
         notifyDataSetChanged();
-        if (observableCollectionSubject.getValue() != null) {
-            lastUpdatedChangeNumber = innerCollection.getChangesCount();
-            Lc.d("refresh update " + lastUpdatedChangeNumber);
-        } else {
-            lastUpdatedChangeNumber = UNKNOWN_UPDATE;
-        }
+        lastUpdatedChangeNumber = innerCollection.getChangesCount();
+        Lc.d("refresh update " + lastUpdatedChangeNumber);
     }
 
     public void setObservableCollection(@Nullable final ObservableCollection<TItem> observableCollection) {
@@ -168,9 +163,6 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     }
 
     protected void onItemsChanged(@NonNull final ObservableCollection.CollectionChange<TItem> collectionChange) {
-        if (observableCollectionSubject.getValue() == null) {
-            return;
-        }
         if (Looper.myLooper() != Looper.getMainLooper()) {
             Lc.assertion("Items changes called on not main thread");
             return;
@@ -199,7 +191,12 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
                     notifyItemRangeChanged(change.getStart() + itemsOffset(), change.getCount());
                     break;
                 case REMOVED:
-                    notifyItemRangeRemoved(change.getStart() + itemsOffset(), change.getCount());
+                    if (getItemCount() == 0) {
+                        //TODO: bug of recyclerview?
+                        notifyDataSetChanged();
+                    } else {
+                        notifyItemRangeRemoved(change.getStart() + itemsOffset(), change.getCount());
+                    }
                     break;
                 default:
                     Lc.assertion("Not supported " + change.getType());
@@ -248,15 +245,12 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
 
     @NonNull
     public TItem getItem(final int position) {
-        if (observableCollectionSubject.getValue() == null) {
-            throw new ShouldNotHappenException();
-        }
-        return observableCollectionSubject.getValue().get(position);
+        return innerCollection.get(position);
     }
 
     @Override
     public int getItemCount() {
-        return observableCollectionSubject.getValue() != null ? observableCollectionSubject.getValue().size() : 0;
+        return innerCollection.size();
     }
 
     public boolean isOnClickListenerDisabled(@NonNull final TItem item) {
