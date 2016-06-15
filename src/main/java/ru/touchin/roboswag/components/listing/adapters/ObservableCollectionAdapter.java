@@ -83,28 +83,12 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
                     for (final Change<TItem> change : changes.getChanges()) {
                         switch (change.getType()) {
                             case INSERTED:
-                                int i = 0;
-                                for (TItem item : change.getChangedItems()) {
-                                    Lc.d("added " + item + " at " + (change.getStart() + i));
-                                    i++;
-                                }
                                 innerCollection.addAll(change.getStart(), change.getChangedItems());
                                 break;
                             case CHANGED:
-                                int j = 0;
-                                for (TItem item : change.getChangedItems()) {
-                                    Lc.d("changed " + item + " at " + (change.getStart() + j));
-                                    j++;
-                                }
                                 innerCollection.update(change.getStart(), change.getChangedItems());
                                 break;
                             case REMOVED:
-                                int k = 0;
-                                Lc.d("removed " + change.getCount());
-                                for (TItem item : change.getChangedItems()) {
-                                    Lc.d("removed " + item + " at " + (change.getStart() + k));
-                                    k++;
-                                }
                                 innerCollection.remove(change.getStart(), change.getCount());
                                 break;
                             default:
@@ -154,7 +138,6 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     private void refreshUpdate() {
         notifyDataSetChanged();
         lastUpdatedChangeNumber = innerCollection.getChangesCount();
-        Lc.d("refresh update " + lastUpdatedChangeNumber);
     }
 
     public void setObservableCollection(@Nullable final ObservableCollection<TItem> observableCollection) {
@@ -170,15 +153,12 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
         if (collectionChange.getNumber() != innerCollection.getChangesCount()
                 || collectionChange.getNumber() != lastUpdatedChangeNumber + 1) {
             if (lastUpdatedChangeNumber < collectionChange.getNumber()) {
-                Lc.d("refresh update of inconsistence ");
                 refreshUpdate();
             }
             return;
         }
-        Lc.d("applied changes start " + lastUpdatedChangeNumber);
         notifyAboutChanges(collectionChange.getChanges());
         lastUpdatedChangeNumber = innerCollection.getChangesCount();
-        Lc.d("applied changes end " + lastUpdatedChangeNumber);
     }
 
     private void notifyAboutChanges(@NonNull final Collection<Change<TItem>> changes) {
@@ -231,7 +211,6 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
         }
 
         lastUpdatedChangeNumber = innerCollection.getChangesCount();
-        Lc.d("bind changes " + lastUpdatedChangeNumber);
 
         final TItem item = getItem(position - itemsOffset());
         onBindItemToViewHolder((TViewHolder) holder, position, item);
