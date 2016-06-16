@@ -27,40 +27,27 @@ import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.util.TypedValue;
 
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
-
 import ru.touchin.roboswag.components.utils.UiUtils;
-import ru.touchin.roboswag.core.log.Lc;
 
 /**
  * Created by Gavriil Sitnikov on 03/16.
  * TODO
  */
-public class MaterialProgressDrawable extends Drawable {
+public class MaterialProgressDrawable extends Drawable implements Runnable, Animatable {
 
     private static final int UPDATE_INTERVAL = 10;
 
     private static final float DEFAULT_STROKE_WIDTH_DP = 4.5f;
     private static final Parameters DEFAULT_PARAMETERS = new Parameters(20, 270, 4, 12, 4, 8);
 
-    private WeakReference<Callback> lastDrawCallback;
-
     private final Paint paint;
-    private final Runnable loop = new Runnable() {
-        @Override
-        public void run() {
-            scheduleSelf(this, animationStartTime + animationCycle * UPDATE_INTERVAL);
-            invalidateSelf();
-        }
-    };
 
     private Parameters parameters;
     private long animationStartTime;
@@ -68,6 +55,7 @@ public class MaterialProgressDrawable extends Drawable {
     private float rotationAngle;
     private float arcSize;
     private final RectF arcBounds = new RectF();
+    private boolean running;
 
     public MaterialProgressDrawable(@NonNull final Context context) {
         super();
@@ -118,22 +106,6 @@ public class MaterialProgressDrawable extends Drawable {
         arcBounds.inset(paint.getStrokeWidth() / 2, paint.getStrokeWidth() / 2);
     }
 
-    private Callback getInternalCallback() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            return getCallback();
-        }
-
-        try {
-            final Field field = Drawable.class.getDeclaredField("mCallback");
-            field.setAccessible(true);
-            return (Callback) field.get(this);
-        } catch (final Exception ex) {
-            Lc.assertion(ex);
-            return null;
-        }
-
-    }
-
     @Override
     public void unscheduleSelf(final Runnable what) {
         super.unscheduleSelf(what);
@@ -141,24 +113,9 @@ public class MaterialProgressDrawable extends Drawable {
         animationCycle = 0;
     }
 
+    @SuppressWarnings("PMD.NPathComplexity")
     @Override
     public void draw(final Canvas canvas) {
-        final Callback currentCallback = getInternalCallback();
-
-        if (lastDrawCallback == null || lastDrawCallback.get() != currentCallback) {
-            unscheduleSelf(loop);
-        }
-
-        drawArc(canvas);
-
-        if (lastDrawCallback == null || lastDrawCallback.get() != currentCallback) {
-            lastDrawCallback = new WeakReference<>(currentCallback);
-            loop.run();
-        }
-    }
-
-    @SuppressWarnings("PMD.NPathComplexity")
-    private void drawArc(final Canvas canvas) {
         final boolean isGrowingCycle = (((int) (arcSize / parameters.maxAngle)) % 2) == 0;
         final float angle = arcSize % parameters.maxAngle;
         final float shift = (angle / parameters.maxAngle) * parameters.gapAngle;
@@ -168,6 +125,9 @@ public class MaterialProgressDrawable extends Drawable {
         arcSize += isGrowingCycle ? parameters.arcMagicNumber1 : parameters.arcMagicNumber2;
         if (arcSize < 0) {
             arcSize = 0;
+        }
+        if (isRunning()) {
+            scheduleSelf(this, animationStartTime + animationCycle * UPDATE_INTERVAL);
         }
     }
 
@@ -186,6 +146,34 @@ public class MaterialProgressDrawable extends Drawable {
     @Override
     public int getOpacity() {
         return PixelFormat.TRANSLUCENT;
+    }
+
+    @Override
+    public void start() {
+        if (!running) {
+            running = true;
+            run();
+        }
+    }
+
+    @Override
+    public void stop() {
+        if (running) {
+            unscheduleSelf(this);
+            running = false;
+        }
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
+    public void run() {
+        if (running) {
+            invalidateSelf();
+        }
     }
 
     public static class Parameters {
