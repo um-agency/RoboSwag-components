@@ -25,6 +25,7 @@ import android.view.ViewGroup;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import ru.touchin.roboswag.components.navigation.AbstractBaseFragment;
+import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
 import rx.functions.Action0;
 import rx.functions.Func1;
 
@@ -180,9 +181,12 @@ public final class UiUtils {
         }
 
         final Runnable runnable = () -> {
-            if (targetView.getWindowVisibility() == View.VISIBLE) {
-                onClickListener.onClick(targetView);
+            if (targetView.getWindowVisibility() != View.VISIBLE
+                    || !targetView.hasWindowFocus()
+                    || (targetView.getContext() instanceof BaseActivity && !((BaseActivity) targetView.getContext()).isResumed())) {
+                return;
             }
+            onClickListener.onClick(targetView);
         };
 
         targetView.setOnClickListener(v -> {

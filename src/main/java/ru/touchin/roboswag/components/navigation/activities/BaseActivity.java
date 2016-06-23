@@ -29,6 +29,11 @@ public abstract class BaseActivity extends AppCompatActivity
     private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
     @NonNull
     private final BaseUiBindable baseUiBindable = new BaseUiBindable(isCreatedSubject, isStartedSubject);
+    private boolean resumed;
+
+    public boolean isResumed() {
+        return resumed;
+    }
 
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
@@ -40,6 +45,18 @@ public abstract class BaseActivity extends AppCompatActivity
     protected void onStart() {
         super.onStart();
         isStartedSubject.onNext(true);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        resumed = true;
+    }
+
+    @Override
+    protected void onPause() {
+        resumed = false;
+        super.onPause();
     }
 
     @Override
