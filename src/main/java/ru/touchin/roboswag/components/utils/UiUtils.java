@@ -183,7 +183,7 @@ public final class UiUtils {
         final Runnable runnable = () -> {
             if (targetView.getWindowVisibility() != View.VISIBLE
                     || !targetView.hasWindowFocus()
-                    || (targetView.getContext() instanceof BaseActivity && !((BaseActivity) targetView.getContext()).isResumed())) {
+                    || (targetView.getContext() instanceof BaseActivity && !((BaseActivity) targetView.getContext()).isActuallyResumed())) {
                 return;
             }
             onClickListener.onClick(targetView);

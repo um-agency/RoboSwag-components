@@ -31,7 +31,7 @@ public abstract class BaseActivity extends AppCompatActivity
     private final BaseUiBindable baseUiBindable = new BaseUiBindable(isCreatedSubject, isStartedSubject);
     private boolean resumed;
 
-    public boolean isResumed() {
+    public boolean isActuallyResumed() {
         return resumed;
     }
 
