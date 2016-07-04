@@ -73,8 +73,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     public ObservableCollectionAdapter(@NonNull final UiBindable uiBindable) {
         super();
         this.uiBindable = uiBindable;
-        observableCollectionSubject
-                .observeOn(AndroidSchedulers.mainThread())
+        uiBindable.untilDestroy(observableCollectionSubject)
                 .doOnNext(collection -> innerCollection.set(collection != null ? collection.getItems() : new ArrayList<>()))
                 .switchMap(observableCollection -> observableCollection != null
                         ? observableCollection.observeChanges().observeOn(AndroidSchedulers.mainThread())
@@ -99,9 +98,9 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
                 });
         innerCollection.observeChanges()
                 .subscribe(this::onItemsChanged);
-        newItemsUpdatingObservable = uiBindable.untilStop(observableCollectionSubject
+        newItemsUpdatingObservable = uiBindable.untilDestroy(observableCollectionSubject
                 .switchMap(observableCollection -> observableCollection != null ? observableCollection.loadItem(0) : Observable.empty()));
-        historyPreLoadingObservable = uiBindable.untilStop(observableCollectionSubject
+        historyPreLoadingObservable = uiBindable.untilDestroy(observableCollectionSubject
                 .switchMap(observableCollection -> {
                     final int size = observableCollection.size();
                     return observableCollection.loadRange(size, size + PRE_LOADING_COUNT);
