@@ -195,11 +195,11 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     }
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(final ViewGroup parent, final int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType) {
         return onCreateItemViewHolder(parent, viewType);
     }
 
-    public abstract TViewHolder onCreateItemViewHolder(final ViewGroup parent, final int viewType);
+    public abstract TViewHolder onCreateItemViewHolder(@NonNull final ViewGroup parent, final int viewType);
 
     @SuppressWarnings("unchecked")
     @Override
