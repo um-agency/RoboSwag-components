@@ -42,7 +42,7 @@ import ru.touchin.roboswag.components.utils.UiUtils;
  */
 public class MaterialProgressDrawable extends Drawable implements Runnable, Animatable {
 
-    private static final int UPDATE_INTERVAL = 10;
+    private static final int UPDATE_INTERVAL = 1000 / 60;
 
     private static final float DEFAULT_STROKE_WIDTH_DP = 4.5f;
     private static final Parameters DEFAULT_PARAMETERS = new Parameters(20, 270, 4, 12, 4, 8);
@@ -50,8 +50,6 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
     private final Paint paint;
 
     private Parameters parameters;
-    private long animationStartTime;
-    private long animationCycle;
     private float rotationAngle;
     private float arcSize;
     private final RectF arcBounds = new RectF();
@@ -106,13 +104,6 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
         arcBounds.inset(paint.getStrokeWidth() / 2, paint.getStrokeWidth() / 2);
     }
 
-    @Override
-    public void unscheduleSelf(final Runnable what) {
-        super.unscheduleSelf(what);
-        animationStartTime = SystemClock.uptimeMillis();
-        animationCycle = 0;
-    }
-
     @SuppressWarnings("PMD.NPathComplexity")
     @Override
     public void draw(final Canvas canvas) {
@@ -121,13 +112,14 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
         final float shift = (angle / parameters.maxAngle) * parameters.gapAngle;
         canvas.drawArc(arcBounds, isGrowingCycle ? rotationAngle + shift : rotationAngle + parameters.gapAngle - shift,
                 isGrowingCycle ? angle + parameters.gapAngle : parameters.maxAngle - angle + parameters.gapAngle, false, paint);
+        //TODO: compute based on animation start time
         rotationAngle += isGrowingCycle ? parameters.rotationMagicNumber1 : parameters.rotationMagicNumber2;
         arcSize += isGrowingCycle ? parameters.arcMagicNumber1 : parameters.arcMagicNumber2;
         if (arcSize < 0) {
             arcSize = 0;
         }
         if (isRunning()) {
-            scheduleSelf(this, animationStartTime + animationCycle * UPDATE_INTERVAL);
+            scheduleSelf(this, SystemClock.uptimeMillis() + UPDATE_INTERVAL);
         }
     }
 
