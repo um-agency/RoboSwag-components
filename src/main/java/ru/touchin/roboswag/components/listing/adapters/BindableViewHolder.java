@@ -38,7 +38,7 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements UiBin
     @NonNull
     private final UiBindable baseBindable;
     @NonNull
-    private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
+    private final BehaviorSubject<Boolean> attachedToWindowSubject = BehaviorSubject.create();
 
     public BindableViewHolder(@NonNull final UiBindable baseBindable, @NonNull final View itemView) {
         super(itemView);
@@ -47,18 +47,22 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements UiBin
 
     @CallSuper
     public void onAttachedToWindow() {
-        isStartedSubject.onNext(true);
+        attachedToWindowSubject.onNext(true);
+    }
+
+    public boolean isAttachedToWindow() {
+        return attachedToWindowSubject.hasValue() && attachedToWindowSubject.getValue();
     }
 
     @CallSuper
     public void onDetachedFromWindow() {
-        isStartedSubject.onNext(false);
+        attachedToWindowSubject.onNext(false);
     }
 
     @NonNull
     @Override
     public <T> Observable<T> bind(@NonNull final Observable<T> observable) {
-        return isStartedSubject
+        return attachedToWindowSubject
                 .switchMap(isStarted -> isStarted ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never());
     }
 
