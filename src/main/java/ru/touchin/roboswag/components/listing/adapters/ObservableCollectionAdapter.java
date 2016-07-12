@@ -49,7 +49,7 @@ import rx.subjects.BehaviorSubject;
  * TODO: fill description
  */
 public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends ObservableCollectionAdapter.ViewHolder>
-        extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+        extends RecyclerView.Adapter<BindableViewHolder> {
 
     private static final int PRE_LOADING_COUNT = 10;
 
@@ -195,7 +195,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     }
 
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType) {
+    public BindableViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType) {
         return onCreateItemViewHolder(parent, viewType);
     }
 
@@ -203,7 +203,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
 
     @SuppressWarnings("unchecked")
     @Override
-    public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
+    public void onBindViewHolder(final BindableViewHolder holder, final int position) {
         if (observableCollectionSubject.getValue() == null) {
             Lc.assertion(new ShouldNotHappenException());
             return;
@@ -231,6 +231,18 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
         return innerCollection.size();
     }
 
+    @Override
+    public void onViewAttachedToWindow(@NonNull final BindableViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+        holder.onAttachedToWindow();
+    }
+
+    @Override
+    public void onViewDetachedFromWindow(@NonNull final BindableViewHolder holder) {
+        holder.onDetachedFromWindow();
+        super.onViewDetachedFromWindow(holder);
+    }
+
     public boolean isOnClickListenerDisabled(@NonNull final TItem item) {
         return false;
     }
@@ -241,15 +253,15 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
 
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends BindableViewHolder {
 
         @Nullable
         private Subscription newItemsUpdatingSubscription;
         @Nullable
         private Subscription historyPreLoadingSubscription;
 
-        public ViewHolder(@NonNull final View itemView) {
-            super(itemView);
+        public ViewHolder(@NonNull final UiBindable baseBindable, @NonNull final View itemView) {
+            super(baseBindable, itemView);
         }
 
         @SuppressWarnings("unchecked")
@@ -265,10 +277,12 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
                 historyPreLoadingSubscription = null;
             }
             if (position == adapter.itemsOffset()) {
-                newItemsUpdatingSubscription = adapter.newItemsUpdatingObservable.subscribe(Actions.empty(), Actions.empty());
+                newItemsUpdatingSubscription = bind(adapter.newItemsUpdatingObservable)
+                        .subscribe(Actions.empty(), Actions.empty());
             }
             if (position - adapter.itemsOffset() > observableCollection.size() - PRE_LOADING_COUNT) {
-                historyPreLoadingSubscription = adapter.historyPreLoadingObservable.subscribe(Actions.empty(), Actions.empty());
+                historyPreLoadingSubscription = bind(adapter.historyPreLoadingObservable)
+                        .subscribe(Actions.empty(), Actions.empty());
             }
         }
 
