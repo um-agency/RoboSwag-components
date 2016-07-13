@@ -64,21 +64,23 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     private OnItemClickListener<TItem> onItemClickListener;
     private int lastUpdatedChangeNumber = -1;
     @NonNull
-    private final Observable<?> newItemsUpdatingObservable;
-    @NonNull
     private final Observable<?> historyPreLoadingObservable;
 
     private final ObservableList<TItem> innerCollection = new ObservableList<>();
+    private boolean anyChangeApplied;
 
     public ObservableCollectionAdapter(@NonNull final UiBindable uiBindable) {
         super();
         this.uiBindable = uiBindable;
+        innerCollection.observeChanges()
+                .subscribe(this::onItemsChanged);
         uiBindable.untilDestroy(observableCollectionSubject)
                 .doOnNext(collection -> innerCollection.set(collection != null ? collection.getItems() : new ArrayList<>()))
                 .switchMap(observableCollection -> observableCollection != null
                         ? observableCollection.observeChanges().observeOn(AndroidSchedulers.mainThread())
                         : Observable.empty())
                 .subscribe(changes -> {
+                    anyChangeApplied = true;
                     for (final Change<TItem> change : changes.getChanges()) {
                         switch (change.getType()) {
                             case INSERTED:
@@ -96,10 +98,6 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
                         }
                     }
                 });
-        innerCollection.observeChanges()
-                .subscribe(this::onItemsChanged);
-        newItemsUpdatingObservable = uiBindable.untilDestroy(observableCollectionSubject
-                .switchMap(observableCollection -> observableCollection != null ? observableCollection.loadItem(0) : Observable.empty()));
         historyPreLoadingObservable = uiBindable.untilDestroy(observableCollectionSubject
                 .switchMap(observableCollection -> {
                     final int size = observableCollection.size();
@@ -147,6 +145,11 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     protected void onItemsChanged(@NonNull final ObservableCollection.CollectionChange<TItem> collectionChange) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             Lc.assertion("Items changes called on not main thread");
+            return;
+        }
+        if (!anyChangeApplied) {
+            anyChangeApplied = true;
+            refreshUpdate();
             return;
         }
         if (collectionChange.getNumber() != innerCollection.getChangesCount()
@@ -254,9 +257,6 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
     }
 
     public static class ViewHolder extends BindableViewHolder {
-
-        @Nullable
-        private Subscription newItemsUpdatingSubscription;
         @Nullable
         private Subscription historyPreLoadingSubscription;
 
@@ -268,17 +268,9 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
         public void bindPosition(@NonNull final ObservableCollection<?> observableCollection,
                                  @NonNull final ObservableCollectionAdapter adapter,
                                  final int position) {
-            if (newItemsUpdatingSubscription != null) {
-                newItemsUpdatingSubscription.unsubscribe();
-                newItemsUpdatingSubscription = null;
-            }
             if (historyPreLoadingSubscription != null) {
                 historyPreLoadingSubscription.unsubscribe();
                 historyPreLoadingSubscription = null;
-            }
-            if (position == adapter.itemsOffset()) {
-                newItemsUpdatingSubscription = bind(adapter.newItemsUpdatingObservable)
-                        .subscribe(Actions.empty(), Actions.empty());
             }
             if (position - adapter.itemsOffset() > observableCollection.size() - PRE_LOADING_COUNT) {
                 historyPreLoadingSubscription = bind(adapter.historyPreLoadingObservable)
