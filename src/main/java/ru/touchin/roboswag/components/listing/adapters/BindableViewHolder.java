@@ -53,6 +53,7 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements UiBin
                 .switchMap(attached -> attached
                         ? Observable.just(true)
                         : Observable.timer(DETACH_DELAY, TimeUnit.MILLISECONDS).map(ignored -> false))
+                .distinctUntilChanged()
                 .replay(1)
                 .refCount();
     }
