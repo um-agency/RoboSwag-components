@@ -24,6 +24,8 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
+import java.util.concurrent.TimeUnit;
+
 import ru.touchin.roboswag.components.navigation.UiBindable;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
@@ -35,14 +37,24 @@ import rx.subjects.BehaviorSubject;
  */
 public class BindableViewHolder extends RecyclerView.ViewHolder implements UiBindable {
 
+    // it is needed to delay detach to avoid re-subscriptions on fast scroll
+    private static final long DETACH_DELAY = TimeUnit.SECONDS.toMillis(1);
+
     @NonNull
     private final UiBindable baseBindable;
     @NonNull
     private final BehaviorSubject<Boolean> attachedToWindowSubject = BehaviorSubject.create();
+    private final Observable<Boolean> attachedObservable;
 
     public BindableViewHolder(@NonNull final UiBindable baseBindable, @NonNull final View itemView) {
         super(itemView);
         this.baseBindable = baseBindable;
+        attachedObservable = attachedToWindowSubject
+                .switchMap(attached -> attached
+                        ? Observable.just(true)
+                        : Observable.timer(DETACH_DELAY, TimeUnit.MILLISECONDS).map(ignored -> false))
+                .replay(1)
+                .refCount();
     }
 
     @CallSuper
@@ -62,7 +74,7 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements UiBin
     @NonNull
     @Override
     public <T> Observable<T> bind(@NonNull final Observable<T> observable) {
-        return attachedToWindowSubject
+        return attachedObservable
                 .switchMap(isStarted -> isStarted ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never());
     }
 
@@ -75,6 +87,6 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements UiBin
     @NonNull
     @Override
     public <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
-        return baseBindable.untilStop(observable);
+        return baseBindable.untilDestroy(observable);
     }
 }
