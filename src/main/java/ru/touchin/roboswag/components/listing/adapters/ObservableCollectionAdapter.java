@@ -28,6 +28,7 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 import ru.touchin.roboswag.components.R;
@@ -68,6 +69,8 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
 
     private final ObservableList<TItem> innerCollection = new ObservableList<>();
     private boolean anyChangeApplied;
+    @NonNull
+    private final List<RecyclerView> attachedRecyclerViews = new LinkedList<>();
 
     public ObservableCollectionAdapter(@NonNull final UiBindable uiBindable) {
         super();
@@ -103,6 +106,18 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
                     final int size = observableCollection.size();
                     return observableCollection.loadRange(size, size + PRE_LOADING_COUNT);
                 }));
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull final RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        attachedRecyclerViews.add(recyclerView);
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull final RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        attachedRecyclerViews.remove(recyclerView);
     }
 
     @NonNull
@@ -142,12 +157,21 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
         refreshUpdate();
     }
 
+    private boolean anyRecyclerViewShown() {
+        for (final RecyclerView recyclerView : attachedRecyclerViews) {
+            if (recyclerView.isShown()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     protected void onItemsChanged(@NonNull final ObservableCollection.CollectionChange<TItem> collectionChange) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             Lc.assertion("Items changes called on not main thread");
             return;
         }
-        if (!anyChangeApplied) {
+        if (!anyChangeApplied || !anyRecyclerViewShown()) {
             anyChangeApplied = true;
             refreshUpdate();
             return;
