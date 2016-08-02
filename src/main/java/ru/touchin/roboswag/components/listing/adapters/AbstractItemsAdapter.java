@@ -193,7 +193,9 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
 
         public void bindItem(final int position, @NonNull final ItemsProvider itemsProvider) {
             loadItem(position, itemsProvider);
-            UiUtils.setOnRippleClickListener(retryButton, () -> loadItem(position, itemsProvider));
+            if (retryButton != null) {
+                UiUtils.setOnRippleClickListener(retryButton, () -> loadItem(position, itemsProvider));
+            }
         }
 
         @SuppressWarnings("unchecked")
@@ -201,6 +203,9 @@ public abstract class AbstractItemsAdapter<TItem, TViewHolder extends RecyclerVi
             if (subscription != null) {
                 subscription.unsubscribe();
                 subscription = null;
+            }
+            if (retryButton == null || progressBar == null) {
+                return;
             }
             retryButton.setVisibility(View.INVISIBLE);
             progressBar.setVisibility(View.VISIBLE);
