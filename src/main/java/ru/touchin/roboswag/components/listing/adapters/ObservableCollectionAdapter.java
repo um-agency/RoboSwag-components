@@ -197,7 +197,7 @@ public abstract class ObservableCollectionAdapter<TItem, TViewHolder extends Obs
                     notifyItemRangeChanged(change.getStart() + itemsOffset(), change.getCount());
                     break;
                 case REMOVED:
-                    if (getItemCount() == 0) {
+                    if (getItemCount() - itemsOffset() == 0) {
                         //TODO: bug of recyclerview?
                         notifyDataSetChanged();
                     } else {
