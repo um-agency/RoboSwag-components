@@ -23,8 +23,8 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import ru.touchin.roboswag.core.data.storable.SafeStore;
 import ru.touchin.roboswag.core.log.Lc;
+import ru.touchin.roboswag.core.observables.storable.SafeStore;
 
 /**
  * Created by Gavriil Sitnikov on 18/03/16.

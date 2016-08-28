@@ -30,7 +30,7 @@ import java.util.Map;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter;
 import ru.touchin.roboswag.core.log.Lc;
-import ru.touchin.roboswag.core.utils.android.RxAndroidUtils;
+import ru.touchin.roboswag.core.observables.RxAndroidUtils;
 import rx.Observable;
 import rx.Scheduler;
 import rx.functions.Action1;

@@ -32,12 +32,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 
-import ru.touchin.roboswag.core.data.storable.SafeConverter;
-import ru.touchin.roboswag.core.data.storable.SameTypesConverter;
-import ru.touchin.roboswag.core.data.storable.Storable;
-import ru.touchin.roboswag.core.data.storable.concrete.NonNullSafeStorable;
-import ru.touchin.roboswag.core.data.storable.concrete.SafeStorable;
 import ru.touchin.roboswag.core.log.Lc;
+import ru.touchin.roboswag.core.observables.storable.SafeConverter;
+import ru.touchin.roboswag.core.observables.storable.SameTypesConverter;
+import ru.touchin.roboswag.core.observables.storable.Storable;
+import ru.touchin.roboswag.core.observables.storable.concrete.NonNullSafeStorable;
+import ru.touchin.roboswag.core.observables.storable.concrete.SafeStorable;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 
 /**
@@ -48,7 +48,7 @@ public final class PreferenceStorables {
 
     @NonNull
     public static SafeStorable<String, String, String> stringStorable(@NonNull final String name, @NonNull final SharedPreferences preferences) {
-        return new Storable.Builder<String, String, String>(name, String.class, false)
+        return new Storable.Builder<String, String, String>(name, String.class)
                 .setSafeStore(String.class, new PreferenceStore<>(preferences), new SameTypesConverter<>())
                 .build();
     }
@@ -57,7 +57,7 @@ public final class PreferenceStorables {
     public static NonNullSafeStorable<String, String, String> stringStorable(@NonNull final String name,
                                                                              @NonNull final SharedPreferences preferences,
                                                                              @NonNull final String defaultValue) {
-        return new Storable.Builder<String, String, String>(name, String.class, false)
+        return new Storable.Builder<String, String, String>(name, String.class)
                 .setSafeStore(String.class, new PreferenceStore<>(preferences), new SameTypesConverter<>())
                 .setDefaultValue(defaultValue)
                 .build();
@@ -65,7 +65,7 @@ public final class PreferenceStorables {
 
     @NonNull
     public static SafeStorable<String, Long, Long> longStorable(@NonNull final String name, @NonNull final SharedPreferences preferences) {
-        return new Storable.Builder<String, Long, Long>(name, Long.class, false)
+        return new Storable.Builder<String, Long, Long>(name, Long.class)
                 .setSafeStore(Long.class, new PreferenceStore<>(preferences), new SameTypesConverter<>())
                 .build();
     }
@@ -74,7 +74,7 @@ public final class PreferenceStorables {
     public static NonNullSafeStorable<String, Long, Long> longStorable(@NonNull final String name,
                                                                        @NonNull final SharedPreferences preferences,
                                                                        final long defaultValue) {
-        return new Storable.Builder<String, Long, Long>(name, Long.class, false)
+        return new Storable.Builder<String, Long, Long>(name, Long.class)
                 .setSafeStore(Long.class, new PreferenceStore<>(preferences), new SameTypesConverter<>())
                 .setDefaultValue(defaultValue)
                 .build();
@@ -82,7 +82,7 @@ public final class PreferenceStorables {
 
     @NonNull
     public static SafeStorable<String, Boolean, Boolean> booleanStorable(@NonNull final String name, @NonNull final SharedPreferences preferences) {
-        return new Storable.Builder<String, Boolean, Boolean>(name, Boolean.class, false)
+        return new Storable.Builder<String, Boolean, Boolean>(name, Boolean.class)
                 .setSafeStore(Boolean.class, new PreferenceStore<>(preferences), new SameTypesConverter<>())
                 .build();
     }
@@ -91,7 +91,7 @@ public final class PreferenceStorables {
     public static NonNullSafeStorable<String, Boolean, Boolean> booleanStorable(@NonNull final String name,
                                                                                 @NonNull final SharedPreferences preferences,
                                                                                 final boolean defaultValue) {
-        return new Storable.Builder<String, Boolean, Boolean>(name, Boolean.class, false)
+        return new Storable.Builder<String, Boolean, Boolean>(name, Boolean.class)
                 .setSafeStore(Boolean.class, new PreferenceStore<>(preferences), new SameTypesConverter<>())
                 .setDefaultValue(defaultValue)
                 .build();
@@ -99,7 +99,7 @@ public final class PreferenceStorables {
 
     @NonNull
     public static SafeStorable<String, Integer, Integer> integerStorable(@NonNull final String name, @NonNull final SharedPreferences preferences) {
-        return new Storable.Builder<String, Integer, Integer>(name, Integer.class, false)
+        return new Storable.Builder<String, Integer, Integer>(name, Integer.class)
                 .setSafeStore(Integer.class, new PreferenceStore<>(preferences), new SameTypesConverter<>())
                 .build();
     }
@@ -108,7 +108,7 @@ public final class PreferenceStorables {
     public static NonNullSafeStorable<String, Integer, Integer> integerStorable(@NonNull final String name,
                                                                                 @NonNull final SharedPreferences preferences,
                                                                                 final int defaultValue) {
-        return new Storable.Builder<String, Integer, Integer>(name, Integer.class, false)
+        return new Storable.Builder<String, Integer, Integer>(name, Integer.class)
                 .setSafeStore(Integer.class, new PreferenceStore<>(preferences), new SameTypesConverter<>())
                 .setDefaultValue(defaultValue)
                 .build();
@@ -116,7 +116,7 @@ public final class PreferenceStorables {
 
     @NonNull
     public static SafeStorable<String, Float, Float> floatStorable(@NonNull final String name, @NonNull final SharedPreferences preferences) {
-        return new Storable.Builder<String, Float, Float>(name, Float.class, false)
+        return new Storable.Builder<String, Float, Float>(name, Float.class)
                 .setSafeStore(Float.class, new PreferenceStore<>(preferences), new SameTypesConverter<>())
                 .build();
     }
@@ -125,7 +125,7 @@ public final class PreferenceStorables {
     public static NonNullSafeStorable<String, Float, Float> floatStorable(@NonNull final String name,
                                                                           @NonNull final SharedPreferences preferences,
                                                                           final float defaultValue) {
-        return new Storable.Builder<String, Float, Float>(name, Float.class, false)
+        return new Storable.Builder<String, Float, Float>(name, Float.class)
                 .setSafeStore(Float.class, new PreferenceStore<>(preferences), new SameTypesConverter<>())
                 .setDefaultValue(defaultValue)
                 .build();
@@ -135,7 +135,7 @@ public final class PreferenceStorables {
     public static <T extends Enum<T>> SafeStorable<String, T, String> enumStorable(@NonNull final String name,
                                                                                    @NonNull final Class<T> enumClass,
                                                                                    @NonNull final SharedPreferences preferences) {
-        return new Storable.Builder<String, T, String>(name, enumClass, false)
+        return new Storable.Builder<String, T, String>(name, enumClass)
                 .setSafeStore(String.class, new PreferenceStore<>(preferences), new EnumToStringConverter<>())
                 .build();
     }
@@ -145,7 +145,7 @@ public final class PreferenceStorables {
                                                                                           @NonNull final Class<T> enumClass,
                                                                                           @NonNull final SharedPreferences preferences,
                                                                                           final T defaultValue) {
-        return new Storable.Builder<String, T, String>(name, enumClass, false)
+        return new Storable.Builder<String, T, String>(name, enumClass)
                 .setSafeStore(String.class, new PreferenceStore<>(preferences), new EnumToStringConverter<>())
                 .setDefaultValue(defaultValue)
                 .build();
@@ -155,7 +155,7 @@ public final class PreferenceStorables {
     public static <T> SafeStorable<String, T, String> jsonStorable(@NonNull final String name,
                                                                    @NonNull final Class<T> jsonClass,
                                                                    @NonNull final SharedPreferences preferences) {
-        return new Storable.Builder<String, T, String>(name, jsonClass, false)
+        return new Storable.Builder<String, T, String>(name, jsonClass)
                 .setSafeStore(String.class, new PreferenceStore<>(preferences), new JsonConverter<>())
                 .build();
     }
@@ -165,7 +165,7 @@ public final class PreferenceStorables {
                                                                           @NonNull final Class<T> jsonClass,
                                                                           @NonNull final SharedPreferences preferences,
                                                                           final T defaultValue) {
-        return new Storable.Builder<String, T, String>(name, jsonClass, false)
+        return new Storable.Builder<String, T, String>(name, jsonClass)
                 .setSafeStore(String.class, new PreferenceStore<>(preferences), new JsonConverter<>())
                 .setDefaultValue(defaultValue)
                 .build();
