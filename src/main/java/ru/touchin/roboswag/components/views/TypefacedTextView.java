@@ -118,7 +118,8 @@ public class TypefacedTextView extends TextView implements TypefacedView {
                         }
                     }
 
-                } while (difference >= 1 && scaleAction != ScaleAction.DO_NOTHING);
+                }
+                while (difference >= 1 && scaleAction != ScaleAction.DO_NOTHING);
 
                 if (scaleAction == ScaleAction.SCALE_DOWN) {
                     setTextSize(TypedValue.COMPLEX_UNIT_PX, getTextSize() - 1);
