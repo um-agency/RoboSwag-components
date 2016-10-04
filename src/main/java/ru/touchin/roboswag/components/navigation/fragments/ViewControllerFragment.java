@@ -229,6 +229,14 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     }
 
     @Override
+    protected void onPause(@NonNull final View view, @NonNull final TActivity activity) {
+        if (viewController != null) {
+            viewController.onPause();
+        }
+        super.onPause(view, activity);
+    }
+
+    @Override
     protected void onStop(@NonNull final View view, @NonNull final TActivity activity) {
         isStarted = false;
         if (viewController != null) {

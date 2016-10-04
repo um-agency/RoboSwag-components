@@ -161,6 +161,10 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
         // do nothing
     }
 
+    public void onPause() {
+        // do nothing
+    }
+
     public void onStop() {
         isStartedSubject.onNext(false);
     }
