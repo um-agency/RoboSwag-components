@@ -30,9 +30,11 @@ import android.widget.FrameLayout;
 
 import ru.touchin.roboswag.components.R;
 
+
 /**
- * Created by Gavriil Sitnikov on 07/14.
- * FrameLayout that holds special aspect ratio sizes
+ * Created by Gavriil Sitnikov on 01/07/14.
+ * FrameLayout that holds specific aspect ratio sizes.
+ * For example if aspect ratio equals 1.0 then this view will layout as square.
  */
 public class AspectRatioFrameLayout extends FrameLayout {
 
@@ -58,11 +60,23 @@ public class AspectRatioFrameLayout extends FrameLayout {
     }
 
     /* Returns if layout is wrapping to content but holds aspect ratio */
+
+    /**
+     * Returns if layout is wrapping to content but holds aspect ratio.
+     * If it is true it means that minimum size of view will equals to maximum size of it's child (biggest width or height) depends on aspect ratio.
+     * Else maximum size of view will equals to minimum available size which parent could give to this view depends on aspect ratio.
+     *
+     * @return True if wrapping to content.
+     */
     public boolean isWrapToContent() {
         return wrapToContent;
     }
 
-    /* Sets if layout is wrapping to content but holds aspect ratio */
+    /**
+     * Sets if layout is wrapping to content but holds aspect ratio.
+     *
+     * @param wrapToContent True if wrapping to content.
+     */
     public void setWrapToContent(final boolean wrapToContent) {
         if (wrapToContent == this.wrapToContent) {
             return;

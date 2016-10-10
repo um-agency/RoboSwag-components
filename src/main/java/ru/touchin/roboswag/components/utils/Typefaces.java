@@ -21,8 +21,11 @@ package ru.touchin.roboswag.components.utils;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.content.res.TypedArray;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
+import android.support.annotation.StyleableRes;
+import android.util.AttributeSet;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -35,18 +38,18 @@ import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 
 /**
  * Created by Gavriil Sitnikov on 18/07/2014.
- * Manager for typefaces stored in assets 'fonts' folder.
+ * Manager for typefaces stored in 'assets/fonts' folder.
  */
 public final class Typefaces {
 
     private static final Map<String, Typeface> TYPEFACES_MAP = new HashMap<>();
 
     /**
-     * Returns typeface by name from assets 'fonts' folder.
+     * Returns {@link Typeface} by name from assets 'fonts' folder.
      *
-     * @param context Context of assets where typeface file stored in.
-     * @param name    Full name of typeface (without extension).
-     * @return Typeface from assets.
+     * @param context Context of assets where typeface file stored in;
+     * @param name    Full name of typeface (without extension, e.g. 'Roboto-Regular');
+     * @return {@link Typeface} from assets.
      */
     @NonNull
     public static Typeface getByName(@NonNull final Context context, @NonNull final String name) {
@@ -72,6 +75,28 @@ public final class Typefaces {
             }
             return result;
         }
+    }
+
+    /**
+     * Returns {@link Typeface} by name from assets 'fonts' folder.
+     *
+     * @param context     Context of assets where typeface file stored in;
+     * @param attrs       Attributes of view to get font from;
+     * @param styleableId Id of attribute set;
+     * @param attributeId Id of attribute;
+     * @return {@link Typeface} from assets.
+     */
+    @NonNull
+    public static Typeface getFromAttributes(@NonNull final Context context, @NonNull final AttributeSet attrs,
+                                             @StyleableRes final int[] styleableId, @StyleableRes final int attributeId) {
+        final TypedArray typedArray = context.obtainStyledAttributes(attrs, styleableId);
+        final String customTypeface = typedArray.getString(attributeId);
+        typedArray.recycle();
+        if (customTypeface != null) {
+            return getByName(context, customTypeface);
+        }
+        Lc.w("Couldn't find custom typeface. Returns default");
+        return Typeface.DEFAULT;
     }
 
     private Typefaces() {

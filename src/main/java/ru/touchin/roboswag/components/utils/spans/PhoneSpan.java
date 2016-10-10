@@ -1,6 +1,5 @@
-package ru.touchin.roboswag.components.telephony;
+package ru.touchin.roboswag.components.utils.spans;
 
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -12,7 +11,7 @@ import ru.touchin.roboswag.core.log.Lc;
 
 /**
  * Created by Gavriil Sitnikov on 14/11/2015.
- * TODO: fill description
+ * Span that is opening phone call intent.
  */
 public class PhoneSpan extends URLSpan {
 
@@ -20,6 +19,7 @@ public class PhoneSpan extends URLSpan {
         super(phoneNumber);
     }
 
+    @SuppressWarnings("PMD.AvoidCatchingThrowable")
     @Override
     public void onClick(@NonNull final View widget) {
         super.onClick(widget);
@@ -28,8 +28,8 @@ public class PhoneSpan extends URLSpan {
             intent.setData(Uri.parse(getURL()));
             widget.getContext().startActivity(intent);
             // it should catch throwable to not crash in production if there are problems with startActivity()
-        } catch (final ActivityNotFoundException exception) {
-            Lc.assertion(exception);
+        } catch (final Throwable throwable) {
+            Lc.assertion(throwable);
         }
     }
 

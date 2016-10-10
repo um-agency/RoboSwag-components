@@ -1,7 +1,25 @@
+/*
+ *  Copyright (c) 2015 RoboSwag (Gavriil Sitnikov, Vsevolod Ivanov)
+ *
+ *  This file is part of RoboSwag library.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ */
+
 package ru.touchin.roboswag.components.navigation.activities;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,57 +29,46 @@ import android.view.inputmethod.InputMethodManager;
 
 import java.util.ArrayList;
 
-import ru.touchin.roboswag.components.navigation.BaseUiBindable;
-import ru.touchin.roboswag.components.navigation.UiBindable;
+import ru.touchin.roboswag.components.utils.BaseLifecycleBindable;
+import ru.touchin.roboswag.components.utils.LifecycleBindable;
 import rx.Observable;
-import rx.subjects.BehaviorSubject;
+import rx.Subscription;
+import rx.functions.Action0;
+import rx.functions.Action1;
 
 /**
  * Created by Gavriil Sitnikov on 08/03/2016.
- * TODO: fill description
+ * Base activity to use in components repository.
  */
+@SuppressWarnings("PMD.TooManyMethods")
 public abstract class BaseActivity extends AppCompatActivity
-        implements UiBindable {
+        implements LifecycleBindable {
 
+    @NonNull
     private final ArrayList<OnBackPressedListener> onBackPressedListeners = new ArrayList<>();
     @NonNull
-    private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create();
-    @NonNull
-    private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
-    @NonNull
-    private final BaseUiBindable baseUiBindable = new BaseUiBindable(isCreatedSubject, isStartedSubject);
+    private final BaseLifecycleBindable baseLifecycleBindable = new BaseLifecycleBindable();
     private boolean resumed;
 
+    /**
+     * Returns if activity resumed.
+     *
+     * @return True if resumed.
+     */
     public boolean isActuallyResumed() {
         return resumed;
-    }
-
-    protected boolean isLauncherActivity() {
-        return false;
     }
 
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Possible work around for market launches. See http://code.google.com/p/android/issues/detail?id=2373
-        // for more details. Essentially, the market launches the main activity on top of other activities.
-        // we never want this to happen. Instead, we check if we are the root and if not, we finish.
-        if (isLauncherActivity() && !isTaskRoot()) {
-            final Intent intent = getIntent();
-            if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) && Intent.ACTION_MAIN.equals(intent.getAction())) {
-                finish();
-                return;
-            }
-        }
-
-        isCreatedSubject.onNext(true);
+        baseLifecycleBindable.onCreate();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        isStartedSubject.onNext(true);
+        baseLifecycleBindable.onStart();
     }
 
     @Override
@@ -78,35 +85,19 @@ public abstract class BaseActivity extends AppCompatActivity
 
     @Override
     protected void onStop() {
-        isStartedSubject.onNext(false);
+        baseLifecycleBindable.onStop();
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        isCreatedSubject.onNext(false);
+        baseLifecycleBindable.onDestroy();
         super.onDestroy();
-    }
-
-    @NonNull
-    @Override
-    public <T> Observable<T> bind(@NonNull final Observable<T> observable) {
-        return baseUiBindable.bind(observable);
-    }
-
-    @NonNull
-    public <T> Observable<T> untilDestroy(@NonNull final Observable<T> observable) {
-        return baseUiBindable.untilDestroy(observable);
-    }
-
-    @NonNull
-    public <T> Observable<T> untilStop(@NonNull final Observable<T> observable) {
-        return baseUiBindable.untilStop(observable);
     }
 
     /**
      * Hides device keyboard that is showing over {@link Activity}.
-     * Do not use it if keyboard is over {@link android.app.Dialog} - it won't work as they have different {@link Activity#getWindow()}.
+     * Do NOT use it if keyboard is over {@link android.app.Dialog} - it won't work as they have different {@link Activity#getWindow()}.
      */
     public void hideSoftInput() {
         if (getCurrentFocus() == null) {
@@ -119,7 +110,9 @@ public abstract class BaseActivity extends AppCompatActivity
 
     /**
      * Shows device keyboard over {@link Activity} and focuses {@link View}.
-     * Do not use it if keyboard is over {@link android.app.Dialog} - it won't work as they have different {@link Activity#getWindow()}.
+     * Do NOT use it if keyboard is over {@link android.app.Dialog} - it won't work as they have different {@link Activity#getWindow()}.
+     * Do NOT use it if you are not sure that view is already added on screen.
+     * Better use it onStart of element if view is part of it or onConfigureNavigation if view is part of navigation.
      *
      * @param view View to get focus for input from keyboard.
      */
@@ -148,12 +141,88 @@ public abstract class BaseActivity extends AppCompatActivity
         if (getSupportFragmentManager().getBackStackEntryCount() <= 1) {
             supportFinishAfterTransition();
         } else {
-            getSupportFragmentManager().popBackStackImmediate();
+            getSupportFragmentManager().popBackStack();
         }
     }
 
+    @SuppressWarnings("CPD-START")
+    //CPD: it is same as in other implementation based on BaseLifecycleBindable
+    @NonNull
+    @Override
+    public <T> Subscription bind(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
+        return baseLifecycleBindable.bind(observable, onNextAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilStop(@NonNull final Observable<T> observable,
+                                      @NonNull final Action1<T> onNextAction,
+                                      @NonNull final Action1<Throwable> onErrorAction) {
+        return baseLifecycleBindable.untilStop(observable, onNextAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilStop(@NonNull final Observable<T> observable,
+                                      @NonNull final Action1<T> onNextAction,
+                                      @NonNull final Action1<Throwable> onErrorAction,
+                                      @NonNull final Action0 onCompletedAction) {
+        return baseLifecycleBindable.untilStop(observable, onNextAction, onErrorAction, onCompletedAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilStop(@NonNull final Observable<T> observable) {
+        return baseLifecycleBindable.untilStop(observable);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilStop(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
+        return baseLifecycleBindable.untilStop(observable, onNextAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable) {
+        return baseLifecycleBindable.untilDestroy(observable);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
+        return baseLifecycleBindable.untilDestroy(observable, onNextAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable,
+                                         @NonNull final Action1<T> onNextAction,
+                                         @NonNull final Action1<Throwable> onErrorAction) {
+        return baseLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable,
+                                         @NonNull final Action1<T> onNextAction,
+                                         @NonNull final Action1<Throwable> onErrorAction,
+                                         @NonNull final Action0 onCompletedAction) {
+        return baseLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction, onCompletedAction);
+    }
+
+    @SuppressWarnings("CPD-END")
+    //CPD: it is same as in other implementation based on BaseLifecycleBindable
+    /**
+     * Interface to be implemented for someone who want to intercept device back button pressing event.
+     */
     public interface OnBackPressedListener {
 
+        /**
+         * Calls when user presses device back button.
+         *
+         * @return True if it is processed by this object.
+         */
         boolean onBackPressed();
 
     }

@@ -19,19 +19,38 @@
 
 package ru.touchin.roboswag.components.navigation.fragments;
 
+import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import ru.touchin.roboswag.components.navigation.AbstractState;
+import ru.touchin.roboswag.components.navigation.ViewController;
 import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
 import ru.touchin.roboswag.core.log.Lc;
 
 /**
- * Created by Gavriil Sitnikov on 12/03/2016.
- * TODO: fill description
+ * Created by Gavriil Sitnikov on 11/04/2016.
+ * Simple {@link ViewControllerFragment} with no state and with attached {@link #getTargetFragment()}
+ * which is using by {@link ru.touchin.roboswag.components.navigation.ViewControllerNavigation}.
+ *
+ * @param <TActivity> Type of {@link ViewControllerActivity} where fragment could be attached to.
  */
+@SuppressWarnings("PMD.UseUtilityClass")
+//UseUtilityClass: PMD bug
 public class StatelessTargetedViewControllerFragment<TTargetState extends AbstractState,
         TActivity extends ViewControllerActivity<?>>
         extends TargetedViewControllerFragment<AbstractState, TTargetState, TActivity> {
+
+    /**
+     * Creates {@link Bundle} which will store state and {@link ViewController}'s class.
+     *
+     * @param viewControllerClass Class of {@link ViewController} which will be instantiated inside this fragment;
+     * @return Returns {@link Bundle} with state inside.
+     */
+    @NonNull
+    public static Bundle createState(@NonNull final Class<? extends ViewController> viewControllerClass) {
+        return createState(viewControllerClass, null);
+    }
 
     @Nullable
     @Override

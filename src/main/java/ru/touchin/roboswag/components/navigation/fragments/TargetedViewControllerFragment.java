@@ -27,13 +27,22 @@ import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 
 /**
  * Created by Gavriil Sitnikov on 11/04/2016.
- * TODO: fill description
+ * Simple {@link ViewControllerFragment} with attached {@link #getTargetFragment()}
+ * which is using by {@link ru.touchin.roboswag.components.navigation.ViewControllerNavigation}.
+ *
+ * @param <TState>    Type of object which is representing it's fragment state;
+ * @param <TActivity> Type of {@link ViewControllerActivity} where fragment could be attached to.
  */
 public class TargetedViewControllerFragment<TState extends AbstractState,
         TTargetState extends AbstractState,
         TActivity extends ViewControllerActivity<?>>
         extends SimpleViewControllerFragment<TState, TActivity> {
 
+    /**
+     * Returns specific {@link ViewControllerFragment} which is attached to this fragment as {@link #getTargetFragment()}.
+     *
+     * @return Target fragment.
+     */
     @SuppressWarnings("unchecked")
     @NonNull
     public ViewControllerFragment<TTargetState, TActivity> getTarget() {

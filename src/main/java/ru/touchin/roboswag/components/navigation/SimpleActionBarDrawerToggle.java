@@ -33,7 +33,7 @@ import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
 
 /**
  * Created by Gavriil Sitnikov on 11/03/16.
- * TODO: descriptions
+ * Simple realization of one-side {@link ActionBarDrawerToggle}.
  */
 public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
         implements FragmentManager.OnBackStackChangedListener, BaseActivity.OnBackPressedListener {
@@ -45,8 +45,8 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
     @NonNull
     private final View sidebar;
 
-    private boolean isHamburgerShowed;
-    private boolean isSidebarDisabled;
+    private boolean hamburgerShowed;
+    private boolean sidebarDisabled;
 
     private float slideOffset;
     private float slidePosition;
@@ -55,9 +55,7 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
     private ValueAnimator hamburgerAnimator;
     private boolean firstAnimation = true;
 
-    public SimpleActionBarDrawerToggle(@NonNull final BaseActivity activity,
-                                       @NonNull final DrawerLayout drawerLayout,
-                                       @NonNull final View sidebar) {
+    public SimpleActionBarDrawerToggle(@NonNull final BaseActivity activity, @NonNull final DrawerLayout drawerLayout, @NonNull final View sidebar) {
         super(activity, drawerLayout, 0, 0);
         this.activity = activity;
         this.drawerLayout = drawerLayout;
@@ -68,59 +66,109 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
         activity.addOnBackPressedListener(this);
     }
 
-    private boolean shouldShowHamburger() {
-        return !isHamburgerShowed && !isSidebarDisabled;
+    /**
+     * Returns base {@link DrawerLayout}.
+     *
+     * @return {@link DrawerLayout}.
+     */
+    @NonNull
+    public DrawerLayout getDrawerLayout() {
+        return drawerLayout;
     }
 
+    /**
+     * Returns if sidebar is opened.
+     *
+     * @return True if sidebar is opened.
+     */
+    public boolean isOpened() {
+        return drawerLayout.isDrawerOpen(sidebar);
+    }
+
+    private boolean shouldShowHamburger() {
+        return !hamburgerShowed && !sidebarDisabled;
+    }
+
+    /**
+     * Method to process clicking on hamburger. It is needed to be called from {@link android.app.Activity#onOptionsItemSelected(MenuItem)}.
+     * If this method won't be called then opening-closing won't work.
+     *
+     * @param item Selected item.
+     * @return True if item clicking processed.
+     */
     public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
         return shouldShowHamburger() && super.onOptionsItemSelected(item);
     }
 
     private void update() {
         setHamburgerState(shouldShowHamburger());
-        drawerLayout.setDrawerLockMode(isSidebarDisabled ? DrawerLayout.LOCK_MODE_LOCKED_CLOSED : DrawerLayout.LOCK_MODE_UNLOCKED);
+        drawerLayout.setDrawerLockMode(sidebarDisabled ? DrawerLayout.LOCK_MODE_LOCKED_CLOSED : DrawerLayout.LOCK_MODE_UNLOCKED);
     }
 
+    /**
+     * Disables sidebar. So it will be in closed state and couldn't be opened.
+     */
     public void disableSidebar() {
-        isSidebarDisabled = true;
+        sidebarDisabled = true;
         close();
         update();
     }
 
+    /**
+     * Enables sidebar. So it could be opened.
+     */
     public void enableSidebar() {
-        isSidebarDisabled = false;
+        sidebarDisabled = false;
         update();
     }
 
+    /**
+     * Hides hamburger icon. Use it if there are some fragments in activity's stack.
+     */
     public void hideHamburger() {
         syncState();
-        isHamburgerShowed = true;
+        hamburgerShowed = true;
         update();
     }
 
+    /**
+     * Shows hamburger icon. Use it if there are no fragments in activity's stack or current fragment is like top.
+     */
     public void showHamburger() {
         syncState();
-        isHamburgerShowed = false;
+        hamburgerShowed = false;
         update();
     }
 
+    /**
+     * Opens sidebar.
+     */
     public void open() {
-        if (!drawerLayout.isDrawerOpen(sidebar)) {
+        if (!sidebarDisabled && !drawerLayout.isDrawerOpen(sidebar)) {
             drawerLayout.openDrawer(sidebar);
         }
     }
 
+    /**
+     * Closes sidebar.
+     */
     public void close() {
         if (drawerLayout.isDrawerOpen(sidebar)) {
             drawerLayout.closeDrawer(sidebar);
         }
     }
 
+    /**
+     * Call it when back stack of activity's fragments have changed.
+     */
     @Override
     public void onBackStackChanged() {
         close();
     }
 
+    /**
+     * Call it when system back button have pressed.
+     */
     @Override
     public boolean onBackPressed() {
         if (drawerLayout.isDrawerOpen(sidebar)) {
@@ -162,6 +210,9 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
         activity.supportInvalidateOptionsMenu();
     }
 
+    /**
+     * Call it at {@link android.app.Activity#onPostCreate(android.os.Bundle)}.
+     */
     @Override
     public void syncState() {
         cancelAnimation();

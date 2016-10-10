@@ -32,13 +32,12 @@ import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
-import android.util.TypedValue;
 
 import ru.touchin.roboswag.components.utils.UiUtils;
 
 /**
- * Created by Gavriil Sitnikov on 03/16.
- * TODO
+ * Created by Gavriil Sitnikov on 01/03/16.
+ * Simple realization of endless progress bar which is looking material-like.
  */
 public class MaterialProgressDrawable extends Drawable implements Runnable, Animatable {
 
@@ -47,12 +46,15 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
     private static final float DEFAULT_STROKE_WIDTH_DP = 4.5f;
     private static final Parameters DEFAULT_PARAMETERS = new Parameters(20, 270, 4, 12, 4, 8);
 
+    @NonNull
     private final Paint paint;
+    @NonNull
+    private Parameters parameters = DEFAULT_PARAMETERS;
+    @NonNull
+    private final RectF arcBounds = new RectF();
 
-    private Parameters parameters;
     private float rotationAngle;
     private float arcSize;
-    private final RectF arcBounds = new RectF();
     private boolean running;
 
     public MaterialProgressDrawable(@NonNull final Context context) {
@@ -60,32 +62,56 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
 
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DEFAULT_STROKE_WIDTH_DP, UiUtils.getDisplayMetrics(context)));
+        paint.setStrokeWidth(UiUtils.OfMetrics.dpToPixels(context, DEFAULT_STROKE_WIDTH_DP));
         paint.setColor(Color.BLACK);
-
-        parameters = DEFAULT_PARAMETERS;
     }
 
+    /**
+     * Returns width of arc.
+     *
+     * @return Width.
+     */
     public float getStrokeWidth() {
         return paint.getStrokeWidth();
     }
 
+    /**
+     * Sets width of arc.
+     *
+     * @param strokeWidth Width.
+     */
     public void setStrokeWidth(final float strokeWidth) {
         paint.setStrokeWidth(strokeWidth);
         updateArcBounds();
         invalidateSelf();
     }
 
+    /**
+     * Sets color of arc.
+     *
+     * @param color Color.
+     */
     public void setColor(@ColorInt final int color) {
         paint.setColor(color);
         invalidateSelf();
     }
 
+    /**
+     * Returns magic parameters of spinning.
+     *
+     * @return Parameters of spinning.
+     */
+    @NonNull
     public Parameters getParameters() {
         return parameters;
     }
 
-    public void setParameters(final Parameters parameters) {
+    /**
+     * Sets magic parameters of spinning.
+     *
+     * @param parameters Parameters of spinning.
+     */
+    public void setParameters(@NonNull final Parameters parameters) {
         this.parameters = parameters;
         invalidateSelf();
     }
@@ -97,16 +123,15 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
     }
 
     private void updateArcBounds() {
-        arcBounds.left = getBounds().left;
-        arcBounds.right = getBounds().right;
-        arcBounds.top = getBounds().top;
-        arcBounds.bottom = getBounds().bottom;
-        arcBounds.inset(paint.getStrokeWidth() / 2, paint.getStrokeWidth() / 2);
+        arcBounds.set(getBounds());
+        //HACK: + 1 as anti-aliasing drawing bug workaround
+        final int inset = (int) (paint.getStrokeWidth() / 2) + 1;
+        arcBounds.inset(inset, inset);
     }
 
     @SuppressWarnings("PMD.NPathComplexity")
     @Override
-    public void draw(final Canvas canvas) {
+    public void draw(@NonNull final Canvas canvas) {
         final boolean isGrowingCycle = (((int) (arcSize / parameters.maxAngle)) % 2) == 0;
         final float angle = arcSize % parameters.maxAngle;
         final float shift = (angle / parameters.maxAngle) * parameters.gapAngle;
@@ -168,6 +193,9 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
         }
     }
 
+    /**
+     * Some parameters which are using to spin progress bar.
+     */
     public static class Parameters {
 
         private final float gapAngle;
@@ -188,26 +216,56 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
             this.arcMagicNumber2 = arcMagicNumber2;
         }
 
+        /**
+         * Returns angle of gap of arc.
+         *
+         * @return Angle of gap.
+         */
         public float getGapAngle() {
             return gapAngle;
         }
 
+        /**
+         * Returns maximum angle of arc.
+         *
+         * @return Maximum angle of arc.
+         */
         public float getMaxAngle() {
             return maxAngle;
         }
 
+        /**
+         * Magic parameter 1.
+         *
+         * @return Magic.
+         */
         public float getRotationMagicNumber1() {
             return rotationMagicNumber1;
         }
 
+        /**
+         * Magic parameter 2.
+         *
+         * @return Magic.
+         */
         public float getRotationMagicNumber2() {
             return rotationMagicNumber2;
         }
 
+        /**
+         * Magic parameter 3.
+         *
+         * @return Magic.
+         */
         public float getArcMagicNumber1() {
             return arcMagicNumber1;
         }
 
+        /**
+         * Magic parameter 4.
+         *
+         * @return Magic.
+         */
         public float getArcMagicNumber2() {
             return arcMagicNumber2;
         }

@@ -20,6 +20,7 @@
 package ru.touchin.roboswag.components.navigation.fragments;
 
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -34,11 +35,15 @@ import rx.functions.Action2;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
- * Fragment that have specific activity as a parent and can't be background.
- * [phase 1]
+ * Non-background fragment that have specific activity as a parent.
+ *
+ * @param <TActivity> Type of activity which to such fragment could be attached.
  */
 public abstract class ViewFragment<TActivity extends AppCompatActivity> extends Fragment
         implements OnFragmentStartedListener {
+
+    private boolean appeared;
+    private boolean started;
 
     /**
      * Returns if fragment have parent fragment.
@@ -56,7 +61,7 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      */
     @SuppressWarnings("unchecked")
     @Nullable
-    protected TActivity getBaseActivity() {
+    protected final TActivity getBaseActivity() {
         if (getActivity() == null) {
             return null;
         }
@@ -78,6 +83,7 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
     }
 
     @Override
+    @CallSuper
     public void onFragmentStarted(@NonNull final Fragment fragment) {
         //do nothing
     }
@@ -100,6 +106,7 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      * @param activity           Activity which fragment attached to.
      * @param savedInstanceState If the fragment is being re-created from a previous saved state, this is the state.
      */
+    @CallSuper
     public void onActivityCreated(@NonNull final View view, @NonNull final TActivity activity, @Nullable final Bundle savedInstanceState) {
         //do nothing
     }
@@ -116,6 +123,7 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
     @Override
     public void onStart() {
         super.onStart();
+        started = true;
         callMethodAfterInstantiation(this::onStart);
     }
 
@@ -125,12 +133,28 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      * @param view     Instantiated view.
      * @param activity Activity which fragment attached to.
      */
+    @CallSuper
     protected void onStart(@NonNull final View view, @NonNull final TActivity activity) {
         if (getParentFragment() instanceof OnFragmentStartedListener) {
             ((OnFragmentStartedListener) getParentFragment()).onFragmentStarted(this);
         } else if (activity instanceof OnFragmentStartedListener) {
             ((OnFragmentStartedListener) activity).onFragmentStarted(this);
         }
+        if (!appeared && isMenuVisible()) {
+            onAppear(view, activity);
+            appeared = true;
+        }
+    }
+
+    /**
+     * Called when fragment is moved in started state and it's {@link #isMenuVisible()} sets to true.
+     * Usually it is indicating that user can't see fragment on screen and useful to track analytics events.
+     *
+     * @param view     Instantiated view.
+     * @param activity Activity which fragment attached to.
+     */
+    protected void onAppear(@NonNull final View view, @NonNull final TActivity activity) {
+        //do nothing
     }
 
     @Deprecated
@@ -146,8 +170,22 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      * @param view     Instantiated view.
      * @param activity Activity which fragment attached to.
      */
+    @CallSuper
     protected void onResume(@NonNull final View view, @NonNull final TActivity activity) {
         //do nothing
+    }
+
+    @Override
+    public void setMenuVisibility(final boolean menuVisible) {
+        super.setMenuVisibility(menuVisible);
+        if (getBaseActivity() != null && getView() != null) {
+            if (!appeared && menuVisible && started) {
+                onAppear(getView(), getBaseActivity());
+            }
+            if (appeared && (!menuVisible || !started)) {
+                onDisappear(getView(), getBaseActivity());
+            }
+        }
     }
 
     @Deprecated
@@ -163,13 +201,26 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      * @param view     Instantiated view.
      * @param activity Activity which fragment attached to.
      */
+    @CallSuper
     protected void onPause(@NonNull final View view, @NonNull final TActivity activity) {
+        // do nothing
+    }
+
+    /**
+     * Called when fragment is moved in stopped state or it's {@link #isMenuVisible()} sets to false.
+     * Usually it is indicating that user can't see fragment on screen and useful to track analytics events.
+     *
+     * @param view     Instantiated view.
+     * @param activity Activity which fragment attached to.
+     */
+    protected void onDisappear(@NonNull final View view, @NonNull final TActivity activity) {
         //do nothing
     }
 
     @Deprecated
     @Override
     public void onStop() {
+        started = false;
         callMethodAfterInstantiation(this::onStop);
         super.onStop();
     }
@@ -180,8 +231,12 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      * @param view     Instantiated view.
      * @param activity Activity which fragment attached to.
      */
+    @CallSuper
     protected void onStop(@NonNull final View view, @NonNull final TActivity activity) {
-        //do nothing
+        if (appeared) {
+            onDisappear(view, activity);
+            appeared = false;
+        }
     }
 
     @Deprecated
@@ -200,6 +255,7 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      *
      * @param view Instantiated view.
      */
+    @CallSuper
     protected void onDestroyView(@NonNull final View view) {
         //do nothing
     }

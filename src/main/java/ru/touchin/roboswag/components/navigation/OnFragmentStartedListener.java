@@ -24,11 +24,16 @@ import android.support.v4.app.Fragment;
 
 /**
  * Created by Gavriil Sitnikov on 08/10/2014.
- * Base interface to listen fragment changing
+ * Base interface to listen child fragments start.
+ * Usually it helps to determine that fragment have showed on screen and we can change {@link android.app.Activity}'s navigation state for example.
  */
 public interface OnFragmentStartedListener {
 
-    /* Raises by fragment to notify that it is started */
+    /**
+     * Calls by child fragment (added via {@link android.support.v4.app.FragmentManager}) on it'sstart.
+     *
+     * @param fragment Child fragment which called this method.
+     */
     void onFragmentStarted(@NonNull Fragment fragment);
 
 }

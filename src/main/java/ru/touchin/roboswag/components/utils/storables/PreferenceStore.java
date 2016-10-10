@@ -17,7 +17,7 @@
  *
  */
 
-package ru.touchin.roboswag.components.storables;
+package ru.touchin.roboswag.components.utils.storables;
 
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
@@ -26,9 +26,12 @@ import android.support.annotation.Nullable;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.observables.storable.SafeStore;
 
+
 /**
  * Created by Gavriil Sitnikov on 18/03/16.
- * TODO: description
+ * Store based on {@link SharedPreferences} for {@link ru.touchin.roboswag.core.observables.storable.Storable}.
+ *
+ * @param <T> Type of storable. Could be Boolean, Integer, Long, Float or String.
  */
 public class PreferenceStore<T> implements SafeStore<String, T> {
 

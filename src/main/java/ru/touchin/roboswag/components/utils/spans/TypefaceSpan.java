@@ -17,14 +17,13 @@
  *
  */
 
-package ru.touchin.roboswag.components.utils;
+package ru.touchin.roboswag.components.utils.spans;
 
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
 import android.text.TextPaint;
 import android.text.style.MetricAffectingSpan;
-
 
 /**
  * Created by Ilia Kurtov on 15/02/2016.

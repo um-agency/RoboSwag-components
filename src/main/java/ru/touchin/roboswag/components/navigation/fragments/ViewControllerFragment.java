@@ -21,9 +21,11 @@ package ru.touchin.roboswag.components.navigation.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Parcel;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
+import android.view.InflateException;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,7 +34,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 
 import ru.touchin.roboswag.components.navigation.AbstractState;
 import ru.touchin.roboswag.components.navigation.ViewController;
@@ -47,11 +51,39 @@ import rx.subjects.BehaviorSubject;
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
  * Fragment instantiated in specific activity of {@link TActivity} type that is holding {@link ViewController} inside.
+ *
+ * @param <TState>    Type of object which is representing it's fragment state;
+ * @param <TActivity> Type of {@link ViewControllerActivity} where fragment could be attached to.
  */
+@SuppressWarnings("PMD.TooManyMethods")
 public abstract class ViewControllerFragment<TState extends AbstractState, TActivity extends ViewControllerActivity<?>>
         extends ViewFragment<TActivity> {
 
     private static final String VIEW_CONTROLLER_STATE_EXTRA = "VIEW_CONTROLLER_STATE_EXTRA";
+
+    private static boolean inDebugMode;
+
+    /**
+     * Enables debugging features like serialization of {@link #getState()} every creation.
+     */
+    public static void setInDebugMode() {
+        inDebugMode = true;
+    }
+
+    @SuppressWarnings("unchecked")
+    @NonNull
+    private static <T extends Serializable> T reserialize(@NonNull final T serializable) {
+        Parcel parcel = Parcel.obtain();
+        parcel.writeSerializable(serializable);
+        final byte[] serializableBytes = parcel.marshall();
+        parcel.recycle();
+        parcel = Parcel.obtain();
+        parcel.unmarshall(serializableBytes, 0, serializableBytes.length);
+        parcel.setDataPosition(0);
+        final T result = (T) parcel.readSerializable();
+        parcel.recycle();
+        return result;
+    }
 
     /**
      * Creates {@link Bundle} which will store state.
@@ -75,18 +107,18 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     private boolean isStarted;
 
     /**
-     * Returns specific object which contains state of ViewController.
+     * Returns specific {@link AbstractState} which contains state of fragment and it's {@link ViewController}.
      *
-     * @return Object of TState type.
+     * @return Object represents state.
      */
     public TState getState() {
         return state;
     }
 
     /**
-     * It should return specific ViewController class to control instantiated view by logic after activity creation.
+     * It should return specific {@link ViewController} class to control instantiated view by logic after activity creation.
      *
-     * @return Returns class of specific ViewController.
+     * @return Returns class of specific {@link ViewController}.
      */
     @NonNull
     public abstract Class<? extends ViewController<TActivity,
@@ -97,12 +129,15 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     public void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setHasOptionsMenu(getParentFragment() == null);
+        setHasOptionsMenu(!isChildFragment());
 
         state = savedInstanceState != null
                 ? (TState) savedInstanceState.getSerializable(VIEW_CONTROLLER_STATE_EXTRA)
                 : (getArguments() != null ? (TState) getArguments().getSerializable(VIEW_CONTROLLER_STATE_EXTRA) : null);
         if (state != null) {
+            if (inDebugMode) {
+                state = reserialize(state);
+            }
             state.onCreate();
         }
         viewControllerSubscription = Observable
@@ -114,7 +149,9 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
                             }
                             return newViewController;
                         })
-                .subscribe(this::onViewControllerChanged, Lc::assertion);
+                .subscribe(this::onViewControllerChanged,
+                        throwable -> Lc.cutAssertion(throwable,
+                                OnErrorThrowable.class, InvocationTargetException.class, InflateException.class));
     }
 
     @Nullable
@@ -179,13 +216,36 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     }
 
     @Override
-    public void setMenuVisibility(final boolean menuVisible) {
-        if (menuVisible && !isMenuVisible() && viewController != null) {
-            viewController.onAppear(AppearType.ACTIVATED);
+    protected void onAppear(@NonNull final View view, @NonNull final TActivity activity) {
+        super.onAppear(view, activity);
+        if (viewController != null) {
+            viewController.onAppear();
         }
-        super.setMenuVisibility(menuVisible);
     }
 
+    @Override
+    protected void onResume(@NonNull final View view, @NonNull final TActivity activity) {
+        super.onResume(view, activity);
+        if (viewController != null) {
+            viewController.onResume();
+        }
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (viewController != null) {
+            viewController.onLowMemory();
+        }
+    }
+
+    /**
+     * Calls when activity configuring ActionBar, Toolbar, Sidebar etc.
+     * If it will be called or not depends on {@link #hasOptionsMenu()} and {@link #isMenuVisible()}.
+     *
+     * @param menu     The options menu in which you place your items;
+     * @param inflater Helper to inflate menu items.
+     */
     protected void onConfigureNavigation(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
         if (viewController != null) {
             viewController.onConfigureNavigation(menu, inflater);
@@ -212,10 +272,15 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
             if (isStarted) {
                 this.viewController.onStart();
             }
-            if (isMenuVisible()) {
-                viewController.onAppear(AppearType.STARTED);
-            }
             this.viewController.getActivity().supportInvalidateOptionsMenu();
+        }
+    }
+
+    @Override
+    protected void onPause(@NonNull final View view, @NonNull final TActivity activity) {
+        super.onPause(view, activity);
+        if (viewController != null) {
+            viewController.onPause();
         }
     }
 
@@ -229,11 +294,11 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     }
 
     @Override
-    protected void onPause(@NonNull final View view, @NonNull final TActivity activity) {
+    protected void onDisappear(@NonNull final View view, @NonNull final TActivity activity) {
+        super.onDisappear(view, activity);
         if (viewController != null) {
-            viewController.onPause();
+            viewController.onDisappear();
         }
-        super.onPause(view, activity);
     }
 
     @Override
@@ -273,13 +338,6 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
             super(context);
         }
 
-    }
-
-    public enum AppearType {
-        // fragment just started first time
-        STARTED,
-        // fragment activated (started and menu visibility is true)
-        ACTIVATED
     }
 
 }

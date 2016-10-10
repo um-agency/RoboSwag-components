@@ -29,7 +29,10 @@ import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivi
 
 /**
  * Created by Gavriil Sitnikov on 07/03/2016.
- * TODO: fill description
+ * Simple {@link ViewControllerFragment} which is using by {@link ru.touchin.roboswag.components.navigation.ViewControllerNavigation}.
+ *
+ * @param <TState>    Type of object which is representing it's fragment state;
+ * @param <TActivity> Type of {@link ViewControllerActivity} where fragment could be attached to.
  */
 public class SimpleViewControllerFragment<TState extends AbstractState, TActivity extends ViewControllerActivity<?>>
         extends ViewControllerFragment<TState, TActivity> {
@@ -39,8 +42,8 @@ public class SimpleViewControllerFragment<TState extends AbstractState, TActivit
     /**
      * Creates {@link Bundle} which will store state and {@link ViewController}'s class.
      *
-     * @param viewControllerClass Class of {@link ViewController} which will be instantiated inside this fragment.
-     * @param state               State to use into {@link ViewController}.
+     * @param viewControllerClass Class of {@link ViewController} which will be instantiated inside this fragment;
+     * @param state               State to use into {@link ViewController};
      * @return Returns {@link Bundle} with state inside.
      */
     @NonNull
