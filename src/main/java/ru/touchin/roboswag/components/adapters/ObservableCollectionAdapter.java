@@ -422,6 +422,18 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
             return itemView.getContext().getString(stringRes);
         }
 
+        /**
+         * Simply get String from resources with arguments.
+         *
+         * @param stringRes     String resource id;
+         * @param formatArgs    The format arguments that will be used for substitution;
+         * @return Requested String that matches with provided string resource id.
+         */
+        @NonNull
+        public String getString(@StringRes final int stringRes, final Object... formatArgs) {
+            return itemView.getContext().getString(stringRes, formatArgs);
+        }
+
     }
 
 }
