@@ -22,6 +22,7 @@ package ru.touchin.roboswag.components.adapters;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
@@ -408,6 +409,29 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                         .delaySubscription(DELAY_BEFORE_LOADING_HISTORY, TimeUnit.MILLISECONDS)
                         .onErrorResumeNext(Observable.empty()), Actions.empty());
             }
+        }
+
+        /**
+         * Simply get String from resources.
+         *
+         * @param stringRes string resource id;
+         * @return Requested String that matches with provided string resource id.
+         */
+        @NonNull
+        public String getString(@StringRes final int stringRes) {
+            return itemView.getContext().getString(stringRes);
+        }
+
+        /**
+         * Simply get String from resources with arguments.
+         *
+         * @param stringRes     String resource id;
+         * @param formatArgs    The format arguments that will be used for substitution;
+         * @return Requested String that matches with provided string resource id.
+         */
+        @NonNull
+        public String getString(@StringRes final int stringRes, final Object... formatArgs) {
+            return itemView.getContext().getString(stringRes, formatArgs);
         }
 
     }
