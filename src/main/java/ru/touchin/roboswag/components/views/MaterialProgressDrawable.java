@@ -46,6 +46,7 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
     private static final float DEFAULT_STROKE_WIDTH_DP = 4.5f;
     private static final Parameters DEFAULT_PARAMETERS = new Parameters(20, 270, 4, 12, 4, 8);
 
+    private final int size;
     @NonNull
     private final Paint paint;
     @NonNull
@@ -58,12 +59,27 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
     private boolean running;
 
     public MaterialProgressDrawable(@NonNull final Context context) {
+        this(context, -1);
+    }
+
+    public MaterialProgressDrawable(@NonNull final Context context, final int size) {
         super();
 
+        this.size = size;
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(UiUtils.OfMetrics.dpToPixels(context, DEFAULT_STROKE_WIDTH_DP));
         paint.setColor(Color.BLACK);
+    }
+
+    @Override
+    public int getIntrinsicWidth() {
+        return size;
+    }
+
+    @Override
+    public int getIntrinsicHeight() {
+        return size;
     }
 
     /**
