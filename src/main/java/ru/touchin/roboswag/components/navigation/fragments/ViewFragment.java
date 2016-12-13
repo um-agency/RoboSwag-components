@@ -181,9 +181,11 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
         if (getBaseActivity() != null && getView() != null) {
             if (!appeared && menuVisible && started) {
                 onAppear(getView(), getBaseActivity());
+                appeared = true;
             }
             if (appeared && (!menuVisible || !started)) {
                 onDisappear(getView(), getBaseActivity());
+                appeared = false;
             }
         }
     }
