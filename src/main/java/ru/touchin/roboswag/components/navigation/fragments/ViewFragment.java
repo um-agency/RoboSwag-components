@@ -142,7 +142,6 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
         }
         if (!appeared && isMenuVisible()) {
             onAppear(view, activity);
-            appeared = true;
         }
     }
 
@@ -154,7 +153,7 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      * @param activity Activity which fragment attached to.
      */
     protected void onAppear(@NonNull final View view, @NonNull final TActivity activity) {
-        //do nothing
+        appeared = true;
     }
 
     @Deprecated
@@ -214,7 +213,7 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      * @param activity Activity which fragment attached to.
      */
     protected void onDisappear(@NonNull final View view, @NonNull final TActivity activity) {
-        //do nothing
+        appeared = false;
     }
 
     @Deprecated
@@ -235,7 +234,6 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
     protected void onStop(@NonNull final View view, @NonNull final TActivity activity) {
         if (appeared) {
             onDisappear(view, activity);
-            appeared = false;
         }
     }
 
