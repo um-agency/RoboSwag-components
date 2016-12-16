@@ -21,6 +21,7 @@ package ru.touchin.roboswag.components.navigation;
 
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
+import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
@@ -35,6 +36,7 @@ import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivi
 import ru.touchin.roboswag.components.navigation.fragments.ViewControllerFragment;
 import ru.touchin.roboswag.components.utils.BaseLifecycleBindable;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
+import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
 import rx.Subscription;
 import rx.functions.Action0;
@@ -128,6 +130,21 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     public final String getString(@StringRes final int resId, @NonNull final Object... formatArgs) {
         return getActivity().getString(resId, formatArgs);
+    }
+
+    /**
+     * Look for a child view with the given id.  If this view has the given id, return this view.
+     *
+     * @param id The id to search for;
+     * @return The view that has the given id in the hierarchy.
+     */
+    @NonNull
+    public View findViewById(@IdRes final int id) {
+        final View viewById = getContainer().findViewById(id);
+        if (viewById == null) {
+            throw new ShouldNotHappenException("No view for id=" + getActivity().getResources().getResourceName(id));
+        }
+        return viewById;
     }
 
     /**
