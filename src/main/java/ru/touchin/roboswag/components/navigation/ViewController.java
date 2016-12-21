@@ -22,6 +22,7 @@ package ru.touchin.roboswag.components.navigation;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.support.annotation.IdRes;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
@@ -36,6 +37,7 @@ import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivi
 import ru.touchin.roboswag.components.navigation.fragments.ViewControllerFragment;
 import ru.touchin.roboswag.components.utils.BaseLifecycleBindable;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
+import ru.touchin.roboswag.components.utils.UiUtils;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
 import rx.Subscription;
@@ -130,6 +132,43 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     public final String getString(@StringRes final int resId, @NonNull final Object... formatArgs) {
         return getActivity().getString(resId, formatArgs);
+    }
+
+    /**
+     * Set the view controller content from a layout resource.
+     * This layout is placed directly into the container's ({@link #getContainer()}) view hierarchy.
+     *
+     * @param layoutResId Resource ID to be inflated.
+     */
+    public void setContentView(@LayoutRes final int layoutResId) {
+        if (getContainer().getChildCount() > 0) {
+            getContainer().removeAllViews();
+        }
+        UiUtils.inflateAndAdd(layoutResId, getContainer());
+    }
+
+    /**
+     * Set the view controller content to an explicit view.
+     * This view is placed directly into the container's ({@link #getContainer()}) view hierarchy.
+     *
+     * @param view The desired content to display.
+     */
+    public void setContentView(@NonNull final View view) {
+        setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    }
+
+    /**
+     * Set the view controller content to an explicit view with specific layout parameters.
+     * This view is placed directly into the container's ({@link #getContainer()}) view hierarchy.
+     *
+     * @param view         The desired content to display;
+     * @param layoutParams Layout parameters for the view.
+     */
+    public void setContentView(@NonNull final View view, @NonNull final ViewGroup.LayoutParams layoutParams) {
+        if (getContainer().getChildCount() > 0) {
+            getContainer().removeAllViews();
+        }
+        getContainer().addView(view, layoutParams);
     }
 
     /**
