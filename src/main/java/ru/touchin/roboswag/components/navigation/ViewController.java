@@ -119,6 +119,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      *
      * @param resId Resource id for the string
      */
+    @NonNull
     public final String getString(@StringRes final int resId) {
         return getActivity().getString(resId);
     }
@@ -130,6 +131,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      * @param resId      Resource id for the format string
      * @param formatArgs The format arguments that will be used for substitution.
      */
+    @NonNull
     public final String getString(@StringRes final int resId, @NonNull final Object... formatArgs) {
         return getActivity().getString(resId, formatArgs);
     }
@@ -178,8 +180,9 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      * @return The view that has the given id in the hierarchy.
      */
     @NonNull
-    public View findViewById(@IdRes final int id) {
-        final View viewById = getContainer().findViewById(id);
+    @SuppressWarnings("unchecked")
+    public <T extends View> T findViewById(@IdRes final int id) {
+        final T viewById = (T) getContainer().findViewById(id);
         if (viewById == null) {
             throw new ShouldNotHappenException("No view for id=" + getActivity().getResources().getResourceName(id));
         }
