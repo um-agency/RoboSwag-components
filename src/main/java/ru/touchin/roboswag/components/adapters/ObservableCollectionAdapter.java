@@ -317,18 +317,6 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         return positionInList < 0 || positionInList >= innerCollection.size() ? null : innerCollection.get(positionInList);
     }
 
-    @Override
-    public void onViewAttachedToWindow(@NonNull final BindableViewHolder holder) {
-        super.onViewAttachedToWindow(holder);
-        holder.onAttachedToWindow();
-    }
-
-    @Override
-    public void onViewDetachedFromWindow(@NonNull final BindableViewHolder holder) {
-        holder.onDetachedFromWindow();
-        super.onViewDetachedFromWindow(holder);
-    }
-
     /**
      * Sets item click listener.
      *

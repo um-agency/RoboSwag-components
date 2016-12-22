@@ -19,92 +19,52 @@
 
 package ru.touchin.roboswag.components.adapters;
 
-import android.support.annotation.CallSuper;
+import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
-import java.util.concurrent.TimeUnit;
-
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
-import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
 import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.functions.Action1;
-import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 12/8/2016.
  * ViewHolder that implements {@link LifecycleBindable} and uses parent bindable object as bridge (Activity, ViewController etc.).
- * It is important to use such ViewHolder to avoid endless bindings when parent bindable have started but ViewHolder already detached from window.
- * So inside method {@link RecyclerView.Adapter#onBindViewHolder(RecyclerView.ViewHolder, int)}
- * use only inner {@link #bind(Observable, Action1)} method but not parent's bind method.
  */
 public class BindableViewHolder extends RecyclerView.ViewHolder implements LifecycleBindable {
 
-    //HACK: it is needed to delay detach to avoid re-subscriptions on fast scroll
-    private static final long DETACH_DELAY = TimeUnit.SECONDS.toMillis(1);
-
     @NonNull
     private final LifecycleBindable baseLifecycleBindable;
-    @NonNull
-    private final BehaviorSubject<Boolean> attachedToWindowSubject = BehaviorSubject.create();
-    private final Observable<Boolean> attachedObservable;
 
     public BindableViewHolder(@NonNull final LifecycleBindable baseLifecycleBindable, @NonNull final View itemView) {
         super(itemView);
         this.baseLifecycleBindable = baseLifecycleBindable;
-        attachedObservable = attachedToWindowSubject
-                .switchMap(attached -> attached
-                        ? Observable.just(true)
-                        : Observable.timer(DETACH_DELAY, TimeUnit.MILLISECONDS).map(ignored -> false))
-                .distinctUntilChanged()
-                .replay(1)
-                .refCount();
     }
 
     /**
-     * Calls when {@link RecyclerView.ViewHolder} have attached to window.
-     */
-    @CallSuper
-    public void onAttachedToWindow() {
-        attachedToWindowSubject.onNext(true);
-    }
-
-    /**
-     * Returns if {@link RecyclerView.ViewHolder} attached to window or not.
+     * Look for a child view with the given id.  If this view has the given id, return this view.
      *
-     * @return True if {@link RecyclerView.ViewHolder} attached to window.
+     * @param id The id to search for;
+     * @return The view that has the given id in the hierarchy.
      */
-    public boolean isAttachedToWindow() {
-        return attachedToWindowSubject.hasValue() && attachedToWindowSubject.getValue();
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public <T extends View> T findViewById(@IdRes final int id) {
+        final T viewById = (T) itemView.findViewById(id);
+        if (viewById == null) {
+            throw new ShouldNotHappenException("No view for id=" + itemView.getResources().getResourceName(id));
+        }
+        return viewById;
     }
 
-    /**
-     * Calls when {@link RecyclerView.ViewHolder} have detached from window.
-     */
-    @CallSuper
-    public void onDetachedFromWindow() {
-        attachedToWindowSubject.onNext(false);
-    }
-
-    @SuppressWarnings("CPD-START")
-    //CPD: it is same as in other implementation based on BaseLifecycleBindable
     @NonNull
     @Override
     public <T> Subscription bind(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
-        final String codePoint = Lc.getCodePoint(this, 1);
-        final Observable<T> safeObservable = observable
-                .onErrorResumeNext(throwable -> {
-                    Lc.assertion(new ShouldNotHappenException("Unexpected error on bind at " + codePoint, throwable));
-                    return Observable.never();
-                })
-                .observeOn(AndroidSchedulers.mainThread());
-        return attachedObservable.switchMap(attached -> attached ? safeObservable : Observable.never())
-                .subscribe(onNextAction);
+        return baseLifecycleBindable.bind(observable, onNextAction);
     }
 
     @NonNull
