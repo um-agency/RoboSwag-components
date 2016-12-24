@@ -19,8 +19,15 @@
 
 package ru.touchin.roboswag.components.adapters;
 
+import android.content.res.ColorStateList;
+import android.graphics.drawable.Drawable;
+import android.support.annotation.ColorInt;
+import android.support.annotation.ColorRes;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
@@ -59,6 +66,31 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
             throw new ShouldNotHappenException("No view for id=" + itemView.getResources().getResourceName(id));
         }
         return viewById;
+    }
+
+    @NonNull
+    public String getString(@StringRes final int resId) {
+        return itemView.getResources().getString(resId);
+    }
+
+    @NonNull
+    public String getString(@StringRes final int resId, final Object... formatArgs) {
+        return itemView.getResources().getString(resId, formatArgs);
+    }
+
+    @ColorInt
+    public int getColor(@ColorRes final int resId) {
+        return ContextCompat.getColor(itemView.getContext(), resId);
+    }
+
+    @NonNull
+    public Drawable getDrawable(@DrawableRes final int resId) {
+        return ContextCompat.getDrawable(itemView.getContext(), resId);
+    }
+
+    @NonNull
+    public ColorStateList getColorStateList(@ColorRes final int resId) {
+        return ContextCompat.getColorStateList(itemView.getContext(), resId);
     }
 
     @NonNull
