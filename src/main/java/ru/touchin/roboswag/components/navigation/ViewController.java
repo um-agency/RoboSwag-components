@@ -19,8 +19,12 @@
 
 package ru.touchin.roboswag.components.navigation;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.CallSuper;
+import android.support.annotation.ColorInt;
+import android.support.annotation.ColorRes;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -187,6 +191,32 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
             throw new ShouldNotHappenException("No view for id=" + getActivity().getResources().getResourceName(id));
         }
         return viewById;
+    }
+
+    /**
+     * Return the color value associated with a particular resource ID.
+     * Starting in {@link android.os.Build.VERSION_CODES#M}, the returned
+     * color will be styled for the specified Context's theme.
+     *
+     * @param resId The resource id to search for data;
+     * @return int A single color value in the form 0xAARRGGBB.
+     */
+    @ColorInt
+    public int getColor(@ColorRes final int resId) {
+        return getActivity().getColorCompat(resId);
+    }
+
+    /**
+     * Returns a drawable object associated with a particular resource ID.
+     * Starting in {@link android.os.Build.VERSION_CODES#LOLLIPOP}, the
+     * returned drawable will be styled for the specified Context's theme.
+     *
+     * @param resId The resource id to search for data;
+     * @return Drawable An object that can be used to draw this resource.
+     */
+    @NonNull
+    public Drawable getDrawable(@DrawableRes final int resId) {
+        return getActivity().getDrawableCompat(resId);
     }
 
     /**

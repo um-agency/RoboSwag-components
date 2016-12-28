@@ -20,9 +20,14 @@
 package ru.touchin.roboswag.components.navigation.activities;
 
 import android.app.Activity;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.annotation.ColorInt;
+import android.support.annotation.ColorRes;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -120,6 +125,32 @@ public abstract class BaseActivity extends AppCompatActivity
         view.requestFocus();
         final InputMethodManager inputManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         inputManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+    }
+
+    /**
+     * Return the color value associated with a particular resource ID.
+     * Starting in {@link android.os.Build.VERSION_CODES#M}, the returned
+     * color will be styled for the specified Context's theme.
+     *
+     * @param resId The resource id to search for data;
+     * @return int A single color value in the form 0xAARRGGBB.
+     */
+    @ColorInt
+    public int getColorCompat(@ColorRes final int resId) {
+        return ContextCompat.getColor(this, resId);
+    }
+
+    /**
+     * Returns a drawable object associated with a particular resource ID.
+     * Starting in {@link android.os.Build.VERSION_CODES#LOLLIPOP}, the
+     * returned drawable will be styled for the specified Context's theme.
+     *
+     * @param resId The resource id to search for data;
+     * @return Drawable An object that can be used to draw this resource.
+     */
+    @NonNull
+    public Drawable getDrawableCompat(@DrawableRes final int resId) {
+        return ContextCompat.getDrawable(this, resId);
     }
 
     public void addOnBackPressedListener(@NonNull final OnBackPressedListener onBackPressedListener) {
