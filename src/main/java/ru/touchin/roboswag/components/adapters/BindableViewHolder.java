@@ -19,8 +19,6 @@
 
 package ru.touchin.roboswag.components.adapters;
 
-import android.content.res.ColorStateList;
-import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
@@ -75,7 +73,6 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
      *
      * @param resId The resource id to search for data;
      * @return String The string data associated with the resource.
-     * @throws Resources.NotFoundException Throws NotFoundException if the given ID does not exist.
      */
     @NonNull
     public String getString(@StringRes final int resId) {
@@ -89,7 +86,6 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
      * @param resId      The resource id to search for data;
      * @param formatArgs The format arguments that will be used for substitution.
      * @return String The string data associated with the resource.
-     * @throws Resources.NotFoundException Throws NotFoundException if the given ID does not exist.
      */
     @NonNull
     public String getString(@StringRes final int resId, final Object... formatArgs) {
@@ -103,7 +99,6 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
      *
      * @param resId The resource id to search for data;
      * @return int A single color value in the form 0xAARRGGBB.
-     * @throws Resources.NotFoundException Throws NotFoundException if the given ID does not exist.
      */
     @ColorInt
     public int getColor(@ColorRes final int resId) {
@@ -121,19 +116,6 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
     @NonNull
     public Drawable getDrawable(@DrawableRes final int resId) {
         return ContextCompat.getDrawable(itemView.getContext(), resId);
-    }
-
-    /**
-     * Returns a color state list object associated with a particular resource ID.
-     * Starting in {@link android.os.Build.VERSION_CODES#LOLLIPOP}, the
-     * returned drawable will be styled for the specified Context's theme.
-     *
-     * @param resId The resource id to search for data;
-     * @return A color state list, or {@code null} if the resource could not be resolved.
-     */
-    @NonNull
-    public ColorStateList getColorStateList(@ColorRes final int resId) {
-        return ContextCompat.getColorStateList(itemView.getContext(), resId);
     }
 
     @NonNull
