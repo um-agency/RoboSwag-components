@@ -111,7 +111,7 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
     }
 
     /**
-     * Returns a color state list object associated with a particular resource ID.
+     * Returns a drawable object associated with a particular resource ID.
      * Starting in {@link android.os.Build.VERSION_CODES#LOLLIPOP}, the
      * returned drawable will be styled for the specified Context's theme.
      *
@@ -124,7 +124,7 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
     }
 
     /**
-     * Returns a drawable object associated with a particular resource ID.
+     * Returns a color state list object associated with a particular resource ID.
      * Starting in {@link android.os.Build.VERSION_CODES#LOLLIPOP}, the
      * returned drawable will be styled for the specified Context's theme.
      *
