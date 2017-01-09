@@ -26,6 +26,7 @@ import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.exceptions.OnErrorThrowable;
 import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Actions;
@@ -151,6 +152,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
         return until(observable, isCreatedSubject.map(created -> !created), onNextAction, onErrorAction, onCompletedAction);
     }
 
+    @NonNull
     private <T> Subscription until(@NonNull final Observable<T> observable,
                                    @NonNull final Observable<Boolean> conditionSubject,
                                    @NonNull final Action1<T> onNextAction,
@@ -161,7 +163,14 @@ public class BaseLifecycleBindable implements LifecycleBindable {
                         ? observable.observeOn(AndroidSchedulers.mainThread()).doOnCompleted(onCompletedAction)
                         : Observable.empty())
                 .takeUntil(conditionSubject.filter(condition -> condition))
-                .subscribe(onNextAction, onErrorAction);
+                .subscribe(onNextAction, throwable -> {
+                    final boolean isRxError = throwable instanceof OnErrorThrowable;
+                    if ((!isRxError && throwable instanceof RuntimeException)
+                            || (isRxError && throwable.getCause() instanceof RuntimeException)) {
+                        Lc.assertion(throwable);
+                    }
+                    onErrorAction.call(throwable);
+                });
     }
 
 }
