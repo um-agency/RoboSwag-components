@@ -275,7 +275,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
     @Override
     public abstract BindableViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType);
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     @Override
     public void onBindViewHolder(@NonNull final BindableViewHolder holder, final int position) {
         lastUpdatedChangeNumber = innerCollection.getChangesCount();
@@ -293,7 +293,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
             return;
         }
         final TItem item = innerCollection.get(itemPosition);
-        itemViewHolder.adapter = this;
+        itemViewHolder.setAdapter(this);
         onBindItemToViewHolder(itemViewHolder, position, item);
         itemViewHolder.bindPosition(position);
         if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
@@ -374,7 +374,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         @Nullable
         private Subscription historyPreLoadingSubscription;
         @Nullable
-        public ObservableCollectionAdapter adapter;
+        private ObservableCollectionAdapter adapter;
 
         public ViewHolder(@NonNull final LifecycleBindable baseBindable, @NonNull final View itemView) {
             super(baseBindable, itemView);
@@ -393,10 +393,17 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                 historyPreLoadingSubscription = null;
             }
             if (adapter != null && position - adapter.getHeadersCount() > adapter.innerCollection.size() - PRE_LOADING_COUNT) {
-                historyPreLoadingSubscription = bind(adapter.historyPreLoadingObservable
+                historyPreLoadingSubscription = untilDestroy(adapter.historyPreLoadingObservable
                         .delaySubscription(DELAY_BEFORE_LOADING_HISTORY, TimeUnit.MILLISECONDS)
                         .onErrorResumeNext(Observable.empty()), Actions.empty());
             }
+        }
+
+        @SuppressWarnings("PMD.DefaultPackage")
+        @Deprecated
+        //it is for internal use only
+        void setAdapter(@Nullable final ObservableCollectionAdapter adapter) {
+            this.adapter = adapter;
         }
 
         /**
@@ -413,8 +420,8 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         /**
          * Simply get String from resources with arguments.
          *
-         * @param stringRes     String resource id;
-         * @param formatArgs    The format arguments that will be used for substitution;
+         * @param stringRes  String resource id;
+         * @param formatArgs The format arguments that will be used for substitution;
          * @return Requested String that matches with provided string resource id.
          */
         @NonNull
