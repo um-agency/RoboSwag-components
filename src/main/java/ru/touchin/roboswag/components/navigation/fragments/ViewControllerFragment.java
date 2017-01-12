@@ -22,6 +22,7 @@ package ru.touchin.roboswag.components.navigation.fragments;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcel;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Pair;
@@ -41,6 +42,7 @@ import java.lang.reflect.InvocationTargetException;
 import ru.touchin.roboswag.components.navigation.AbstractState;
 import ru.touchin.roboswag.components.navigation.ViewController;
 import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
+import ru.touchin.roboswag.components.utils.UiUtils;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
@@ -62,12 +64,22 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     private static final String VIEW_CONTROLLER_STATE_EXTRA = "VIEW_CONTROLLER_STATE_EXTRA";
 
     private static boolean inDebugMode;
+    private static long acceptableUiCalculationTime = 100;
 
     /**
      * Enables debugging features like serialization of {@link #getState()} every creation.
      */
     public static void setInDebugMode() {
         inDebugMode = true;
+    }
+
+    /**
+     * Sets acceptable UI calculation time so there will be warnings in logs if ViewController's inflate/layout actions will take more than that time.
+     * Works only if {@link #setInDebugMode()} called.
+     * It's 100ms by default.
+     */
+    public static void setAcceptableUiCalculationTime(final long acceptableUiCalculationTime) {
+        ViewControllerFragment.acceptableUiCalculationTime = acceptableUiCalculationTime;
     }
 
     @SuppressWarnings("unchecked")
@@ -166,6 +178,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         }
         final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
         final ViewController.CreationContext creationContext = new ViewController.CreationContext(activity, this, viewInfo.first);
+        final long creationTime = inDebugMode ? SystemClock.elapsedRealtime() : 0;
         try {
             switch (constructor.getParameterTypes().length) {
                 case 2:
@@ -178,6 +191,17 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
             }
         } catch (final Exception exception) {
             throw OnErrorThrowable.from(exception);
+        } finally {
+            checkCreationTime(creationTime);
+        }
+    }
+
+    private void checkCreationTime(final long creationTime) {
+        if (inDebugMode) {
+            final long creationPeriod = SystemClock.elapsedRealtime() - creationTime;
+            if (creationPeriod > acceptableUiCalculationTime) {
+                UiUtils.UI_METRICS_LC_GROUP.w("Creation of %s took too much: %dms", getViewControllerClass(), creationPeriod);
+            }
         }
     }
 
@@ -187,7 +211,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     public View onCreateView(@NonNull final LayoutInflater inflater,
                              @Nullable final ViewGroup container,
                              @Nullable final Bundle savedInstanceState) {
-        return new PlaceholderView(inflater.getContext());
+        return new PlaceholderView(inflater.getContext(), getViewControllerClass().getName());
     }
 
     @Override
@@ -334,8 +358,33 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
 
     private static class PlaceholderView extends FrameLayout {
 
-        public PlaceholderView(@NonNull final Context context) {
+        @NonNull
+        private final String tagName;
+        private long lastMeasureTime;
+
+        public PlaceholderView(@NonNull final Context context, @NonNull final String tagName) {
             super(context);
+            this.tagName = tagName;
+        }
+
+        @Override
+        protected void onMeasure(final int widthMeasureSpec, final int heightMeasureSpec) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            if (inDebugMode && lastMeasureTime == 0) {
+                lastMeasureTime = SystemClock.uptimeMillis();
+            }
+        }
+
+        @Override
+        protected void onLayout(final boolean changed, final int left, final int top, final int right, final int bottom) {
+            super.onLayout(changed, left, top, right, bottom);
+            if (inDebugMode && lastMeasureTime > 0) {
+                final long layoutTime = SystemClock.uptimeMillis() - lastMeasureTime;
+                if (layoutTime > acceptableUiCalculationTime) {
+                    UiUtils.UI_METRICS_LC_GROUP.w("Layout of %s took too much: %dms", tagName, layoutTime);
+                }
+                lastMeasureTime = 0;
+            }
         }
 
     }

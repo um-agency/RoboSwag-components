@@ -44,6 +44,7 @@ import android.view.ViewGroup;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
+import ru.touchin.roboswag.core.log.LcGroup;
 import rx.functions.Action0;
 
 /**
@@ -52,6 +53,10 @@ import rx.functions.Action0;
  */
 public final class UiUtils {
 
+    /**
+     * Logging group to log UI metrics (like inflation or layout time etc.).
+     */
+    public static final LcGroup UI_METRICS_LC_GROUP = new LcGroup("UI_METRICS");
     /**
      * Delay to let user view ripple effect before screen changed.
      */
