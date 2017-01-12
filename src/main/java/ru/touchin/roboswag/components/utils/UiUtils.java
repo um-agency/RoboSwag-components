@@ -58,6 +58,10 @@ public final class UiUtils {
      */
     public static final LcGroup UI_METRICS_LC_GROUP = new LcGroup("UI_METRICS");
     /**
+     * Logging group to log UI lifecycle (onCreate, onStart, onResume etc.).
+     */
+    public static final LcGroup UI_LIFECYCLE_LC_GROUP = new LcGroup("UI_LIFECYCLE");
+    /**
      * Delay to let user view ripple effect before screen changed.
      */
     public static final long RIPPLE_EFFECT_DELAY = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? 150 : 0;

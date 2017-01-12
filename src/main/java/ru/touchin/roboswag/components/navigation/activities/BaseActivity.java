@@ -38,6 +38,8 @@ import java.util.ArrayList;
 
 import ru.touchin.roboswag.components.utils.BaseLifecycleBindable;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
+import ru.touchin.roboswag.components.utils.UiUtils;
+import ru.touchin.roboswag.core.log.Lc;
 import rx.Observable;
 import rx.Subscription;
 import rx.functions.Action0;
@@ -76,6 +78,7 @@ public abstract class BaseActivity extends AppCompatActivity
     @Override
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         baseLifecycleBindable.onCreate();
         restoreLastActivityResult(savedInstanceState);
     }
@@ -92,6 +95,7 @@ public abstract class BaseActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this) + " requestCode: " + requestCode + "; resultCode: " + resultCode);
         if (resultCode == RESULT_OK) {
             lastActivityResult.onNext(new Pair<>(requestCode, data));
         }
@@ -114,17 +118,20 @@ public abstract class BaseActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         baseLifecycleBindable.onStart();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         resumed = true;
     }
 
     @Override
     protected void onPause() {
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         resumed = false;
         super.onPause();
     }
@@ -132,6 +139,7 @@ public abstract class BaseActivity extends AppCompatActivity
     @Override
     protected void onSaveInstanceState(@NonNull final Bundle stateToSave) {
         super.onSaveInstanceState(stateToSave);
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         if (lastActivityResult.getValue() != null) {
             stateToSave.putInt(ACTIVITY_RESULT_CODE_EXTRA, lastActivityResult.getValue().first);
             if (lastActivityResult.getValue().second != null) {
@@ -141,13 +149,21 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
+    }
+
+    @Override
     protected void onStop() {
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         baseLifecycleBindable.onStop();
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         baseLifecycleBindable.onDestroy();
         super.onDestroy();
     }

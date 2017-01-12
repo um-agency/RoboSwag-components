@@ -42,6 +42,7 @@ import ru.touchin.roboswag.components.navigation.fragments.ViewControllerFragmen
 import ru.touchin.roboswag.components.utils.BaseLifecycleBindable;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
 import ru.touchin.roboswag.components.utils.UiUtils;
+import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
 import rx.Subscription;
@@ -236,6 +237,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     @CallSuper
     public void onCreate() {
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         baseLifecycleBindable.onCreate();
     }
 
@@ -245,6 +247,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     @CallSuper
     public void onStart() {
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         baseLifecycleBindable.onStart();
     }
 
@@ -253,7 +256,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      * Usually it is indicating that user can't see fragment on screen and useful to track analytics events.
      */
     public void onAppear() {
-        //do nothing
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
     }
 
     /**
@@ -262,7 +265,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     @CallSuper
     public void onResume() {
-        //do nothing
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
     }
 
     /**
@@ -280,7 +283,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     @CallSuper
     public void onPause() {
-        //do nothing
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
     }
 
     /**
@@ -290,7 +293,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     @CallSuper
     public void onSaveInstanceState(@NonNull final Bundle savedInstanceState) {
-        // do nothing
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
     }
 
     /**
@@ -298,7 +301,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      * Usually it is indicating that user can't see fragment on screen and useful to track analytics events.
      */
     public void onDisappear() {
-        //do nothing
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
     }
 
     /**
@@ -307,6 +310,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     @CallSuper
     public void onStop() {
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         baseLifecycleBindable.onStop();
     }
 
@@ -316,6 +320,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     @CallSuper
     public void onDestroy() {
+        UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         baseLifecycleBindable.onDestroy();
         destroyed = true;
     }
