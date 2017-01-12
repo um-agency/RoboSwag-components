@@ -20,6 +20,7 @@
 package ru.touchin.roboswag.components.navigation.activities;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.ColorInt;
@@ -28,6 +29,7 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -40,6 +42,7 @@ import rx.Observable;
 import rx.Subscription;
 import rx.functions.Action0;
 import rx.functions.Action1;
+import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 08/03/2016.
@@ -49,11 +52,17 @@ import rx.functions.Action1;
 public abstract class BaseActivity extends AppCompatActivity
         implements LifecycleBindable {
 
+    private static final String ACTIVITY_RESULT_CODE_EXTRA = "ACTIVITY_RESULT_CODE_EXTRA";
+    private static final String ACTIVITY_RESULT_DATA_EXTRA = "ACTIVITY_RESULT_DATA_EXTRA";
+
     @NonNull
     private final ArrayList<OnBackPressedListener> onBackPressedListeners = new ArrayList<>();
     @NonNull
     private final BaseLifecycleBindable baseLifecycleBindable = new BaseLifecycleBindable();
     private boolean resumed;
+
+    @NonNull
+    private final BehaviorSubject<Pair<Integer, Intent>> lastActivityResult = BehaviorSubject.create((Pair<Integer, Intent>) null);
 
     /**
      * Returns if activity resumed.
@@ -68,6 +77,38 @@ public abstract class BaseActivity extends AppCompatActivity
     protected void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         baseLifecycleBindable.onCreate();
+        restoreLastActivityResult(savedInstanceState);
+    }
+
+    private void restoreLastActivityResult(@Nullable final Bundle savedInstanceState) {
+        if (savedInstanceState == null) {
+            return;
+        }
+
+        lastActivityResult.onNext(new Pair<>(savedInstanceState.getInt(ACTIVITY_RESULT_CODE_EXTRA),
+                savedInstanceState.getParcelable(ACTIVITY_RESULT_DATA_EXTRA)));
+    }
+
+    @Override
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            lastActivityResult.onNext(new Pair<>(requestCode, data));
+        }
+    }
+
+    /**
+     * Observes activity result by request code coming from {@link #onActivityResult(int, int, Intent)}
+     *
+     * @param requestCode Unique code to identify activity result;
+     * @return {@link Observable} which will emit data (Intents) from other activities (endlessly).
+     */
+    @NonNull
+    public Observable<Intent> observeActivityResult(final int requestCode) {
+        return lastActivityResult.switchMap(resultPair -> resultPair == null || resultPair.first != requestCode
+                ? Observable.empty()
+                : Observable.just(resultPair.second))
+                .doOnNext(result -> lastActivityResult.onNext(null));
     }
 
     @Override
@@ -86,6 +127,17 @@ public abstract class BaseActivity extends AppCompatActivity
     protected void onPause() {
         resumed = false;
         super.onPause();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull final Bundle stateToSave) {
+        super.onSaveInstanceState(stateToSave);
+        if (lastActivityResult.getValue() != null) {
+            stateToSave.putInt(ACTIVITY_RESULT_CODE_EXTRA, lastActivityResult.getValue().first);
+            if (lastActivityResult.getValue().second != null) {
+                stateToSave.putParcelable(ACTIVITY_RESULT_DATA_EXTRA, lastActivityResult.getValue().second);
+            }
+        }
     }
 
     @Override
