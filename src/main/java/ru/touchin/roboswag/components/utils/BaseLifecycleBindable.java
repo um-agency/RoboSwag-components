@@ -162,6 +162,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
                 .switchMap(created -> created
                         ? observable.observeOn(AndroidSchedulers.mainThread()).doOnCompleted(onCompletedAction)
                         : Observable.empty())
+                //TODO: basically takeUntil is calling completed so investigate observable = ***.first() behavior and doOnCompleted also
                 .takeUntil(conditionSubject.filter(condition -> condition))
                 .subscribe(onNextAction, throwable -> {
                     final boolean isRxError = throwable instanceof OnErrorThrowable;
