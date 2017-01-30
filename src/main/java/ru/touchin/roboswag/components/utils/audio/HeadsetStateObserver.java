@@ -19,6 +19,7 @@
 
 package ru.touchin.roboswag.components.utils.audio;
 
+import android.bluetooth.BluetoothA2dp;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -31,7 +32,8 @@ import rx.subjects.PublishSubject;
 
 /**
  * Created by Gavriil Sitnikov on 02/11/2015.
- * Simple observer of wired headset state (plugged in or not).
+ * Simple observer of wired and wireless (bluetooth A2DP) headsets state (plugged in or not).
+ * <br><font color="yellow"> You require android.permission.BLUETOOTH if want to observe wireless headset state </font>
  */
 public final class HeadsetStateObserver {
 
@@ -50,24 +52,28 @@ public final class HeadsetStateObserver {
                 .switchMap(isPluggedInReceiver -> Observable
                         .just(isPluggedIn())
                         .concatWith(isPluggedInReceiver.isPluggedInChangedEvent
-                                .doOnSubscribe(() -> context.registerReceiver(isPluggedInReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG)))
+                                .doOnSubscribe(() -> {
+                                    final IntentFilter headsetStateIntentFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
+                                    headsetStateIntentFilter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
+                                    context.registerReceiver(isPluggedInReceiver, headsetStateIntentFilter);
+                                })
                                 .doOnUnsubscribe(() -> context.unregisterReceiver(isPluggedInReceiver))))
                 .replay(1)
                 .refCount();
     }
 
     /**
-     * Returns if wired headset plugged in.
+     * Returns if wired or wireless headset plugged in.
      *
      * @return True if headset is plugged in.
      */
     @SuppressWarnings("deprecation")
     public boolean isPluggedIn() {
-        return audioManager.isWiredHeadsetOn();
+        return audioManager.isWiredHeadsetOn() || audioManager.isBluetoothA2dpOn();
     }
 
     /**
-     * Observes plugged in state of wired headset.
+     * Observes plugged in state of headset.
      *
      * @return Returns observable which will provide current plugged in state and any of it's udpdate.
      */
@@ -84,10 +90,19 @@ public final class HeadsetStateObserver {
         @Override
         public void onReceive(final Context context, final Intent intent) {
             if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction())) {
-                if (intent.getExtras() == null) {
-                    isPluggedInChangedEvent.onNext(false);
-                } else {
-                    isPluggedInChangedEvent.onNext(intent.getExtras().getInt("state") != 0);
+                isPluggedInChangedEvent.onNext(intent.getIntExtra("state", 0) != 0);
+            }
+            if (BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(intent.getAction())) {
+                final int bluetoothState = intent.getIntExtra(BluetoothA2dp.EXTRA_STATE, BluetoothA2dp.STATE_DISCONNECTED);
+                switch (bluetoothState) {
+                    case BluetoothA2dp.STATE_DISCONNECTED:
+                        isPluggedInChangedEvent.onNext(false);
+                        break;
+                    case BluetoothA2dp.STATE_CONNECTED:
+                        isPluggedInChangedEvent.onNext(true);
+                        break;
+                    default:
+                        break;
                 }
             }
         }
