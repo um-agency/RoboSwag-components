@@ -28,12 +28,12 @@ import android.media.AudioManager;
 import android.support.annotation.NonNull;
 
 import rx.Observable;
-import rx.subjects.PublishSubject;
+import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 02/11/2015.
- * Simple observer of wired and wireless (bluetooth A2DP) headsets state (plugged in or not).
- * <br><font color="yellow"> You require android.permission.BLUETOOTH if want to observe wireless headset state </font>
+ * Simple observer of wired or wireless (bluetooth A2DP) headsets state (plugged in or not).
+ * <br><font color="yellow"> You require android.permission.BLUETOOTH and API level >= 11 if want to observe wireless headset state </font>
  */
 public final class HeadsetStateObserver {
 
@@ -46,30 +46,23 @@ public final class HeadsetStateObserver {
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         isPluggedInObservable = Observable
                 .<IsPluggedInReceiver>create(subscriber -> {
-                    subscriber.onNext(new IsPluggedInReceiver());
+                    subscriber.onNext(new IsPluggedInReceiver(audioManager));
                     subscriber.onCompleted();
                 })
-                .switchMap(isPluggedInReceiver -> Observable
-                        .just(isPluggedIn())
-                        .concatWith(isPluggedInReceiver.isPluggedInChangedEvent
-                                .doOnSubscribe(() -> {
-                                    final IntentFilter headsetStateIntentFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
-                                    headsetStateIntentFilter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
-                                    context.registerReceiver(isPluggedInReceiver, headsetStateIntentFilter);
-                                })
-                                .doOnUnsubscribe(() -> context.unregisterReceiver(isPluggedInReceiver))))
+                .switchMap(isPluggedInReceiver -> Observable.combineLatest(isPluggedInReceiver.isWiredPluggedInChangedEvent,
+                        isPluggedInReceiver.isWirelessPluggedInChangedEvent,
+                        (isWiredPluggedIn, isWirelessPluggedIn) -> isWiredPluggedIn || isWirelessPluggedIn)
+                        .distinctUntilChanged()
+                        .doOnSubscribe(() -> {
+                            final IntentFilter headsetStateIntentFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
+                                headsetStateIntentFilter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
+                            }
+                            context.registerReceiver(isPluggedInReceiver, headsetStateIntentFilter);
+                        })
+                        .doOnUnsubscribe(() -> context.unregisterReceiver(isPluggedInReceiver)))
                 .replay(1)
                 .refCount();
-    }
-
-    /**
-     * Returns if wired or wireless headset plugged in.
-     *
-     * @return True if headset is plugged in.
-     */
-    @SuppressWarnings("deprecation")
-    public boolean isPluggedIn() {
-        return audioManager.isWiredHeadsetOn() || audioManager.isBluetoothA2dpOn();
     }
 
     /**
@@ -85,21 +78,30 @@ public final class HeadsetStateObserver {
     private static class IsPluggedInReceiver extends BroadcastReceiver {
 
         @NonNull
-        private final PublishSubject<Boolean> isPluggedInChangedEvent = PublishSubject.create();
+        private final BehaviorSubject<Boolean> isWiredPluggedInChangedEvent;
+        @NonNull
+        private final BehaviorSubject<Boolean> isWirelessPluggedInChangedEvent;
+
+        @SuppressWarnings("deprecation")
+        public IsPluggedInReceiver(@NonNull final AudioManager audioManager) {
+            isWiredPluggedInChangedEvent = BehaviorSubject.create(audioManager.isWiredHeadsetOn());
+            isWirelessPluggedInChangedEvent = BehaviorSubject.create(audioManager.isBluetoothA2dpOn());
+        }
 
         @Override
         public void onReceive(final Context context, final Intent intent) {
-            if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction())) {
-                isPluggedInChangedEvent.onNext(intent.getIntExtra("state", 0) != 0);
+            if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction()) && !isInitialStickyBroadcast()) {
+                isWiredPluggedInChangedEvent.onNext(intent.getIntExtra("state", 0) != 0);
             }
-            if (BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(intent.getAction())) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB &&
+                    BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(intent.getAction())) {
                 final int bluetoothState = intent.getIntExtra(BluetoothA2dp.EXTRA_STATE, BluetoothA2dp.STATE_DISCONNECTED);
                 switch (bluetoothState) {
                     case BluetoothA2dp.STATE_DISCONNECTED:
-                        isPluggedInChangedEvent.onNext(false);
+                        isWirelessPluggedInChangedEvent.onNext(false);
                         break;
                     case BluetoothA2dp.STATE_CONNECTED:
-                        isPluggedInChangedEvent.onNext(true);
+                        isWirelessPluggedInChangedEvent.onNext(true);
                         break;
                     default:
                         break;
