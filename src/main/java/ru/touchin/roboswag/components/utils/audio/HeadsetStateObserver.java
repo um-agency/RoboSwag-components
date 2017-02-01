@@ -32,7 +32,7 @@ import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 02/11/2015.
- * Simple observer of wired or wireless (bluetooth A2DP) headsets state (plugged in or not).
+ * Simple observer of wired or wireless (bluetooth A2DP) headsets state (connected or not).
  * <br><font color="yellow"> You require android.permission.BLUETOOTH and API level >= 11 if want to observe wireless headset state </font>
  */
 public final class HeadsetStateObserver {
@@ -40,68 +40,78 @@ public final class HeadsetStateObserver {
     @NonNull
     private final AudioManager audioManager;
     @NonNull
-    private final Observable<Boolean> isPluggedInObservable;
+    private final Observable<Boolean> isConnectedObservable;
 
     public HeadsetStateObserver(@NonNull final Context context) {
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        isPluggedInObservable = Observable
-                .<IsPluggedInReceiver>create(subscriber -> {
-                    subscriber.onNext(new IsPluggedInReceiver(audioManager));
+        isConnectedObservable = Observable
+                .<IsConnectedReceiver>create(subscriber -> {
+                    subscriber.onNext(new IsConnectedReceiver(audioManager));
                     subscriber.onCompleted();
                 })
-                .switchMap(isPluggedInReceiver -> Observable.combineLatest(isPluggedInReceiver.isWiredPluggedInChangedEvent,
-                        isPluggedInReceiver.isWirelessPluggedInChangedEvent,
-                        (isWiredPluggedIn, isWirelessPluggedIn) -> isWiredPluggedIn || isWirelessPluggedIn)
+                .switchMap(isConnectedReceiver -> Observable.combineLatest(isConnectedReceiver.isWiredConnectedChangedEvent,
+                        isConnectedReceiver.isWirelessConnectedChangedEvent,
+                        (isWiredConnected, isWirelessConnected) -> isWiredConnected || isWirelessConnected)
                         .distinctUntilChanged()
                         .doOnSubscribe(() -> {
                             final IntentFilter headsetStateIntentFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
                                 headsetStateIntentFilter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
                             }
-                            context.registerReceiver(isPluggedInReceiver, headsetStateIntentFilter);
+                            context.registerReceiver(isConnectedReceiver, headsetStateIntentFilter);
                         })
-                        .doOnUnsubscribe(() -> context.unregisterReceiver(isPluggedInReceiver)))
+                        .doOnUnsubscribe(() -> context.unregisterReceiver(isConnectedReceiver)))
                 .replay(1)
                 .refCount();
     }
 
     /**
-     * Observes plugged in state of headset.
+     * Returns if wired or wireless headset is connected.
      *
-     * @return Returns observable which will provide current plugged in state and any of it's udpdate.
+     * @return True if headset is connected.
      */
-    @NonNull
-    public Observable<Boolean> observeIsPluggedIn() {
-        return isPluggedInObservable;
+    @SuppressWarnings("deprecation")
+    public boolean isConnected() {
+        return audioManager.isWiredHeadsetOn() || audioManager.isBluetoothA2dpOn();
     }
 
-    private static class IsPluggedInReceiver extends BroadcastReceiver {
+    /**
+     * Observes connection state of headset.
+     *
+     * @return Returns observable which will provide current connection state and any of it's udpdate.
+     */
+    @NonNull
+    public Observable<Boolean> observeIsConnected() {
+        return isConnectedObservable;
+    }
+
+    private static class IsConnectedReceiver extends BroadcastReceiver {
 
         @NonNull
-        private final BehaviorSubject<Boolean> isWiredPluggedInChangedEvent;
+        private final BehaviorSubject<Boolean> isWiredConnectedChangedEvent;
         @NonNull
-        private final BehaviorSubject<Boolean> isWirelessPluggedInChangedEvent;
+        private final BehaviorSubject<Boolean> isWirelessConnectedChangedEvent;
 
         @SuppressWarnings("deprecation")
-        public IsPluggedInReceiver(@NonNull final AudioManager audioManager) {
-            isWiredPluggedInChangedEvent = BehaviorSubject.create(audioManager.isWiredHeadsetOn());
-            isWirelessPluggedInChangedEvent = BehaviorSubject.create(audioManager.isBluetoothA2dpOn());
+        public IsConnectedReceiver(@NonNull final AudioManager audioManager) {
+            isWiredConnectedChangedEvent = BehaviorSubject.create(audioManager.isWiredHeadsetOn());
+            isWirelessConnectedChangedEvent = BehaviorSubject.create(audioManager.isBluetoothA2dpOn());
         }
 
         @Override
         public void onReceive(final Context context, final Intent intent) {
             if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction()) && !isInitialStickyBroadcast()) {
-                isWiredPluggedInChangedEvent.onNext(intent.getIntExtra("state", 0) != 0);
+                isWiredConnectedChangedEvent.onNext(intent.getIntExtra("state", 0) != 0);
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB &&
                     BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(intent.getAction())) {
                 final int bluetoothState = intent.getIntExtra(BluetoothA2dp.EXTRA_STATE, BluetoothA2dp.STATE_DISCONNECTED);
                 switch (bluetoothState) {
                     case BluetoothA2dp.STATE_DISCONNECTED:
-                        isWirelessPluggedInChangedEvent.onNext(false);
+                        isWirelessConnectedChangedEvent.onNext(false);
                         break;
                     case BluetoothA2dp.STATE_CONNECTED:
-                        isWirelessPluggedInChangedEvent.onNext(true);
+                        isWirelessConnectedChangedEvent.onNext(true);
                         break;
                     default:
                         break;
