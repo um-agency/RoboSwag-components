@@ -94,6 +94,7 @@ public final class HeadsetStateObserver {
 
         @SuppressWarnings("deprecation")
         public IsConnectedReceiver(@NonNull final AudioManager audioManager) {
+            super();
             isWiredConnectedChangedEvent = BehaviorSubject.create(audioManager.isWiredHeadsetOn());
             isWirelessConnectedChangedEvent = BehaviorSubject.create(audioManager.isBluetoothA2dpOn());
         }
@@ -103,8 +104,8 @@ public final class HeadsetStateObserver {
             if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction()) && !isInitialStickyBroadcast()) {
                 isWiredConnectedChangedEvent.onNext(intent.getIntExtra("state", 0) != 0);
             }
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB &&
-                    BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(intent.getAction())) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB
+                    && BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(intent.getAction())) {
                 final int bluetoothState = intent.getIntExtra(BluetoothA2dp.EXTRA_STATE, BluetoothA2dp.STATE_DISCONNECTED);
                 switch (bluetoothState) {
                     case BluetoothA2dp.STATE_DISCONNECTED:
