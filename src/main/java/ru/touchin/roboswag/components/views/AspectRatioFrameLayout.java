@@ -101,10 +101,10 @@ public class AspectRatioFrameLayout extends FrameLayout {
             wrapToContent = false;
             aspectRatio = DEFAULT_ASPECT_RATIO;
         } else {
-            final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.AspectRatioFrameLayout);
-            wrapToContent = a.getBoolean(R.styleable.AspectRatioFrameLayout_wrapToContent, false);
-            aspectRatio = a.getFloat(R.styleable.AspectRatioFrameLayout_aspectRatio, DEFAULT_ASPECT_RATIO);
-            a.recycle();
+            final TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.AspectRatioFrameLayout);
+            wrapToContent = typedArray.getBoolean(R.styleable.AspectRatioFrameLayout_wrapToContent, false);
+            aspectRatio = typedArray.getFloat(R.styleable.AspectRatioFrameLayout_aspectRatio, DEFAULT_ASPECT_RATIO);
+            typedArray.recycle();
         }
     }
 

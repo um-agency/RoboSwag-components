@@ -131,7 +131,7 @@ public final class AttributesUtils {
             final int result = typedArray.getInt(AttributesUtils.getField(androidRes, "TextView_maxLines"), Integer.MAX_VALUE);
             typedArray.recycle();
             return result;
-        } catch (Exception e) {
+        } catch (final Exception exception) {
             return Integer.MAX_VALUE;
         }
     }
