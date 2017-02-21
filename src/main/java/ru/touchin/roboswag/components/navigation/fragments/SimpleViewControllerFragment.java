@@ -64,6 +64,11 @@ public class SimpleViewControllerFragment<TState extends AbstractState, TActivit
         return viewControllerClass;
     }
 
+    @Override
+    protected boolean isStateRequired() {
+        return true;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {

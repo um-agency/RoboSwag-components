@@ -51,6 +51,11 @@ public class StatelessTargetedViewControllerFragment<TTargetState extends Abstra
         return createState(viewControllerClass, new DefaultState());
     }
 
+    @Override
+    protected boolean isStateRequired() {
+        return false;
+    }
+
     @NonNull
     @Override
     public AbstractState getState() {

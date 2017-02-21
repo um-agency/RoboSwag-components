@@ -56,4 +56,9 @@ public class StatelessViewControllerFragment<TActivity extends ViewControllerAct
         return super.getState();
     }
 
+    @Override
+    protected boolean isStateRequired() {
+        return false;
+    }
+
 }

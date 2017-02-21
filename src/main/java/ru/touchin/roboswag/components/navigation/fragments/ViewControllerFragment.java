@@ -139,6 +139,13 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     public abstract Class<? extends ViewController<TActivity,
             ? extends ViewControllerFragment<TState, TActivity>>> getViewControllerClass();
 
+    /**
+     * Returns if ViewControllerFragment requires state or not.
+     *
+     * @return true if state is required
+     */
+    protected abstract boolean isStateRequired();
+
     @SuppressWarnings("unchecked")
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {
@@ -154,8 +161,8 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
                 state = reserialize(state);
             }
             state.onCreate();
-        } else {
-            Lc.assertion("State is null");
+        } else if (isStateRequired()) {
+            Lc.assertion("State is required and null");
         }
         viewControllerSubscription = Observable
                 .combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(),
