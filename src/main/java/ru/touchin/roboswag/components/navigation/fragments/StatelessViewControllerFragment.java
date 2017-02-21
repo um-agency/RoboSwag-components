@@ -38,6 +38,13 @@ import ru.touchin.roboswag.core.log.Lc;
 public class StatelessViewControllerFragment<TActivity extends ViewControllerActivity<?>>
         extends SimpleViewControllerFragment<AbstractState, TActivity> {
 
+    @NonNull
+    @Override
+    public AbstractState getState() {
+        Lc.assertion("Trying to access to state of stateless fragment of " + getViewControllerClass());
+        return super.getState();
+    }
+
     /**
      * Creates {@link Bundle} which will store state and {@link ViewController}'s class.
      *
@@ -47,13 +54,6 @@ public class StatelessViewControllerFragment<TActivity extends ViewControllerAct
     @NonNull
     public static Bundle createState(@NonNull final Class<? extends ViewController> viewControllerClass) {
         return createState(viewControllerClass, new DefaultState());
-    }
-
-    @NonNull
-    @Override
-    public AbstractState getState() {
-        Lc.assertion("Trying to access to state of stateless fragment of " + getViewControllerClass());
-        return super.getState();
     }
 
 }

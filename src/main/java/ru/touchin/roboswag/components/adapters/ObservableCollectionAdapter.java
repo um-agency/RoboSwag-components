@@ -402,7 +402,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         @SuppressWarnings("PMD.DefaultPackage")
         @Deprecated
         //it is for internal use only
-        private void setAdapter(@Nullable final ObservableCollectionAdapter adapter) {
+        void setAdapter(@Nullable final ObservableCollectionAdapter adapter) {
             this.adapter = adapter;
         }
 
