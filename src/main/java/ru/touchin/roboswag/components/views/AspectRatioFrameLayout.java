@@ -22,6 +22,8 @@ package ru.touchin.roboswag.components.views;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Point;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -43,6 +45,28 @@ public class AspectRatioFrameLayout extends FrameLayout {
 
     private float aspectRatio;
     private boolean wrapToContent;
+
+    public AspectRatioFrameLayout(@NonNull final Context context) {
+        this(context, null);
+    }
+
+    public AspectRatioFrameLayout(@NonNull final Context context, @Nullable final AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
+
+    public AspectRatioFrameLayout(@NonNull final Context context, @Nullable final AttributeSet attrs, final int defStyle) {
+        super(context, attrs, defStyle);
+
+        if (attrs == null) {
+            wrapToContent = false;
+            aspectRatio = DEFAULT_ASPECT_RATIO;
+        } else {
+            final TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.AspectRatioFrameLayout);
+            wrapToContent = typedArray.getBoolean(R.styleable.AspectRatioFrameLayout_wrapToContent, false);
+            aspectRatio = typedArray.getFloat(R.styleable.AspectRatioFrameLayout_aspectRatio, DEFAULT_ASPECT_RATIO);
+            typedArray.recycle();
+        }
+    }
 
     /* Returns aspect ratio of layout */
     public float getAspectRatio() {
@@ -86,28 +110,6 @@ public class AspectRatioFrameLayout extends FrameLayout {
         requestLayout();
     }
 
-    public AspectRatioFrameLayout(final Context context) {
-        this(context, null);
-    }
-
-    public AspectRatioFrameLayout(final Context context, final AttributeSet attrs) {
-        this(context, attrs, 0);
-    }
-
-    public AspectRatioFrameLayout(final Context context, final AttributeSet attrs, final int defStyle) {
-        super(context, attrs, defStyle);
-
-        if (attrs == null) {
-            wrapToContent = false;
-            aspectRatio = DEFAULT_ASPECT_RATIO;
-        } else {
-            final TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.AspectRatioFrameLayout);
-            wrapToContent = typedArray.getBoolean(R.styleable.AspectRatioFrameLayout_wrapToContent, false);
-            aspectRatio = typedArray.getFloat(R.styleable.AspectRatioFrameLayout_aspectRatio, DEFAULT_ASPECT_RATIO);
-            typedArray.recycle();
-        }
-    }
-
     private void setMeasuredDimensionWithAspectOfLesser(final int measuredWidth, final int measuredHeight) {
         final float heightBasedOnMw = measuredWidth / aspectRatio;
         if (heightBasedOnMw > measuredHeight) {
@@ -126,6 +128,7 @@ public class AspectRatioFrameLayout extends FrameLayout {
         }
     }
 
+    @NonNull
     private Point measureWrapChildren(final int widthMeasureSpec, final int heightMeasureSpec) {
         final Point result = new Point();
         for (int i = 0; i < getChildCount(); i++) {

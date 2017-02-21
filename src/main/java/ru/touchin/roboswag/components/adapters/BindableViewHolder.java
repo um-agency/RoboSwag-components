@@ -25,6 +25,7 @@ import android.support.annotation.ColorRes;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
@@ -88,7 +89,7 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
      * @return String The string data associated with the resource.
      */
     @NonNull
-    public String getString(@StringRes final int resId, final Object... formatArgs) {
+    public String getString(@StringRes final int resId, @Nullable final Object... formatArgs) {
         return itemView.getResources().getString(resId, formatArgs);
     }
 

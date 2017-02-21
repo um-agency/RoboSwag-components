@@ -223,11 +223,14 @@ public final class PreferenceUtils {
     public static <T extends Enum<T>> NonNullSafeStorable<String, T, String> enumStorable(@NonNull final String name,
                                                                                           @NonNull final Class<T> enumClass,
                                                                                           @NonNull final SharedPreferences preferences,
-                                                                                          final T defaultValue) {
+                                                                                          @NonNull final T defaultValue) {
         return new Storable.Builder<String, T, String>(name, enumClass)
                 .setSafeStore(String.class, new PreferenceStore<>(preferences), new EnumToStringConverter<>())
                 .setDefaultValue(defaultValue)
                 .build();
+    }
+
+    private PreferenceUtils() {
     }
 
     private static class EnumToStringConverter<T extends Enum<T>> implements SafeConverter<T, String> {
@@ -243,9 +246,6 @@ public final class PreferenceUtils {
         public T toObject(@NonNull final Class<T> objectClass, @NonNull final Class<String> stringClass, @Nullable final String stringObject) {
             return stringObject != null ? Enum.valueOf(objectClass, stringObject) : null;
         }
-    }
-
-    private PreferenceUtils() {
     }
 
 }

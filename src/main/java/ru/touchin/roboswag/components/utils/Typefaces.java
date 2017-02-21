@@ -88,7 +88,7 @@ public final class Typefaces {
      */
     @NonNull
     public static Typeface getFromAttributes(@NonNull final Context context, @NonNull final AttributeSet attrs,
-                                             @StyleableRes final int[] styleableId, @StyleableRes final int attributeId) {
+                                             @NonNull @StyleableRes final int[] styleableId, @StyleableRes final int attributeId) {
         final TypedArray typedArray = context.obtainStyledAttributes(attrs, styleableId);
         final String customTypeface = typedArray.getString(attributeId);
         typedArray.recycle();
