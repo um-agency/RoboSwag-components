@@ -194,19 +194,19 @@ public class TypefacedEditText extends AppCompatEditText {
         addTextChangedListener(new TextWatcher() {
 
             @Override
-            public void beforeTextChanged(final CharSequence oldText, final int start, final int count, final int after) {
+            public void beforeTextChanged(@NonNull final CharSequence oldText, final int start, final int count, final int after) {
                 //do nothing
             }
 
             @Override
-            public void onTextChanged(final CharSequence inputText, final int start, final int before, final int count) {
+            public void onTextChanged(@NonNull final CharSequence inputText, final int start, final int before, final int count) {
                 if (onTextChangedListener != null) {
                     onTextChangedListener.onTextChanged(inputText);
                 }
             }
 
             @Override
-            public void afterTextChanged(final Editable editable) {
+            public void afterTextChanged(@NonNull final Editable editable) {
                 //do nothing
             }
 
@@ -292,7 +292,7 @@ public class TypefacedEditText extends AppCompatEditText {
     }
 
     @Override
-    public void setEllipsize(final TextUtils.TruncateAt ellipsis) {
+    public void setEllipsize(@NonNull final TextUtils.TruncateAt ellipsis) {
         if (!constructed) {
             return;
         }

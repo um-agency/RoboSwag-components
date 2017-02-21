@@ -110,7 +110,9 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         return result;
     }
 
+    @NonNull
     private final BehaviorSubject<TActivity> activitySubject = BehaviorSubject.create();
+    @NonNull
     private final BehaviorSubject<Pair<PlaceholderView, Bundle>> viewSubject = BehaviorSubject.create();
     @Nullable
     private ViewController viewController;
@@ -123,6 +125,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
      *
      * @return Object represents state.
      */
+    @NonNull
     public TState getState() {
         return state;
     }
@@ -151,6 +154,8 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
                 state = reserialize(state);
             }
             state.onCreate();
+        } else {
+            Lc.assertion("State is null");
         }
         viewControllerSubscription = Observable
                 .combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(),

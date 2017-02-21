@@ -32,6 +32,7 @@ import android.graphics.drawable.Drawable;
 import android.os.SystemClock;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import ru.touchin.roboswag.components.utils.UiUtils;
 
@@ -133,7 +134,7 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
     }
 
     @Override
-    protected void onBoundsChange(final Rect bounds) {
+    protected void onBoundsChange(@NonNull final Rect bounds) {
         super.onBoundsChange(bounds);
         updateArcBounds();
     }
@@ -171,7 +172,7 @@ public class MaterialProgressDrawable extends Drawable implements Runnable, Anim
     }
 
     @Override
-    public void setColorFilter(final ColorFilter colorFilter) {
+    public void setColorFilter(@Nullable final ColorFilter colorFilter) {
         paint.setColorFilter(colorFilter);
         invalidateSelf();
     }

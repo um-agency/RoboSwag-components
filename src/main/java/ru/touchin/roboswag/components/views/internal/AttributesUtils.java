@@ -50,6 +50,7 @@ public final class AttributesUtils {
      * @throws NoSuchFieldException   Throws on reflection call;
      * @throws IllegalAccessException Throws on reflection call.
      */
+    @NonNull
     @SuppressWarnings("unchecked")
     public static <T> T getField(@NonNull final Class resourcesClass, @NonNull final String fieldName)
             throws NoSuchFieldException, IllegalAccessException {
