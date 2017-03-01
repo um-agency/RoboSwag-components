@@ -224,7 +224,7 @@ public final class PreferenceUtils {
     public static <T extends Enum<T>> NonNullStorable<String, T, String> enumStorable(@NonNull final String name,
                                                                                       @NonNull final Class<T> enumClass,
                                                                                       @NonNull final SharedPreferences preferences,
-                                                                                      final T defaultValue) {
+                                                                                      @NonNull final T defaultValue) {
         return new Storable.Builder<String, T, String>(name, enumClass,
                 String.class, new PreferenceStore<>(preferences), new EnumToStringConverter<>())
                 .setDefaultValue(defaultValue)

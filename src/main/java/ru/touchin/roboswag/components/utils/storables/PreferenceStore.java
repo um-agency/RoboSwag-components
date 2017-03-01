@@ -39,6 +39,22 @@ import rx.Single;
  */
 public class PreferenceStore<T> implements Store<String, T> {
 
+    private static boolean isTypeBoolean(@NonNull final Type type) {
+        return type.equals(Boolean.class) || type.equals(boolean.class);
+    }
+
+    private static boolean isTypeInteger(@NonNull final Type type) {
+        return type.equals(Integer.class) || type.equals(int.class);
+    }
+
+    private static boolean isTypeFloat(@NonNull final Type type) {
+        return type.equals(Float.class) || type.equals(float.class);
+    }
+
+    private static boolean isTypeLong(@NonNull final Type type) {
+        return type.equals(Long.class) || type.equals(long.class);
+    }
+
     @NonNull
     private final SharedPreferences preferences;
 
@@ -61,15 +77,15 @@ public class PreferenceStore<T> implements Store<String, T> {
                 return;
             }
 
-            if (storeObjectType.equals(Boolean.class) || storeObjectType.equals(boolean.class)) {
+            if (isTypeBoolean(storeObjectType)) {
                 preferences.edit().putBoolean(key, (Boolean) storeObject).apply();
             } else if (storeObjectType.equals(String.class)) {
                 preferences.edit().putString(key, (String) storeObject).apply();
-            } else if (storeObjectType.equals(Integer.class) || storeObjectType.equals(int.class)) {
+            } else if (isTypeInteger(storeObjectType)) {
                 preferences.edit().putInt(key, (Integer) storeObject).apply();
-            } else if (storeObjectType.equals(Long.class) || storeObjectType.equals(long.class)) {
+            } else if (isTypeLong(storeObjectType)) {
                 preferences.edit().putLong(key, (Long) storeObject).apply();
-            } else if (storeObjectType.equals(Float.class) || storeObjectType.equals(float.class)) {
+            } else if (isTypeFloat(storeObjectType)) {
                 preferences.edit().putFloat(key, (Float) storeObject).apply();
             } else {
                 Lc.assertion("Unsupported type of object " + storeObjectType);
@@ -87,15 +103,15 @@ public class PreferenceStore<T> implements Store<String, T> {
                 return null;
             }
 
-            if (storeObjectType.equals(Boolean.class) || storeObjectType.equals(boolean.class)) {
+            if (isTypeBoolean(storeObjectType)) {
                 return (T) ((Boolean) preferences.getBoolean(key, false));
             } else if (storeObjectType.equals(String.class)) {
                 return (T) (preferences.getString(key, null));
-            } else if (storeObjectType.equals(Integer.class) || storeObjectType.equals(int.class)) {
+            } else if (isTypeInteger(storeObjectType)) {
                 return (T) ((Integer) preferences.getInt(key, 0));
-            } else if (storeObjectType.equals(Long.class) || storeObjectType.equals(long.class)) {
+            } else if (isTypeLong(storeObjectType)) {
                 return (T) ((Long) preferences.getLong(key, 0L));
-            } else if (storeObjectType.equals(Float.class) || storeObjectType.equals(float.class)) {
+            } else if (isTypeFloat(storeObjectType)) {
                 return (T) ((Float) preferences.getFloat(key, 0f));
             }
             Lc.assertion("Unsupported type of object " + storeObjectType);
