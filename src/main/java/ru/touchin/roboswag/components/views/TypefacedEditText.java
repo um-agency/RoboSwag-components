@@ -309,6 +309,8 @@ public class TypefacedEditText extends AppCompatEditText {
     @Override
     public void setInputType(final int type) {
         if (AttributesUtils.isNumberInputType(type)) {
+            Lc.assertion(new IllegalStateException(AttributesUtils.viewError(this,
+                    "Do not specify number InputType for EditText, use phone instead")));
             super.setInputType(InputType.TYPE_CLASS_PHONE);
             return;
         }
