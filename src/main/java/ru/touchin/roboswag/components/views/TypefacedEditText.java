@@ -25,6 +25,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.AppCompatEditText;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.SingleLineTransformationMethod;
@@ -308,8 +309,8 @@ public class TypefacedEditText extends AppCompatEditText {
     @Override
     public void setInputType(final int type) {
         if (AttributesUtils.isNumberInputType(type)) {
-            Lc.assertion(new IllegalStateException(AttributesUtils.viewError(this,
-                    "Do not specify number InputType for EditText, use phone instead")));
+            super.setInputType(InputType.TYPE_CLASS_PHONE);
+            return;
         }
         super.setInputType(type);
     }
