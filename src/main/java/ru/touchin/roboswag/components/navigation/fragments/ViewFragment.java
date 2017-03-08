@@ -134,6 +134,8 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
      * @param activity Activity which fragment attached to.
      */
     @CallSuper
+    @SuppressWarnings("RestrictedApi")
+    //RestrictedApi: we need isMenuVisible() to check analytics rightly!
     protected void onStart(@NonNull final View view, @NonNull final TActivity activity) {
         if (getParentFragment() instanceof OnFragmentStartedListener) {
             ((OnFragmentStartedListener) getParentFragment()).onFragmentStarted(this);

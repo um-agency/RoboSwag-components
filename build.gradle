@@ -2,8 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'me.tatarka.retrolambda'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "24.0.3"
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -12,15 +12,15 @@ android {
 
     defaultConfig {
         minSdkVersion 9
-        targetSdkVersion 24
+        targetSdkVersion 25
     }
 }
 
 dependencies {
     compile project(':libraries:core')
 
-    provided 'com.android.support:appcompat-v7:24.2.1'
-    provided 'com.android.support:recyclerview-v7:24.2.1'
+    provided 'com.android.support:appcompat-v7:25.2.0'
+    provided 'com.android.support:recyclerview-v7:25.2.0'
 
     provided 'io.reactivex:rxandroid:1.2.1'
 }
