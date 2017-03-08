@@ -25,6 +25,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.AppCompatEditText;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.method.SingleLineTransformationMethod;
@@ -160,6 +161,12 @@ public class TypefacedEditText extends AppCompatEditText {
                 "textSize required parameter. If it's dynamic then use '0sp'");
         AttributesUtils.checkAttribute(typedArray, errors, AttributesUtils.getField(androidRes, "TextView_inputType"), true,
                 "inputType required parameter");
+
+        final int inputType = typedArray.getInt(AttributesUtils.getField(androidRes, "TextView_inputType"), -1);
+        if (AttributesUtils.isNumberInputType(inputType)) {
+            errors.add("use inputType phone instead of number");
+        }
+
         AttributesUtils.checkAttribute(typedArray, errors, AttributesUtils.getField(androidRes, "TextView_imeOptions"), true,
                 "imeOptions required parameter");
     }
@@ -297,6 +304,17 @@ public class TypefacedEditText extends AppCompatEditText {
             return;
         }
         Lc.assertion(new IllegalStateException(AttributesUtils.viewError(this, "Do not specify ellipsize for EditText")));
+    }
+
+    @Override
+    public void setInputType(final int type) {
+        if (AttributesUtils.isNumberInputType(type)) {
+            Lc.assertion(new IllegalStateException(AttributesUtils.viewError(this,
+                    "Do not specify number InputType for EditText, use phone instead")));
+            super.setInputType(InputType.TYPE_CLASS_PHONE);
+            return;
+        }
+        super.setInputType(type);
     }
 
     /**
