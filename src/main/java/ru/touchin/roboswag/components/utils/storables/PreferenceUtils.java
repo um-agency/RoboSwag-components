@@ -238,7 +238,7 @@ public final class PreferenceUtils {
 
         @Nullable
         @Override
-        public String toStoreObject(@NonNull final Type objectClass, @NonNull final Type stringClass, @Nullable final T object)
+        public String toStoreObject(@NonNull final Type objectType, @NonNull final Type storeObjectType, @Nullable final T object)
                 throws ConversionException {
             return object != null ? object.name() : null;
         }
@@ -247,12 +247,12 @@ public final class PreferenceUtils {
         @Override
         @SuppressWarnings("unchecked")
         //unchecked: we checked it before cast
-        public T toObject(@NonNull final Type objectClass, @NonNull final Type stringClass, @Nullable final String stringObject)
+        public T toObject(@NonNull final Type objectType, @NonNull final Type storeObjectType, @Nullable final String stringObject)
                 throws ConversionException {
-            if (!(objectClass instanceof Class) || !((Class) objectClass).isEnum()) {
-                throw new ConversionException(String.format("Type %s is not enum class", objectClass));
+            if (!(objectType instanceof Class) || !((Class) objectType).isEnum()) {
+                throw new ConversionException(String.format("Type %s is not enum class", objectType));
             }
-            return stringObject != null ? Enum.valueOf((Class<T>) objectClass, stringObject) : null;
+            return stringObject != null ? Enum.valueOf((Class<T>) objectType, stringObject) : null;
         }
     }
 
