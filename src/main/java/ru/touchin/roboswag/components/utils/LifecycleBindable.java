@@ -21,7 +21,9 @@ package ru.touchin.roboswag.components.utils;
 
 import android.support.annotation.NonNull;
 
+import rx.Completable;
 import rx.Observable;
+import rx.Single;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.functions.Action0;
@@ -39,7 +41,7 @@ import rx.functions.Func1;
 public interface LifecycleBindable {
 
     /**
-     * Method should be used to subscribe to observable while this element is in started state.
+     * Method should be used to subscribe to the observable while this element is in started state.
      * Passed observable should NOT emit errors. It is illegal as in that case it stops emitting items and binding lost after error.
      * If you want to process errors return something via {@link Observable#onErrorReturn(Func1)} method and process in onNextAction.
      *
@@ -53,7 +55,7 @@ public interface LifecycleBindable {
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onStop.
-     * It is automatically subscribing to observable.
+     * It is automatically subscribing to the observable.
      * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
      * Don't forget to process errors if observable can emit them.
      *
@@ -66,7 +68,7 @@ public interface LifecycleBindable {
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onStop.
-     * It is automatically subscribing to observable and calls onNextAction on every emitted item.
+     * It is automatically subscribing to the observable and calls onNextAction on every emitted item.
      * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
      * Don't forget to process errors if observable can emit them.
      *
@@ -80,7 +82,7 @@ public interface LifecycleBindable {
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onStop.
-     * It is automatically subscribing to observable and calls onNextAction, onErrorAction on observable events.
+     * It is automatically subscribing to the observable and calls onNextAction and onErrorAction on observable events.
      * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
      * Don't forget to process errors if observable can emit them.
      *
@@ -95,7 +97,7 @@ public interface LifecycleBindable {
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onStop.
-     * It is automatically subscribing to observable and calls onNextAction, onErrorAction, onCompletedAction on observable events.
+     * It is automatically subscribing to the observable and calls onNextAction, onErrorAction and onCompletedAction on observable events.
      * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
      * Don't forget to process errors if observable can emit them.
      *
@@ -104,54 +106,135 @@ public interface LifecycleBindable {
      * @param onErrorAction     Action which will raise on every {@link Subscriber#onError(Throwable)} throwable;
      * @param onCompletedAction Action which will raise at {@link Subscriber#onCompleted()} on completion of observable;
      * @param <T>               Type of emitted by observable items;
-     * @return {@link Observable} which is wrapping source observable to unsubscribe from it onStop.
+     * @return {@link Subscription} which is wrapping source observable to unsubscribe from it onStop.
      */
     @NonNull
     <T> Subscription untilStop(@NonNull Observable<T> observable,
                                @NonNull Action1<T> onNextAction, @NonNull Action1<Throwable> onErrorAction, @NonNull Action0 onCompletedAction);
 
     /**
+     * Method should be used to guarantee that single won't be subscribed after onStop.
+     * It is automatically subscribing to the single.
+     * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
+     * Don't forget to process errors if single can emit them.
+     *
+     * @param single {@link Single} to subscribe until onStop;
+     * @param <T>    Type of emitted by single item;
+     * @return {@link Subscription} which will unsubscribes from single onStop.
+     */
+    @NonNull
+    <T> Subscription untilStop(@NonNull Single<T> single);
+
+    /**
+     * Method should be used to guarantee that single won't be subscribed after onStop.
+     * It is automatically subscribing to the single and calls onSuccessAction on the emitted item.
+     * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
+     * Don't forget to process errors if single can emit them.
+     *
+     * @param single          {@link Single} to subscribe until onStop;
+     * @param onSuccessAction Action which will raise on every {@link rx.SingleSubscriber#onSuccess(Object)} item;
+     * @param <T>             Type of emitted by single item;
+     * @return {@link Subscription} which will unsubscribes from single onStop.
+     */
+    @NonNull
+    <T> Subscription untilStop(@NonNull Single<T> single, @NonNull Action1<T> onSuccessAction);
+
+    /**
+     * Method should be used to guarantee that single won't be subscribed after onStop.
+     * It is automatically subscribing to the single and calls onSuccessAction and onErrorAction on single events.
+     * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
+     * Don't forget to process errors if single can emit them.
+     *
+     * @param single          {@link Single} to subscribe until onStop;
+     * @param onSuccessAction Action which will raise on every {@link rx.SingleSubscriber#onSuccess(Object)} item;
+     * @param onErrorAction   Action which will raise on every {@link rx.SingleSubscriber#onError(Throwable)} throwable;
+     * @param <T>             Type of emitted by observable items;
+     * @return {@link Subscription} which is wrapping source single to unsubscribe from it onStop.
+     */
+    @NonNull
+    <T> Subscription untilStop(@NonNull Single<T> single, @NonNull Action1<T> onSuccessAction, @NonNull Action1<Throwable> onErrorAction);
+
+    /**
+     * Method should be used to guarantee that completable won't be subscribed after onStop.
+     * It is automatically subscribing to the completable.
+     * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
+     * Don't forget to process errors if completable can emit them.
+     *
+     * @param completable {@link Completable} to subscribe until onStop;
+     * @return {@link Subscription} which will unsubscribes from completable onStop.
+     */
+    @NonNull
+    Subscription untilStop(@NonNull Completable completable);
+
+    /**
+     * Method should be used to guarantee that completable won't be subscribed after onStop.
+     * It is automatically subscribing to the completable and calls onCompletedAction on completable item.
+     * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
+     * Don't forget to process errors if completable can emit them.
+     *
+     * @param completable       {@link Completable} to subscribe until onStop;
+     * @param onCompletedAction Action which will raise at {@link rx.Completable.CompletableSubscriber#onCompleted()} on completion of observable;
+     * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onStop.
+     */
+    @NonNull
+    Subscription untilStop(@NonNull Completable completable, @NonNull Action0 onCompletedAction);
+
+    /**
+     * Method should be used to guarantee that completable won't be subscribed after onStop.
+     * It is automatically subscribing to the completable and calls onCompletedAction and onErrorAction on completable item.
+     * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
+     * Don't forget to process errors if completable can emit them.
+     *
+     * @param completable       {@link Completable} to subscribe until onStop;
+     * @param onCompletedAction Action which will raise at {@link rx.Completable.CompletableSubscriber#onCompleted()} on completion of observable;
+     * @param onErrorAction     Action which will raise on every {@link rx.Completable.CompletableSubscriber#onError(Throwable)} throwable;
+     * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onStop.
+     */
+    @NonNull
+    Subscription untilStop(@NonNull Completable completable, @NonNull Action0 onCompletedAction, @NonNull Action1<Throwable> onErrorAction);
+
+    /**
      * Method should be used to guarantee that observable won't be subscribed after onDestroy.
-     * It is automatically subscribing to observable.
+     * It is automatically subscribing to the observable.
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable {@link Observable} to subscribe until onDestroy;
      * @param <T>        Type of emitted by observable items;
-     * @return {@link Observable} which is wrapping source observable to unsubscribe from it onDestroy.
+     * @return {@link Subscription} which is wrapping source observable to unsubscribe from it onDestroy.
      */
     @NonNull
     <T> Subscription untilDestroy(@NonNull Observable<T> observable);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onDestroy.
-     * It is automatically subscribing to observable and calls onNextAction on every emitted item.
+     * It is automatically subscribing to the observable and calls onNextAction on every emitted item.
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable   {@link Observable} to subscribe until onDestroy;
      * @param onNextAction Action which will raise on every {@link Subscriber#onNext(Object)} item;
      * @param <T>          Type of emitted by observable items;
-     * @return {@link Observable} which is wrapping source observable to unsubscribe from it onDestroy.
+     * @return {@link Subscription} which is wrapping source observable to unsubscribe from it onDestroy.
      */
     @NonNull
     <T> Subscription untilDestroy(@NonNull Observable<T> observable, @NonNull Action1<T> onNextAction);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onDestroy.
-     * It is automatically subscribing to observable and calls onNextAction, onErrorAction on observable events.
+     * It is automatically subscribing to the observable and calls onNextAction and onErrorAction on observable events.
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable    {@link Observable} to subscribe until onDestroy;
      * @param onNextAction  Action which will raise on every {@link Subscriber#onNext(Object)} item;
      * @param onErrorAction Action which will raise on every {@link Subscriber#onError(Throwable)} throwable;
      * @param <T>           Type of emitted by observable items;
-     * @return {@link Observable} which is wrapping source observable to unsubscribe from it onDestroy.
+     * @return {@link Subscription} which is wrapping source observable to unsubscribe from it onDestroy.
      */
     @NonNull
     <T> Subscription untilDestroy(@NonNull Observable<T> observable, @NonNull Action1<T> onNextAction, @NonNull Action1<Throwable> onErrorAction);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onDestroy.
-     * It is automatically subscribing to observable and calls onNextAction, onErrorAction, onCompletedAction on observable events.
+     * It is automatically subscribing to the observable and calls onNextAction, onErrorAction and onCompletedAction on observable events.
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable        {@link Observable} to subscribe until onDestroy;
@@ -159,10 +242,85 @@ public interface LifecycleBindable {
      * @param onErrorAction     Action which will raise on every {@link Subscriber#onError(Throwable)} throwable;
      * @param onCompletedAction Action which will raise at {@link Subscriber#onCompleted()} on completion of observable;
      * @param <T>               Type of emitted by observable items;
-     * @return {@link Observable} which is wrapping source observable to unsubscribe from it onDestroy.
+     * @return {@link Subscription} which is wrapping source observable to unsubscribe from it onDestroy.
      */
     @NonNull
     <T> Subscription untilDestroy(@NonNull Observable<T> observable,
                                   @NonNull Action1<T> onNextAction, @NonNull Action1<Throwable> onErrorAction, @NonNull Action0 onCompletedAction);
+
+    /**
+     * Method should be used to guarantee that single won't be subscribed after onDestroy.
+     * It is automatically subscribing to the single.
+     * Don't forget to process errors if single can emit them.
+     *
+     * @param single {@link Single} to subscribe until onDestroy;
+     * @param <T>    Type of emitted by single items;
+     * @return {@link Subscription} which is wrapping source single to unsubscribe from it onDestroy.
+     */
+    @NonNull
+    <T> Subscription untilDestroy(@NonNull Single<T> single);
+
+    /**
+     * Method should be used to guarantee that single won't be subscribed after onDestroy.
+     * It is automatically subscribing to the single and calls onSuccessAction on every emitted item.
+     * Don't forget to process errors if single can emit them.
+     *
+     * @param single          {@link Single} to subscribe until onDestroy;
+     * @param onSuccessAction Action which will raise on every {@link rx.SingleSubscriber#onSuccess(Object)} item;
+     * @param <T>             Type of emitted by single items;
+     * @return {@link Subscription} which is wrapping source single to unsubscribe from it onDestroy.
+     */
+    @NonNull
+    <T> Subscription untilDestroy(@NonNull Single<T> single, @NonNull Action1<T> onSuccessAction);
+
+    /**
+     * Method should be used to guarantee that single won't be subscribed after onDestroy.
+     * It is automatically subscribing to the single and calls onSuccessAction and onErrorAction on single events.
+     * Don't forget to process errors if single can emit them.
+     *
+     * @param single          {@link Single} to subscribe until onDestroy;
+     * @param onSuccessAction Action which will raise on every {@link rx.SingleSubscriber#onSuccess(Object)} item;
+     * @param onErrorAction   Action which will raise on every {@link rx.SingleSubscriber#onError(Throwable)} throwable;
+     * @param <T>             Type of emitted by single items;
+     * @return {@link Subscription} which is wrapping source single to unsubscribe from it onDestroy.
+     */
+    @NonNull
+    <T> Subscription untilDestroy(@NonNull Single<T> single, @NonNull Action1<T> onSuccessAction, @NonNull Action1<Throwable> onErrorAction);
+
+    /**
+     * Method should be used to guarantee that completable won't be subscribed after onDestroy.
+     * It is automatically subscribing to the completable.
+     * Don't forget to process errors if completable can emit them.
+     *
+     * @param completable {@link Completable} to subscribe until onDestroy;
+     * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onDestroy.
+     */
+    @NonNull
+    Subscription untilDestroy(@NonNull Completable completable);
+
+    /**
+     * Method should be used to guarantee that completable won't be subscribed after onDestroy.
+     * It is automatically subscribing to the completable and calls onCompletedAction on completable item.
+     * Don't forget to process errors if single can emit them.
+     *
+     * @param completable       {@link Completable} to subscribe until onDestroy;
+     * @param onCompletedAction Action which will raise on every {@link Completable.CompletableSubscriber#onCompleted()} item;
+     * @return {@link Subscription} which is wrapping source single to unsubscribe from it onDestroy.
+     */
+    @NonNull
+    Subscription untilDestroy(@NonNull Completable completable, @NonNull Action0 onCompletedAction);
+
+    /**
+     * Method should be used to guarantee that completable won't be subscribed after onDestroy.
+     * It is automatically subscribing to the completable and calls onCompletedAction and onErrorAction on completable events.
+     * Don't forget to process errors if completable can emit them.
+     *
+     * @param completable       {@link Completable} to subscribe until onDestroy;
+     * @param onCompletedAction Action which will raise on every {@link Completable.CompletableSubscriber#onCompleted()} item;
+     * @param onErrorAction     Action which will raise on every {@link rx.Completable.CompletableSubscriber#onError(Throwable)} throwable;
+     * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onDestroy.
+     */
+    @NonNull
+    Subscription untilDestroy(@NonNull Completable completable, @NonNull Action0 onCompletedAction, @NonNull Action1<Throwable> onErrorAction);
 
 }
