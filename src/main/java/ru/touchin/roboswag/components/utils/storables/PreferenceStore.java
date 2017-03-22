@@ -23,8 +23,12 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.lang.reflect.Type;
+
 import ru.touchin.roboswag.core.log.Lc;
-import ru.touchin.roboswag.core.observables.storable.SafeStore;
+import ru.touchin.roboswag.core.observables.storable.Store;
+import rx.Completable;
+import rx.Single;
 
 
 /**
@@ -33,7 +37,23 @@ import ru.touchin.roboswag.core.observables.storable.SafeStore;
  *
  * @param <T> Type of storable. Could be Boolean, Integer, Long, Float or String.
  */
-public class PreferenceStore<T> implements SafeStore<String, T> {
+public class PreferenceStore<T> implements Store<String, T> {
+
+    private static boolean isTypeBoolean(@NonNull final Type type) {
+        return type.equals(Boolean.class) || type.equals(boolean.class);
+    }
+
+    private static boolean isTypeInteger(@NonNull final Type type) {
+        return type.equals(Integer.class) || type.equals(int.class);
+    }
+
+    private static boolean isTypeFloat(@NonNull final Type type) {
+        return type.equals(Float.class) || type.equals(float.class);
+    }
+
+    private static boolean isTypeLong(@NonNull final Type type) {
+        return type.equals(Long.class) || type.equals(long.class);
+    }
 
     @NonNull
     private final SharedPreferences preferences;
@@ -42,54 +62,61 @@ public class PreferenceStore<T> implements SafeStore<String, T> {
         this.preferences = preferences;
     }
 
+    @NonNull
     @Override
-    public boolean contains(@NonNull final String key) {
-        return preferences.contains(key);
+    public Single<Boolean> contains(@NonNull final String key) {
+        return Single.fromCallable(() -> preferences.contains(key));
     }
 
+    @NonNull
     @Override
-    public void storeObject(@NonNull final Class<T> storeObjectClass, @NonNull final String key, @Nullable final T storeObject) {
-        if (storeObject == null) {
-            preferences.edit().remove(key).apply();
-            return;
-        }
+    public Completable storeObject(@NonNull final Type storeObjectType, @NonNull final String key, @Nullable final T storeObject) {
+        return Completable.fromAction(() -> {
+            if (storeObject == null) {
+                preferences.edit().remove(key).apply();
+                return;
+            }
 
-        if (storeObjectClass.equals(Boolean.class)) {
-            preferences.edit().putBoolean(key, (Boolean) storeObject).apply();
-        } else if (storeObjectClass.equals(String.class)) {
-            preferences.edit().putString(key, (String) storeObject).apply();
-        } else if (storeObjectClass.equals(Integer.class)) {
-            preferences.edit().putInt(key, (Integer) storeObject).apply();
-        } else if (storeObjectClass.equals(Long.class)) {
-            preferences.edit().putLong(key, (Long) storeObject).apply();
-        } else if (storeObjectClass.equals(Float.class)) {
-            preferences.edit().putFloat(key, (Float) storeObject).apply();
-        } else {
-            Lc.assertion("Unsupported type of object " + storeObjectClass);
-        }
+            if (isTypeBoolean(storeObjectType)) {
+                preferences.edit().putBoolean(key, (Boolean) storeObject).apply();
+            } else if (storeObjectType.equals(String.class)) {
+                preferences.edit().putString(key, (String) storeObject).apply();
+            } else if (isTypeInteger(storeObjectType)) {
+                preferences.edit().putInt(key, (Integer) storeObject).apply();
+            } else if (isTypeLong(storeObjectType)) {
+                preferences.edit().putLong(key, (Long) storeObject).apply();
+            } else if (isTypeFloat(storeObjectType)) {
+                preferences.edit().putFloat(key, (Float) storeObject).apply();
+            } else {
+                Lc.assertion("Unsupported type of object " + storeObjectType);
+            }
+        });
     }
 
-    @Nullable
+    @NonNull
     @Override
     @SuppressWarnings("unchecked")
-    public T loadObject(@NonNull final Class<T> storeObjectClass, @NonNull final String key) {
-        if (!contains(key)) {
-            return null;
-        }
+    //unchecked: we checked class in if-else statements
+    public Single<T> loadObject(@NonNull final Type storeObjectType, @NonNull final String key) {
+        return Single.fromCallable(() -> {
+            if (!preferences.contains(key)) {
+                return null;
+            }
 
-        if (storeObjectClass.equals(Boolean.class)) {
-            return (T) ((Boolean) preferences.getBoolean(key, false));
-        } else if (storeObjectClass.equals(String.class)) {
-            return (T) (preferences.getString(key, null));
-        } else if (storeObjectClass.equals(Integer.class)) {
-            return (T) ((Integer) preferences.getInt(key, 0));
-        } else if (storeObjectClass.equals(Long.class)) {
-            return (T) ((Long) preferences.getLong(key, 0L));
-        } else if (storeObjectClass.equals(Float.class)) {
-            return (T) ((Float) preferences.getFloat(key, 0f));
-        }
-        Lc.assertion("Unsupported type of object " + storeObjectClass);
-        return null;
+            if (isTypeBoolean(storeObjectType)) {
+                return (T) ((Boolean) preferences.getBoolean(key, false));
+            } else if (storeObjectType.equals(String.class)) {
+                return (T) (preferences.getString(key, null));
+            } else if (isTypeInteger(storeObjectType)) {
+                return (T) ((Integer) preferences.getInt(key, 0));
+            } else if (isTypeLong(storeObjectType)) {
+                return (T) ((Long) preferences.getLong(key, 0L));
+            } else if (isTypeFloat(storeObjectType)) {
+                return (T) ((Float) preferences.getFloat(key, 0f));
+            }
+            Lc.assertion("Unsupported type of object " + storeObjectType);
+            return null;
+        });
     }
 
 }
