@@ -23,7 +23,9 @@ import android.support.annotation.NonNull;
 
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
+import rx.Completable;
 import rx.Observable;
+import rx.Single;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.exceptions.OnErrorThrowable;
@@ -37,6 +39,9 @@ import rx.subjects.BehaviorSubject;
  * Simple implementation of {@link LifecycleBindable}. Could be used to not implement interface but use such object inside.
  */
 public class BaseLifecycleBindable implements LifecycleBindable {
+
+    private static final String UNTIL_DESTROY_METHOD = "untilDestroy";
+    private static final String UNTIL_STOP_METHOD = "untilStop";
 
     @NonNull
     private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create();
@@ -77,26 +82,21 @@ public class BaseLifecycleBindable implements LifecycleBindable {
         final String codePoint = Lc.getCodePoint(this, 2);
         return isStartedSubject.switchMap(started -> started ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
                 .takeUntil(isCreatedSubject.filter(created -> !created))
-                .subscribe(onNextAction,
-                        throwable -> Lc.assertion(new ShouldNotHappenException("Unexpected error on untilStop at " + codePoint, throwable)));
+                .subscribe(onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
     }
 
     @NonNull
     @Override
     public <T> Subscription untilStop(@NonNull final Observable<T> observable) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilStop(observable, Actions.empty(),
-                throwable -> Lc.assertion(new ShouldNotHappenException("Unexpected error on untilStop at " + codePoint, throwable)),
-                Actions.empty());
+        return untilStop(observable, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD), Actions.empty());
     }
 
     @NonNull
     @Override
     public <T> Subscription untilStop(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilStop(observable, onNextAction,
-                throwable -> Lc.assertion(new ShouldNotHappenException("Unexpected error on untilStop at " + codePoint, throwable)),
-                Actions.empty());
+        return untilStop(observable, onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD), Actions.empty());
     }
 
     @NonNull
@@ -118,11 +118,54 @@ public class BaseLifecycleBindable implements LifecycleBindable {
 
     @NonNull
     @Override
+    public <T> Subscription untilStop(@NonNull final Single<T> single) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilStop(single, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilStop(@NonNull final Single<T> single, @NonNull final Action1<T> onSuccessAction) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilStop(single, onSuccessAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilStop(@NonNull final Single<T> single,
+                                      @NonNull final Action1<T> onSuccessAction,
+                                      @NonNull final Action1<Throwable> onErrorAction) {
+        return until(single, isStartedSubject.map(started -> !started), onSuccessAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilStop(@NonNull final Completable completable) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilStop(completable, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilStop(@NonNull final Completable completable,
+                                  @NonNull final Action0 onCompletedAction) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilStop(completable, onCompletedAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilStop(@NonNull final Completable completable,
+                                  @NonNull final Action0 onCompletedAction,
+                                  @NonNull final Action1<Throwable> onErrorAction) {
+        return until(completable, isStartedSubject.map(started -> !started), onCompletedAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
     public <T> Subscription untilDestroy(@NonNull final Observable<T> observable) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilDestroy(observable, Actions.empty(),
-                throwable -> Lc.assertion(new ShouldNotHappenException("Unexpected error on untilDestroy at " + codePoint, throwable)),
-                Actions.empty());
+        return untilDestroy(observable, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD), Actions.empty());
     }
 
     @NonNull
@@ -130,9 +173,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public <T> Subscription untilDestroy(@NonNull final Observable<T> observable,
                                          @NonNull final Action1<T> onNextAction) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilDestroy(observable, onNextAction,
-                throwable -> Lc.assertion(new ShouldNotHappenException("Unexpected error on untilDestroy at " + codePoint, throwable)),
-                Actions.empty());
+        return untilDestroy(observable, onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD), Actions.empty());
     }
 
     @NonNull
@@ -150,6 +191,51 @@ public class BaseLifecycleBindable implements LifecycleBindable {
                                          @NonNull final Action1<Throwable> onErrorAction,
                                          @NonNull final Action0 onCompletedAction) {
         return until(observable, isCreatedSubject.map(created -> !created), onNextAction, onErrorAction, onCompletedAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilDestroy(@NonNull final Single<T> single) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilDestroy(single, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilDestroy(@NonNull final Single<T> single, @NonNull final Action1<T> onSuccessAction) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilDestroy(single, onSuccessAction, getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
+    }
+
+
+    @NonNull
+    @Override
+    public <T> Subscription untilDestroy(@NonNull final Single<T> single,
+                                         @NonNull final Action1<T> onSuccessAction,
+                                         @NonNull final Action1<Throwable> onErrorAction) {
+        return until(single, isCreatedSubject.map(created -> !created), onSuccessAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilDestroy(@NonNull final Completable completable) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilDestroy(completable, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilDestroy(@NonNull final Completable completable, @NonNull final Action0 onCompletedAction) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilDestroy(completable, onCompletedAction, getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilDestroy(@NonNull final Completable completable,
+                                     @NonNull final Action0 onCompletedAction,
+                                     @NonNull final Action1<Throwable> onErrorAction) {
+        return until(completable, isCreatedSubject.map(created -> !created), onCompletedAction, onErrorAction);
     }
 
     @NonNull
@@ -176,6 +262,62 @@ public class BaseLifecycleBindable implements LifecycleBindable {
                     }
                     onErrorAction.call(throwable);
                 });
+    }
+
+    @NonNull
+    private <T> Subscription until(@NonNull final Single<T> single,
+                                   @NonNull final Observable<Boolean> conditionSubject,
+                                   @NonNull final Action1<T> onSuccessAction,
+                                   @NonNull final Action1<Throwable> onErrorAction) {
+        final Single<T> actualSingle;
+        if (onSuccessAction == Actions.empty() && onErrorAction == (Action1) Actions.empty()) {
+            actualSingle = single;
+        } else {
+            actualSingle = single.observeOn(AndroidSchedulers.mainThread());
+        }
+        return isCreatedSubject.first()
+                .flatMap(created -> created ? actualSingle.toObservable() : Observable.empty())
+                .takeUntil(conditionSubject.filter(condition -> condition))
+                .toSingle()
+                .subscribe(onSuccessAction, throwable -> {
+                    final boolean isRxError = throwable instanceof OnErrorThrowable;
+                    if ((!isRxError && throwable instanceof RuntimeException)
+                            || (isRxError && throwable.getCause() instanceof RuntimeException)) {
+                        Lc.assertion(throwable);
+                    }
+                    onErrorAction.call(throwable);
+                });
+    }
+
+
+    @NonNull
+    private Subscription until(@NonNull final Completable completable,
+                               @NonNull final Observable<Boolean> conditionSubject,
+                               @NonNull final Action0 onCompletedAction,
+                               @NonNull final Action1<Throwable> onErrorAction) {
+        final Completable actualCompletable;
+        if (onCompletedAction == Actions.empty() && onErrorAction == (Action1) Actions.empty()) {
+            actualCompletable = completable;
+        } else {
+            actualCompletable = completable.observeOn(AndroidSchedulers.mainThread());
+        }
+        return isCreatedSubject.first()
+                .flatMap(created -> created ? actualCompletable.toObservable() : Observable.empty())
+                .takeUntil(conditionSubject.filter(condition -> condition))
+                .toCompletable()
+                .subscribe(throwable -> {
+                    final boolean isRxError = throwable instanceof OnErrorThrowable;
+                    if ((!isRxError && throwable instanceof RuntimeException)
+                            || (isRxError && throwable.getCause() instanceof RuntimeException)) {
+                        Lc.assertion(throwable);
+                    }
+                    onErrorAction.call(throwable);
+                }, onCompletedAction);
+    }
+
+    @NonNull
+    private Action1<Throwable> getActionThrowableForAssertion(@NonNull final String codePoint, @NonNull final String method) {
+        return throwable -> Lc.assertion(new ShouldNotHappenException("Unexpected error on " + method + " at " + codePoint, throwable));
     }
 
 }

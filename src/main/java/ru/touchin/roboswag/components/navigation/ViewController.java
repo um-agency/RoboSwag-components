@@ -44,7 +44,9 @@ import ru.touchin.roboswag.components.utils.LifecycleBindable;
 import ru.touchin.roboswag.components.utils.UiUtils;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
+import rx.Completable;
 import rx.Observable;
+import rx.Single;
 import rx.Subscription;
 import rx.functions.Action0;
 import rx.functions.Action1;
@@ -374,6 +376,46 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
 
     @NonNull
     @Override
+    public <T> Subscription untilStop(@NonNull final Single<T> single) {
+        return baseLifecycleBindable.untilStop(single);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilStop(@NonNull final Single<T> single, @NonNull final Action1<T> onSuccessAction) {
+        return baseLifecycleBindable.untilStop(single, onSuccessAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilStop(@NonNull final Single<T> single,
+                                      @NonNull final Action1<T> onSuccessAction,
+                                      @NonNull final Action1<Throwable> onErrorAction) {
+        return baseLifecycleBindable.untilStop(single, onSuccessAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilStop(@NonNull final Completable completable) {
+        return baseLifecycleBindable.untilStop(completable);
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilStop(@NonNull final Completable completable, @NonNull final Action0 onCompletedAction) {
+        return baseLifecycleBindable.untilStop(completable, onCompletedAction);
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilStop(@NonNull final Completable completable,
+                                  @NonNull final Action0 onCompletedAction,
+                                  @NonNull final Action1<Throwable> onErrorAction) {
+        return baseLifecycleBindable.untilStop(completable, onCompletedAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
     public <T> Subscription untilDestroy(@NonNull final Observable<T> observable) {
         return baseLifecycleBindable.untilDestroy(observable);
     }
@@ -399,6 +441,46 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
                                          @NonNull final Action1<Throwable> onErrorAction,
                                          @NonNull final Action0 onCompletedAction) {
         return baseLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction, onCompletedAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilDestroy(@NonNull final Single<T> single) {
+        return baseLifecycleBindable.untilDestroy(single);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilDestroy(@NonNull final Single<T> single, @NonNull final Action1<T> onSuccessAction) {
+        return baseLifecycleBindable.untilDestroy(single, onSuccessAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Subscription untilDestroy(@NonNull final Single<T> single,
+                                         @NonNull final Action1<T> onSuccessAction,
+                                         @NonNull final Action1<Throwable> onErrorAction) {
+        return baseLifecycleBindable.untilDestroy(single, onSuccessAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilDestroy(@NonNull final Completable completable) {
+        return baseLifecycleBindable.untilDestroy(completable);
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilDestroy(@NonNull final Completable completable, @NonNull final Action0 onCompletedAction) {
+        return baseLifecycleBindable.untilDestroy(completable, onCompletedAction);
+    }
+
+    @NonNull
+    @Override
+    public Subscription untilDestroy(@NonNull final Completable completable,
+                                     @NonNull final Action0 onCompletedAction,
+                                     @NonNull final Action1<Throwable> onErrorAction) {
+        return baseLifecycleBindable.untilDestroy(completable, onCompletedAction, onErrorAction);
     }
 
     @SuppressWarnings("CPD-END")
