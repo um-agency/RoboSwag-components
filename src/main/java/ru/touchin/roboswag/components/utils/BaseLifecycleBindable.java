@@ -38,6 +38,7 @@ import rx.subjects.BehaviorSubject;
  * Created by Gavriil Sitnikov on 18/04/16.
  * Simple implementation of {@link LifecycleBindable}. Could be used to not implement interface but use such object inside.
  */
+@SuppressWarnings("PMD.TooManyMethods")
 public class BaseLifecycleBindable implements LifecycleBindable {
 
     private static final String UNTIL_DESTROY_METHOD = "untilDestroy";

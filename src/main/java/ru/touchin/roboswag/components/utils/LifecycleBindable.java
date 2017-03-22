@@ -24,6 +24,7 @@ import android.support.annotation.NonNull;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
+import rx.SingleSubscriber;
 import rx.Subscriber;
 import rx.Subscription;
 import rx.functions.Action0;
@@ -38,6 +39,7 @@ import rx.functions.Func1;
  * Use {@link #untilStop(Observable)} method to subscribe to observable where you want and unsubscribe onStop.
  * Use {@link #untilDestroy(Observable)} method to subscribe to observable where you want and unsubscribe onDestroy.
  */
+@SuppressWarnings("PMD.TooManyMethods")
 public interface LifecycleBindable {
 
     /**
@@ -132,7 +134,7 @@ public interface LifecycleBindable {
      * Don't forget to process errors if single can emit them.
      *
      * @param single          {@link Single} to subscribe until onStop;
-     * @param onSuccessAction Action which will raise on every {@link rx.SingleSubscriber#onSuccess(Object)} item;
+     * @param onSuccessAction Action which will raise on every {@link SingleSubscriber#onSuccess(Object)} item;
      * @param <T>             Type of emitted by single item;
      * @return {@link Subscription} which will unsubscribes from single onStop.
      */
@@ -146,8 +148,8 @@ public interface LifecycleBindable {
      * Don't forget to process errors if single can emit them.
      *
      * @param single          {@link Single} to subscribe until onStop;
-     * @param onSuccessAction Action which will raise on every {@link rx.SingleSubscriber#onSuccess(Object)} item;
-     * @param onErrorAction   Action which will raise on every {@link rx.SingleSubscriber#onError(Throwable)} throwable;
+     * @param onSuccessAction Action which will raise on every {@link SingleSubscriber#onSuccess(Object)} item;
+     * @param onErrorAction   Action which will raise on every {@link SingleSubscriber#onError(Throwable)} throwable;
      * @param <T>             Type of emitted by observable items;
      * @return {@link Subscription} which is wrapping source single to unsubscribe from it onStop.
      */
@@ -173,7 +175,7 @@ public interface LifecycleBindable {
      * Don't forget to process errors if completable can emit them.
      *
      * @param completable       {@link Completable} to subscribe until onStop;
-     * @param onCompletedAction Action which will raise at {@link rx.Completable.CompletableSubscriber#onCompleted()} on completion of observable;
+     * @param onCompletedAction Action which will raise at {@link Completable.CompletableSubscriber#onCompleted()} on completion of observable;
      * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onStop.
      */
     @NonNull
@@ -186,8 +188,8 @@ public interface LifecycleBindable {
      * Don't forget to process errors if completable can emit them.
      *
      * @param completable       {@link Completable} to subscribe until onStop;
-     * @param onCompletedAction Action which will raise at {@link rx.Completable.CompletableSubscriber#onCompleted()} on completion of observable;
-     * @param onErrorAction     Action which will raise on every {@link rx.Completable.CompletableSubscriber#onError(Throwable)} throwable;
+     * @param onCompletedAction Action which will raise at {@link Completable.CompletableSubscriber#onCompleted()} on completion of observable;
+     * @param onErrorAction     Action which will raise on every {@link Completable.CompletableSubscriber#onError(Throwable)} throwable;
      * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onStop.
      */
     @NonNull
@@ -266,7 +268,7 @@ public interface LifecycleBindable {
      * Don't forget to process errors if single can emit them.
      *
      * @param single          {@link Single} to subscribe until onDestroy;
-     * @param onSuccessAction Action which will raise on every {@link rx.SingleSubscriber#onSuccess(Object)} item;
+     * @param onSuccessAction Action which will raise on every {@link SingleSubscriber#onSuccess(Object)} item;
      * @param <T>             Type of emitted by single items;
      * @return {@link Subscription} which is wrapping source single to unsubscribe from it onDestroy.
      */
@@ -279,8 +281,8 @@ public interface LifecycleBindable {
      * Don't forget to process errors if single can emit them.
      *
      * @param single          {@link Single} to subscribe until onDestroy;
-     * @param onSuccessAction Action which will raise on every {@link rx.SingleSubscriber#onSuccess(Object)} item;
-     * @param onErrorAction   Action which will raise on every {@link rx.SingleSubscriber#onError(Throwable)} throwable;
+     * @param onSuccessAction Action which will raise on every {@link SingleSubscriber#onSuccess(Object)} item;
+     * @param onErrorAction   Action which will raise on every {@link SingleSubscriber#onError(Throwable)} throwable;
      * @param <T>             Type of emitted by single items;
      * @return {@link Subscription} which is wrapping source single to unsubscribe from it onDestroy.
      */
@@ -317,7 +319,7 @@ public interface LifecycleBindable {
      *
      * @param completable       {@link Completable} to subscribe until onDestroy;
      * @param onCompletedAction Action which will raise on every {@link Completable.CompletableSubscriber#onCompleted()} item;
-     * @param onErrorAction     Action which will raise on every {@link rx.Completable.CompletableSubscriber#onError(Throwable)} throwable;
+     * @param onErrorAction     Action which will raise on every {@link Completable.CompletableSubscriber#onError(Throwable)} throwable;
      * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onDestroy.
      */
     @NonNull

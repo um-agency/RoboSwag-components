@@ -44,6 +44,7 @@ import rx.functions.Action1;
  * Created by Gavriil Sitnikov on 12/8/2016.
  * ViewHolder that implements {@link LifecycleBindable} and uses parent bindable object as bridge (Activity, ViewController etc.).
  */
+@SuppressWarnings("PMD.TooManyMethods")
 public class BindableViewHolder extends RecyclerView.ViewHolder implements LifecycleBindable {
 
     @NonNull
