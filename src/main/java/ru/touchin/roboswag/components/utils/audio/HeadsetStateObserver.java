@@ -100,7 +100,7 @@ public final class HeadsetStateObserver {
         }
 
         @Override
-        public void onReceive(final Context context, final Intent intent) {
+        public void onReceive(@NonNull final Context context, @NonNull final Intent intent) {
             if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction()) && !isInitialStickyBroadcast()) {
                 isWiredConnectedChangedEvent.onNext(intent.getIntExtra("state", 0) != 0);
             }

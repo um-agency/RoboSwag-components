@@ -48,7 +48,7 @@ public class SimpleViewControllerFragment<TState extends AbstractState, TActivit
      */
     @NonNull
     public static Bundle createState(@NonNull final Class<? extends ViewController> viewControllerClass,
-                                     @Nullable final AbstractState state) {
+                                     @NonNull final AbstractState state) {
         final Bundle result = createState(state);
         result.putSerializable(VIEW_CONTROLLER_CLASS_EXTRA, viewControllerClass);
         return result;
@@ -64,12 +64,21 @@ public class SimpleViewControllerFragment<TState extends AbstractState, TActivit
         return viewControllerClass;
     }
 
+    @Override
+    protected boolean isStateRequired() {
+        return true;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public void onCreate(@Nullable final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewControllerClass = (Class<? extends ViewController<TActivity,
                 ? extends ViewControllerFragment<TState, TActivity>>>) getArguments().getSerializable(VIEW_CONTROLLER_CLASS_EXTRA);
+    }
+
+    protected static class DefaultState extends AbstractState {
+        // just default implementation
     }
 
 }

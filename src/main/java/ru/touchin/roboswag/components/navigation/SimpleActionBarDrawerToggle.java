@@ -206,7 +206,7 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
     }
 
     @Override
-    public void onDrawerClosed(final View view) {
+    public void onDrawerClosed(@NonNull final View view) {
         activity.supportInvalidateOptionsMenu();
     }
 
@@ -220,13 +220,13 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
     }
 
     @Override
-    public void onDrawerOpened(final View drawerView) {
+    public void onDrawerOpened(@NonNull final View drawerView) {
         activity.hideSoftInput();
         activity.supportInvalidateOptionsMenu();
     }
 
     @Override
-    public void onDrawerSlide(final View drawerView, final float slideOffset) {
+    public void onDrawerSlide(@NonNull final View drawerView, final float slideOffset) {
         if (slideOffset >= this.slideOffset && slideOffset <= this.slidePosition
                 || slideOffset <= this.slideOffset && slideOffset >= this.slidePosition) {
             this.slideOffset = slideOffset;

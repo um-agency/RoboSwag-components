@@ -41,13 +41,13 @@ public class TypefaceSpan extends MetricAffectingSpan {
     }
 
     @Override
-    public void updateMeasureState(final TextPaint textPaint) {
+    public void updateMeasureState(@NonNull final TextPaint textPaint) {
         textPaint.setTypeface(typeface);
         textPaint.setFlags(textPaint.getFlags() | Paint.SUBPIXEL_TEXT_FLAG);
     }
 
     @Override
-    public void updateDrawState(final TextPaint textPaint) {
+    public void updateDrawState(@NonNull final TextPaint textPaint) {
         textPaint.setTypeface(typeface);
         textPaint.setFlags(textPaint.getFlags() | Paint.SUBPIXEL_TEXT_FLAG);
     }

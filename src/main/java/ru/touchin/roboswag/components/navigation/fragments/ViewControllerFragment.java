@@ -110,7 +110,9 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         return result;
     }
 
+    @NonNull
     private final BehaviorSubject<TActivity> activitySubject = BehaviorSubject.create();
+    @NonNull
     private final BehaviorSubject<Pair<PlaceholderView, Bundle>> viewSubject = BehaviorSubject.create();
     @Nullable
     private ViewController viewController;
@@ -123,6 +125,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
      *
      * @return Object represents state.
      */
+    @NonNull
     public TState getState() {
         return state;
     }
@@ -135,6 +138,13 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     @NonNull
     public abstract Class<? extends ViewController<TActivity,
             ? extends ViewControllerFragment<TState, TActivity>>> getViewControllerClass();
+
+    /**
+     * Returns if ViewControllerFragment requires state or not.
+     *
+     * @return true if state is required
+     */
+    protected abstract boolean isStateRequired();
 
     @SuppressWarnings("unchecked")
     @Override
@@ -151,6 +161,8 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
                 state = reserialize(state);
             }
             state.onCreate();
+        } else if (isStateRequired()) {
+            Lc.assertion("State is required and null");
         }
         viewControllerSubscription = Observable
                 .combineLatest(activitySubject.distinctUntilChanged(), viewSubject.distinctUntilChanged(),

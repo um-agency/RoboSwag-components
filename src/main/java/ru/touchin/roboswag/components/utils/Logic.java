@@ -27,6 +27,7 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
+import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
 
 /**
@@ -75,16 +76,17 @@ public class Logic {
         return result;
     }
 
+    @NonNull
     @SuppressWarnings("unchecked")
     private static <T extends Logic> T constructLogic(@NonNull final Context context, @NonNull final Class<T> logicClass) {
         if (logicClass.getConstructors().length != 1 || logicClass.getConstructors()[0].getParameterTypes().length != 1) {
-            throw new IllegalArgumentException("There should be only one public constructor(Context) for class " + logicClass);
+            throw new ShouldNotHappenException("There should be only one public constructor(Context) for class " + logicClass);
         }
         final Constructor<?> constructor = logicClass.getConstructors()[0];
         try {
             return (T) constructor.newInstance(context);
         } catch (final Exception exception) {
-            throw new IllegalStateException(exception);
+            throw new ShouldNotHappenException(exception);
         }
     }
 

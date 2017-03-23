@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.support.annotation.NonNull;
 import android.support.annotation.StyleableRes;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
@@ -50,6 +51,7 @@ public final class AttributesUtils {
      * @throws NoSuchFieldException   Throws on reflection call;
      * @throws IllegalAccessException Throws on reflection call.
      */
+    @NonNull
     @SuppressWarnings("unchecked")
     public static <T> T getField(@NonNull final Class resourcesClass, @NonNull final String fieldName)
             throws NoSuchFieldException, IllegalAccessException {
@@ -131,7 +133,7 @@ public final class AttributesUtils {
             final int result = typedArray.getInt(AttributesUtils.getField(androidRes, "TextView_maxLines"), Integer.MAX_VALUE);
             typedArray.recycle();
             return result;
-        } catch (Exception e) {
+        } catch (final Exception exception) {
             return Integer.MAX_VALUE;
         }
     }
@@ -146,6 +148,16 @@ public final class AttributesUtils {
     @NonNull
     public static String viewError(@NonNull final View view, @NonNull final String errorText) {
         return "Errors for view id=" + UiUtils.OfViews.getViewIdString(view) + ":\n" + errorText;
+    }
+
+    /**
+     * Returns true if input type equals number input type.
+     *
+     * @param inputType Input type to check;
+     * @return true if input type equals number input type.
+     */
+    public static boolean isNumberInputType(final int inputType) {
+        return inputType == InputType.TYPE_CLASS_NUMBER || inputType == InputType.TYPE_DATETIME_VARIATION_NORMAL;
     }
 
     private AttributesUtils() {

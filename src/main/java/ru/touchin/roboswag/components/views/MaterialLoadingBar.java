@@ -24,6 +24,7 @@ import android.content.res.TypedArray;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 
@@ -51,7 +52,7 @@ import ru.touchin.roboswag.components.utils.UiUtils;
  * <item name="materialLoadingBarStyle">@style/MyAppLoadingBar</item>
  * </style>
  */
-public class MaterialLoadingBar extends android.support.v7.widget.AppCompatImageView {
+public class MaterialLoadingBar extends AppCompatImageView {
 
     private static int getPrimaryColor(@NonNull final Context context) {
         final int colorAttr;

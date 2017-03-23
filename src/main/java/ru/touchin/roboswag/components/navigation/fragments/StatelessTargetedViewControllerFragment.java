@@ -21,7 +21,6 @@ package ru.touchin.roboswag.components.navigation.fragments;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import ru.touchin.roboswag.components.navigation.AbstractState;
 import ru.touchin.roboswag.components.navigation.ViewController;
@@ -49,14 +48,19 @@ public class StatelessTargetedViewControllerFragment<TTargetState extends Abstra
      */
     @NonNull
     public static Bundle createState(@NonNull final Class<? extends ViewController> viewControllerClass) {
-        return createState(viewControllerClass, null);
+        return createState(viewControllerClass, new DefaultState());
     }
 
-    @Nullable
+    @Override
+    protected boolean isStateRequired() {
+        return false;
+    }
+
+    @NonNull
     @Override
     public AbstractState getState() {
         Lc.assertion("Trying to access to state of stateless fragment of " + getViewControllerClass());
-        return null;
+        return super.getState();
     }
 
 }

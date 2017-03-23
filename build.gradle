@@ -18,12 +18,7 @@ android {
 
 dependencies {
     compile project(':libraries:core')
-
-    //TODO: update when Google will fix restoring fragment state in ViewPager
-    //noinspection GradleDependency, NewerVersionAvailable
-    provided 'com.android.support:appcompat-v7:25.0.1'
-    //noinspection GradleDependency, NewerVersionAvailable
-    provided 'com.android.support:recyclerview-v7:25.0.1'
-
+    provided 'com.android.support:appcompat-v7:25.3.0'
+    provided 'com.android.support:recyclerview-v7:25.3.0'
     provided 'io.reactivex:rxandroid:1.2.1'
 }

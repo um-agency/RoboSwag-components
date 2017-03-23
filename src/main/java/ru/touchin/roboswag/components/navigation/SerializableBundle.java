@@ -2,6 +2,7 @@ package ru.touchin.roboswag.components.navigation;
 
 import android.os.Bundle;
 import android.os.Parcel;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.io.IOException;
@@ -40,7 +41,7 @@ public class SerializableBundle implements Serializable {
         this.bundle = bundle;
     }
 
-    private void writeObject(final ObjectOutputStream outputStream) throws IOException {
+    private void writeObject(@NonNull final ObjectOutputStream outputStream) throws IOException {
         if (bundle != null) {
             final Parcel parcel = Parcel.obtain();
             parcel.writeBundle(bundle);
@@ -53,7 +54,7 @@ public class SerializableBundle implements Serializable {
         }
     }
 
-    private void readObject(final ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
+    private void readObject(@NonNull final ObjectInputStream inputStream) throws IOException, ClassNotFoundException {
         final int size = inputStream.readInt();
         if (size > 0) {
             final byte[] bytes = new byte[size];

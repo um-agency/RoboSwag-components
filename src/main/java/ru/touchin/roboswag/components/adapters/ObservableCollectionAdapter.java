@@ -425,7 +425,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
          * @return Requested String that matches with provided string resource id.
          */
         @NonNull
-        public String getString(@StringRes final int stringRes, final Object... formatArgs) {
+        public String getString(@StringRes final int stringRes, @Nullable final Object... formatArgs) {
             return itemView.getContext().getString(stringRes, formatArgs);
         }
 

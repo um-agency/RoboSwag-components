@@ -302,7 +302,7 @@ public class TypefacedTextView extends AppCompatTextView {
     }
 
     @Override
-    public void setEllipsize(final TextUtils.TruncateAt ellipsize) {
+    public void setEllipsize(@NonNull final TextUtils.TruncateAt ellipsize) {
         if (!constructed) {
             return;
         }
@@ -319,7 +319,7 @@ public class TypefacedTextView extends AppCompatTextView {
     }
 
     @Override
-    public void setText(final CharSequence text, final BufferType type) {
+    public void setText(@Nullable final CharSequence text, @Nullable final BufferType type) {
         super.setText(text, type);
         if (constructed && lineStrategy.scalable) {
             requestLayout();
