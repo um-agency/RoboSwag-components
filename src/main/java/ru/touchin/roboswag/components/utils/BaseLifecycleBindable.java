@@ -136,7 +136,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public <T> Subscription untilStop(@NonNull final Single<T> single,
                                       @NonNull final Action1<T> onSuccessAction,
                                       @NonNull final Action1<Throwable> onErrorAction) {
-        return until(single, isStartedSubject.map(started -> !started), onSuccessAction, onErrorAction);
+        return until(single.toObservable(), isStartedSubject.map(started -> !started), onSuccessAction, onErrorAction, Actions.empty());
     }
 
     @NonNull
@@ -159,7 +159,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public Subscription untilStop(@NonNull final Completable completable,
                                   @NonNull final Action0 onCompletedAction,
                                   @NonNull final Action1<Throwable> onErrorAction) {
-        return until(completable, isStartedSubject.map(started -> !started), onCompletedAction, onErrorAction);
+        return until(completable.toObservable(), isStartedSubject.map(started -> !started), Actions.empty(), onErrorAction, onCompletedAction);
     }
 
     @NonNull
@@ -214,7 +214,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public <T> Subscription untilDestroy(@NonNull final Single<T> single,
                                          @NonNull final Action1<T> onSuccessAction,
                                          @NonNull final Action1<Throwable> onErrorAction) {
-        return until(single, isCreatedSubject.map(created -> !created), onSuccessAction, onErrorAction);
+        return until(single.toObservable(), isCreatedSubject.map(created -> !created), onSuccessAction, onErrorAction, Actions.empty());
     }
 
     @NonNull
@@ -236,7 +236,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public Subscription untilDestroy(@NonNull final Completable completable,
                                      @NonNull final Action0 onCompletedAction,
                                      @NonNull final Action1<Throwable> onErrorAction) {
-        return until(completable, isCreatedSubject.map(created -> !created), onCompletedAction, onErrorAction);
+        return until(completable.toObservable(), isCreatedSubject.map(created -> !created), Actions.empty(), onErrorAction, onCompletedAction);
     }
 
     @NonNull
@@ -263,57 +263,6 @@ public class BaseLifecycleBindable implements LifecycleBindable {
                     }
                     onErrorAction.call(throwable);
                 });
-    }
-
-    @NonNull
-    private <T> Subscription until(@NonNull final Single<T> single,
-                                   @NonNull final Observable<Boolean> conditionSubject,
-                                   @NonNull final Action1<T> onSuccessAction,
-                                   @NonNull final Action1<Throwable> onErrorAction) {
-        final Single<T> actualSingle;
-        if (onSuccessAction == Actions.empty() && onErrorAction == (Action1) Actions.empty()) {
-            actualSingle = single;
-        } else {
-            actualSingle = single.observeOn(AndroidSchedulers.mainThread());
-        }
-        return isCreatedSubject.first()
-                .flatMap(created -> created ? actualSingle.toObservable() : Observable.empty())
-                .takeUntil(conditionSubject.filter(condition -> condition))
-                .toSingle()
-                .subscribe(onSuccessAction, throwable -> {
-                    final boolean isRxError = throwable instanceof OnErrorThrowable;
-                    if ((!isRxError && throwable instanceof RuntimeException)
-                            || (isRxError && throwable.getCause() instanceof RuntimeException)) {
-                        Lc.assertion(throwable);
-                    }
-                    onErrorAction.call(throwable);
-                });
-    }
-
-
-    @NonNull
-    private Subscription until(@NonNull final Completable completable,
-                               @NonNull final Observable<Boolean> conditionSubject,
-                               @NonNull final Action0 onCompletedAction,
-                               @NonNull final Action1<Throwable> onErrorAction) {
-        final Completable actualCompletable;
-        if (onCompletedAction == Actions.empty() && onErrorAction == (Action1) Actions.empty()) {
-            actualCompletable = completable;
-        } else {
-            actualCompletable = completable.observeOn(AndroidSchedulers.mainThread());
-        }
-        return isCreatedSubject.first()
-                .flatMap(created -> created ? actualCompletable.toObservable() : Observable.empty())
-                .takeUntil(conditionSubject.filter(condition -> condition))
-                .toCompletable()
-                .subscribe(throwable -> {
-                    final boolean isRxError = throwable instanceof OnErrorThrowable;
-                    if ((!isRxError && throwable instanceof RuntimeException)
-                            || (isRxError && throwable.getCause() instanceof RuntimeException)) {
-                        Lc.assertion(throwable);
-                    }
-                    onErrorAction.call(throwable);
-                }, onCompletedAction);
     }
 
     @NonNull
