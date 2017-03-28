@@ -208,7 +208,6 @@ public class BaseLifecycleBindable implements LifecycleBindable {
         return untilDestroy(single, onSuccessAction, getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
     }
 
-
     @NonNull
     @Override
     public <T> Subscription untilDestroy(@NonNull final Single<T> single,
@@ -252,19 +251,20 @@ public class BaseLifecycleBindable implements LifecycleBindable {
             actualObservable = observable.observeOn(AndroidSchedulers.mainThread())
                     .doOnCompleted(onCompletedAction)
                     .doOnNext(onNextAction)
-                    .doOnError(throwable -> {
-                        final boolean isRxError = throwable instanceof OnErrorThrowable;
-                        if ((!isRxError && throwable instanceof RuntimeException)
-                                || (isRxError && throwable.getCause() instanceof RuntimeException)) {
-                            Lc.assertion(throwable);
-                        }
-                        onErrorAction.call(throwable);
-                    });
+                    .doOnError(onErrorAction);
         }
 
         return isCreatedSubject.first()
                 .switchMap(created -> created ? actualObservable : Observable.empty())
                 .takeUntil(conditionSubject.filter(condition -> condition))
+                .onErrorResumeNext(throwable -> {
+                    final boolean isRxError = throwable instanceof OnErrorThrowable;
+                    if ((!isRxError && throwable instanceof RuntimeException)
+                            || (isRxError && throwable.getCause() instanceof RuntimeException)) {
+                        Lc.assertion(throwable);
+                    }
+                    return Observable.empty();
+                })
                 .subscribe();
     }
 
