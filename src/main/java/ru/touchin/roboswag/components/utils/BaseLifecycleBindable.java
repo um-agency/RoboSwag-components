@@ -247,22 +247,25 @@ public class BaseLifecycleBindable implements LifecycleBindable {
                                    @NonNull final Action0 onCompletedAction) {
         final Observable<T> actualObservable;
         if (onNextAction == Actions.empty() && onErrorAction == (Action1) Actions.empty() && onCompletedAction == Actions.empty()) {
-            actualObservable = observable.doOnCompleted(onCompletedAction);
+            actualObservable = observable;
         } else {
-            actualObservable = observable.observeOn(AndroidSchedulers.mainThread()).doOnCompleted(onCompletedAction);
+            actualObservable = observable.observeOn(AndroidSchedulers.mainThread())
+                    .doOnCompleted(onCompletedAction)
+                    .doOnNext(onNextAction)
+                    .doOnError(throwable -> {
+                        final boolean isRxError = throwable instanceof OnErrorThrowable;
+                        if ((!isRxError && throwable instanceof RuntimeException)
+                                || (isRxError && throwable.getCause() instanceof RuntimeException)) {
+                            Lc.assertion(throwable);
+                        }
+                        onErrorAction.call(throwable);
+                    });
         }
 
         return isCreatedSubject.first()
                 .switchMap(created -> created ? actualObservable : Observable.empty())
                 .takeUntil(conditionSubject.filter(condition -> condition))
-                .subscribe(onNextAction, throwable -> {
-                    final boolean isRxError = throwable instanceof OnErrorThrowable;
-                    if ((!isRxError && throwable instanceof RuntimeException)
-                            || (isRxError && throwable.getCause() instanceof RuntimeException)) {
-                        Lc.assertion(throwable);
-                    }
-                    onErrorAction.call(throwable);
-                });
+                .subscribe();
     }
 
     @NonNull
