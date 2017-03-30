@@ -18,7 +18,9 @@ android {
 
 dependencies {
     compile project(':libraries:core')
-    provided 'com.android.support:appcompat-v7:25.3.0'
-    provided 'com.android.support:recyclerview-v7:25.3.0'
+
+    provided 'com.android.support:appcompat-v7:25.3.1'
+    provided 'com.android.support:recyclerview-v7:25.3.1'
+
     provided 'io.reactivex:rxandroid:1.2.1'
 }
