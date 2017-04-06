@@ -16,15 +16,15 @@ public final class BlurUtils {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable
-    public static Bitmap blurRS(@NonNull final Context context, @NonNull final Bitmap bitmap, final int radius) throws RSRuntimeException {
+    public static Bitmap blurRenderscript(@NonNull final Context context, @NonNull final Bitmap bitmap, final int radius) throws RSRuntimeException {
         RenderScript rs = null;
         try {
             rs = RenderScript.create(context);
-            Allocation input =
+            final Allocation input =
                     Allocation.createFromBitmap(rs, bitmap, Allocation.MipmapControl.MIPMAP_NONE,
                             Allocation.USAGE_SCRIPT);
-            Allocation output = Allocation.createTyped(rs, input.getType());
-            ScriptIntrinsicBlur blur = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
+            final Allocation output = Allocation.createTyped(rs, input.getType());
+            final ScriptIntrinsicBlur blur = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
 
             blur.setInput(input);
             blur.setRadius(radius);
@@ -41,13 +41,10 @@ public final class BlurUtils {
 
     /**
      * Copyright (C) 2015 Wasabeef
-     * <p>
      * Licensed under the Apache License, Version 2.0 (the "License");
      * you may not use this file except in compliance with the License.
      * You may obtain a copy of the License at
-     * <p>
      * http://www.apache.org/licenses/LICENSE-2.0
-     * <p>
      * Unless required by applicable law or agreed to in writing, software
      * distributed under the License is distributed on an "AS IS" BASIS,
      * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,7 +53,10 @@ public final class BlurUtils {
      */
 
     @Nullable
-    public static Bitmap blurFast(@NonNull final Bitmap sentBitmap, int radius, boolean canReuseInBitmap) {
+    @SuppressWarnings({"PMD.ExcessiveMethodLength", "PMD.CyclomaticComplexity", "PMD.ModifiedCyclomaticComplexity", "PMD.StdCyclomaticComplexity",
+            "PMD.NcssMethodCount", "PMD.NPathComplexity", "checkstyle:MethodLength", "checkstyle:LocalFinalVariableName",
+            "checkstyle:ArrayTypeStyle", "checkstyle:InnerAssignment", "checkstyle:LocalVariableName"})
+    public static Bitmap blurFast(@NonNull final Bitmap sentBitmap, final int radius, final boolean canReuseInBitmap) {
 
         // Stack Blur v1.0 from
         // http://www.quasimondo.com/StackBlurForCanvas/StackBlurDemo.html
@@ -100,7 +100,7 @@ public final class BlurUtils {
         final int w = bitmap.getWidth();
         final int h = bitmap.getHeight();
 
-        int[] pix = new int[w * h];
+        final int[] pix = new int[w * h];
         bitmap.getPixels(pix, 0, w, 0, 0, w, h);
 
         final int wm = w - 1;
@@ -115,7 +115,6 @@ public final class BlurUtils {
         int gsum;
         int bsum;
         int x;
-        int y;
         int i;
         int p;
         int yp;
@@ -125,9 +124,9 @@ public final class BlurUtils {
 
         int divsum = (div + 1) >> 1;
         divsum *= divsum;
-        int dv[] = new int[256 * divsum];
+        final int dv[] = new int[256 * divsum];
         for (i = 0; i < 256 * divsum; i++) {
-            dv[i] = (i / divsum);
+            dv[i] = i / divsum;
         }
 
         yw = yi = 0;
@@ -145,6 +144,8 @@ public final class BlurUtils {
         int ginsum;
         int binsum;
 
+        int y;
+
         for (y = 0; y < h; y++) {
             rinsum = ginsum = binsum = routsum = goutsum = boutsum = rsum = gsum = bsum = 0;
             for (i = -radius; i <= radius; i++) {
@@ -152,7 +153,7 @@ public final class BlurUtils {
                 sir = stack[i + radius];
                 sir[0] = (p & 0xff0000) >> 16;
                 sir[1] = (p & 0x00ff00) >> 8;
-                sir[2] = (p & 0x0000ff);
+                sir[2] = p & 0x0000ff;
                 rbs = r1 - Math.abs(i);
                 rsum += sir[0] * rbs;
                 gsum += sir[1] * rbs;
@@ -193,7 +194,7 @@ public final class BlurUtils {
 
                 sir[0] = (p & 0xff0000) >> 16;
                 sir[1] = (p & 0x00ff00) >> 8;
-                sir[2] = (p & 0x0000ff);
+                sir[2] = p & 0x0000ff;
 
                 rinsum += sir[0];
                 ginsum += sir[1];
@@ -204,7 +205,7 @@ public final class BlurUtils {
                 bsum += binsum;
 
                 stackpointer = (stackpointer + 1) % div;
-                sir = stack[(stackpointer) % div];
+                sir = stack[stackpointer % div];
 
                 routsum += sir[0];
                 goutsum += sir[1];
@@ -301,7 +302,7 @@ public final class BlurUtils {
 
         bitmap.setPixels(pix, 0, w, 0, 0, w, h);
 
-        return (bitmap);
+        return bitmap;
     }
 
     private BlurUtils() {
