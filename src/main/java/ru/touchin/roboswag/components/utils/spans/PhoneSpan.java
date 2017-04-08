@@ -1,5 +1,6 @@
 package ru.touchin.roboswag.components.utils.spans;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -19,7 +20,6 @@ public class PhoneSpan extends URLSpan {
         super(phoneNumber);
     }
 
-    @SuppressWarnings("PMD.AvoidCatchingThrowable")
     @Override
     public void onClick(@NonNull final View widget) {
         super.onClick(widget);
@@ -27,9 +27,8 @@ public class PhoneSpan extends URLSpan {
             final Intent intent = new Intent(Intent.ACTION_DIAL);
             intent.setData(Uri.parse(getURL()));
             widget.getContext().startActivity(intent);
-            // it should catch throwable to not crash in production if there are problems with startActivity()
-        } catch (final Throwable throwable) {
-            Lc.assertion(throwable);
+        } catch (final ActivityNotFoundException exception) {
+            Lc.assertion(exception);
         }
     }
 
