@@ -27,6 +27,7 @@ import java.lang.reflect.Type;
 
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.observables.storable.Store;
+import ru.touchin.roboswag.core.utils.Optional;
 import rx.Completable;
 import rx.Single;
 
@@ -96,26 +97,26 @@ public class PreferenceStore<T> implements Store<String, T> {
     @NonNull
     @Override
     @SuppressWarnings("unchecked")
-    //unchecked: we checked class in if-else statements
-    public Single<T> loadObject(@NonNull final Type storeObjectType, @NonNull final String key) {
+    //unchecked: it is checking class in if-else statements
+    public Single<Optional<T>> loadObject(@NonNull final Type storeObjectType, @NonNull final String key) {
         return Single.fromCallable(() -> {
             if (!preferences.contains(key)) {
-                return null;
+                return new Optional<>(null);
             }
 
             if (isTypeBoolean(storeObjectType)) {
-                return (T) ((Boolean) preferences.getBoolean(key, false));
+                return new Optional<>((T) ((Boolean) preferences.getBoolean(key, false)));
             } else if (storeObjectType.equals(String.class)) {
-                return (T) (preferences.getString(key, null));
+                return new Optional<>((T) (preferences.getString(key, null)));
             } else if (isTypeInteger(storeObjectType)) {
-                return (T) ((Integer) preferences.getInt(key, 0));
+                return new Optional<>((T) ((Integer) preferences.getInt(key, 0)));
             } else if (isTypeLong(storeObjectType)) {
-                return (T) ((Long) preferences.getLong(key, 0L));
+                return new Optional<>((T) ((Long) preferences.getLong(key, 0L)));
             } else if (isTypeFloat(storeObjectType)) {
-                return (T) ((Float) preferences.getFloat(key, 0f));
+                return new Optional<>((T) ((Float) preferences.getFloat(key, 0f)));
             }
             Lc.assertion("Unsupported type of object " + storeObjectType);
-            return null;
+            return new Optional<>(null);
         });
     }
 

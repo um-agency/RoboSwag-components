@@ -268,12 +268,9 @@ public final class UiUtils {
                         || (realDisplayMetrics.heightPixels - displayMetrics.heightPixels) > 0;
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                final boolean hasMenuKey = ViewConfiguration.get(activity).hasPermanentMenuKey();
-                final boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
-                return !hasMenuKey && !hasBackKey;
-            }
-            return false;
+            final boolean hasMenuKey = ViewConfiguration.get(activity).hasPermanentMenuKey();
+            final boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
+            return !hasMenuKey && !hasBackKey;
         }
 
         /**

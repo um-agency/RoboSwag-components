@@ -27,7 +27,6 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,10 +38,11 @@ import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.observables.collections.Change;
 import ru.touchin.roboswag.core.observables.collections.ObservableCollection;
 import ru.touchin.roboswag.core.observables.collections.ObservableList;
+import ru.touchin.roboswag.core.observables.collections.loadable.LoadingMoreList;
+import ru.touchin.roboswag.core.utils.Optional;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Actions;
 import rx.subjects.BehaviorSubject;
 
 /**
@@ -62,8 +62,8 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
     private static final int PRE_LOADING_COUNT = 10;
 
     @NonNull
-    private final BehaviorSubject<ObservableCollection<TItem>> observableCollectionSubject
-            = BehaviorSubject.create((ObservableCollection<TItem>) null);
+    private final BehaviorSubject<Optional<ObservableCollection<TItem>>> observableCollectionSubject
+            = BehaviorSubject.create(new Optional<>(null));
     @NonNull
     private final LifecycleBindable lifecycleBindable;
     @Nullable
@@ -83,10 +83,14 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         this.lifecycleBindable = lifecycleBindable;
         innerCollection.observeChanges().subscribe(this::onItemsChanged);
         lifecycleBindable.untilDestroy(observableCollectionSubject
-                        .doOnNext(collection -> innerCollection.set(collection != null ? collection.getItems() : new ArrayList<>()))
-                        .<ObservableCollection.CollectionChange<TItem>>switchMap(observableCollection -> observableCollection != null
-                                ? observableCollection.observeChanges().observeOn(AndroidSchedulers.mainThread())
-                                : Observable.empty()),
+                        .switchMap(optional -> {
+                            final ObservableCollection<TItem> collection = optional.get();
+                            if (collection == null) {
+                                innerCollection.clear();
+                                return Observable.empty();
+                            }
+                            return collection.observeChanges().observeOn(AndroidSchedulers.mainThread());
+                        }),
                 changes -> {
                     anyChangeApplied = true;
                     for (final Change<TItem> change : changes.getChanges()) {
@@ -107,9 +111,13 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                     }
                 });
         historyPreLoadingObservable = observableCollectionSubject
-                .switchMap(observableCollection -> {
-                    final int size = observableCollection.size();
-                    return observableCollection.loadRange(size, size + PRE_LOADING_COUNT);
+                .switchMap(optional -> {
+                    final ObservableCollection<TItem> collection = optional.get();
+                    if (!(collection instanceof LoadingMoreList)) {
+                        return Observable.empty();
+                    }
+                    final int size = collection.size();
+                    return ((LoadingMoreList) collection).loadRange(size, size + PRE_LOADING_COUNT);
                 });
     }
 
@@ -161,7 +169,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      */
     @Nullable
     public ObservableCollection<TItem> getObservableCollection() {
-        return observableCollectionSubject.getValue();
+        return observableCollectionSubject.getValue().get();
     }
 
     /**
@@ -170,8 +178,8 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      * @return Observable of inner {@link ObservableCollection}.
      */
     @NonNull
-    public Observable<ObservableCollection<TItem>> observeObservableCollection() {
-        return observableCollectionSubject.distinctUntilChanged();
+    public Observable<Optional<ObservableCollection<TItem>>> observeObservableCollection() {
+        return observableCollectionSubject;
     }
 
     /**
@@ -180,7 +188,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      * @param observableCollection Inner {@link ObservableCollection}.
      */
     public void setObservableCollection(@Nullable final ObservableCollection<TItem> observableCollection) {
-        this.observableCollectionSubject.onNext(observableCollection);
+        this.observableCollectionSubject.onNext(new Optional<>(observableCollection));
         refreshUpdate();
     }
 
@@ -395,13 +403,13 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
             if (adapter != null && position - adapter.getHeadersCount() > adapter.innerCollection.size() - PRE_LOADING_COUNT) {
                 historyPreLoadingSubscription = untilDestroy(adapter.historyPreLoadingObservable
                         .delaySubscription(DELAY_BEFORE_LOADING_HISTORY, TimeUnit.MILLISECONDS)
-                        .onErrorResumeNext(Observable.empty()), Actions.empty());
+                        .onErrorResumeNext(Observable.empty()));
             }
         }
 
         @SuppressWarnings("PMD.DefaultPackage")
-        @Deprecated
         //it is for internal use only
+        @Deprecated
         void setAdapter(@Nullable final ObservableCollectionAdapter adapter) {
             this.adapter = adapter;
         }

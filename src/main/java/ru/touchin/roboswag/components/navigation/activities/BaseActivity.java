@@ -29,7 +29,6 @@ import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -40,6 +39,8 @@ import ru.touchin.roboswag.components.utils.BaseLifecycleBindable;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
 import ru.touchin.roboswag.components.utils.UiUtils;
 import ru.touchin.roboswag.core.log.Lc;
+import ru.touchin.roboswag.core.utils.Optional;
+import ru.touchin.roboswag.core.utils.pairs.HalfNullablePair;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
@@ -66,7 +67,8 @@ public abstract class BaseActivity extends AppCompatActivity
     private boolean resumed;
 
     @NonNull
-    private final BehaviorSubject<Pair<Integer, Intent>> lastActivityResult = BehaviorSubject.create((Pair<Integer, Intent>) null);
+    private final BehaviorSubject<Optional<HalfNullablePair<Integer, Intent>>> lastActivityResult
+            = BehaviorSubject.create(new Optional<HalfNullablePair<Integer, Intent>>(null));
 
     /**
      * Returns if activity resumed.
@@ -90,8 +92,8 @@ public abstract class BaseActivity extends AppCompatActivity
             return;
         }
 
-        lastActivityResult.onNext(new Pair<>(savedInstanceState.getInt(ACTIVITY_RESULT_CODE_EXTRA),
-                savedInstanceState.getParcelable(ACTIVITY_RESULT_DATA_EXTRA)));
+        lastActivityResult.onNext(new Optional<>(new HalfNullablePair<>(savedInstanceState.getInt(ACTIVITY_RESULT_CODE_EXTRA),
+                savedInstanceState.getParcelable(ACTIVITY_RESULT_DATA_EXTRA))));
     }
 
     @Override
@@ -99,7 +101,7 @@ public abstract class BaseActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this) + " requestCode: " + requestCode + "; resultCode: " + resultCode);
         if (resultCode == RESULT_OK) {
-            lastActivityResult.onNext(new Pair<>(requestCode, data));
+            lastActivityResult.onNext(new Optional<>(new HalfNullablePair<>(requestCode, data)));
         }
     }
 
@@ -111,10 +113,15 @@ public abstract class BaseActivity extends AppCompatActivity
      */
     @NonNull
     public Observable<Intent> observeActivityResult(final int requestCode) {
-        return lastActivityResult.switchMap(resultPair -> resultPair == null || resultPair.first != requestCode
-                ? Observable.empty()
-                : Observable.just(resultPair.second))
-                .doOnNext(result -> lastActivityResult.onNext(null));
+        return lastActivityResult
+                .switchMap(optional -> {
+                    final HalfNullablePair<Integer, Intent> activityResult = optional.get();
+                    if (activityResult == null || activityResult.getFirst() != requestCode) {
+                        return Observable.empty();
+                    }
+                    return Observable.just(activityResult.getSecond() != null ? activityResult.getSecond() : new Intent())
+                            .doOnNext(result -> lastActivityResult.onNext(new Optional<>(null)));
+                });
     }
 
     @Override
@@ -142,10 +149,11 @@ public abstract class BaseActivity extends AppCompatActivity
     protected void onSaveInstanceState(@NonNull final Bundle stateToSave) {
         super.onSaveInstanceState(stateToSave);
         UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
-        if (lastActivityResult.getValue() != null) {
-            stateToSave.putInt(ACTIVITY_RESULT_CODE_EXTRA, lastActivityResult.getValue().first);
-            if (lastActivityResult.getValue().second != null) {
-                stateToSave.putParcelable(ACTIVITY_RESULT_DATA_EXTRA, lastActivityResult.getValue().second);
+        final HalfNullablePair<Integer, Intent> activityResult = lastActivityResult.getValue().get();
+        if (activityResult != null) {
+            stateToSave.putInt(ACTIVITY_RESULT_CODE_EXTRA, activityResult.getFirst());
+            if (activityResult.getSecond() != null) {
+                stateToSave.putParcelable(ACTIVITY_RESULT_DATA_EXTRA, activityResult.getSecond());
             }
         }
     }
@@ -393,8 +401,7 @@ public abstract class BaseActivity extends AppCompatActivity
     }
 
     @SuppressWarnings("CPD-END")
-    //CPD: it is same as in other implementation based on BaseLifecycleBindable
-    /**
+    /*
      * Interface to be implemented for someone who want to intercept device back button pressing event.
      */
     public interface OnBackPressedListener {

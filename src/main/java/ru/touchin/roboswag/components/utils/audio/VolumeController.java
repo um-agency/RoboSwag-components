@@ -54,18 +54,15 @@ public final class VolumeController {
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         maxVolume = audioManager.getStreamMaxVolume(streamType);
         volumeObservable = Observable
-                .<VolumeObserver>create(subscriber -> {
-                    subscriber.onNext(new VolumeObserver());
-                    subscriber.onCompleted();
-                }).switchMap(volumeObserver -> Observable
-                        .just(getVolume())
-                        .concatWith(Observable.merge(selfVolumeChangedEvent,
-                                volumeObserver.systemVolumeChangedEvent
-                                        .map(event -> getVolume())
-                                        .doOnSubscribe(() -> context.getContentResolver()
-                                                .registerContentObserver(Settings.System.CONTENT_URI, true, volumeObserver))
-                                        .doOnUnsubscribe(() -> context.getContentResolver()
-                                                .unregisterContentObserver(volumeObserver)))))
+                .fromCallable(VolumeObserver::new)
+                .switchMap(volumeObserver -> selfVolumeChangedEvent
+                        .mergeWith(volumeObserver.systemVolumeChangedEvent
+                                .map(event -> getVolume())
+                                .doOnSubscribe(() -> context.getContentResolver()
+                                        .registerContentObserver(Settings.System.CONTENT_URI, true, volumeObserver))
+                                .doOnUnsubscribe(() -> context.getContentResolver()
+                                        .unregisterContentObserver(volumeObserver)))
+                        .startWith(getVolume()))
                 .distinctUntilChanged()
                 .replay(1)
                 .refCount();
