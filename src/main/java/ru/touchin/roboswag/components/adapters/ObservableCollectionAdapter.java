@@ -83,33 +83,14 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         this.lifecycleBindable = lifecycleBindable;
         innerCollection.observeChanges().subscribe(this::onItemsChanged);
         lifecycleBindable.untilDestroy(observableCollectionSubject
-                        .switchMap(optional -> {
-                            final ObservableCollection<TItem> collection = optional.get();
-                            if (collection == null) {
-                                innerCollection.clear();
-                                return Observable.empty();
-                            }
-                            return collection.observeChanges().observeOn(AndroidSchedulers.mainThread());
-                        }),
-                changes -> {
-                    anyChangeApplied = true;
-                    for (final Change<TItem> change : changes.getChanges()) {
-                        switch (change.getType()) {
-                            case INSERTED:
-                                innerCollection.addAll(change.getStart(), change.getChangedItems());
-                                break;
-                            case CHANGED:
-                                innerCollection.update(change.getStart(), change.getChangedItems());
-                                break;
-                            case REMOVED:
-                                innerCollection.remove(change.getStart(), change.getCount());
-                                break;
-                            default:
-                                Lc.assertion("Not supported " + change.getType());
-                                break;
-                        }
+                .switchMap(optional -> {
+                    final ObservableCollection<TItem> collection = optional.get();
+                    if (collection == null) {
+                        innerCollection.clear();
+                        return Observable.empty();
                     }
-                });
+                    return collection.observeChanges().observeOn(AndroidSchedulers.mainThread());
+                }), this::onApplyChanges);
         historyPreLoadingObservable = observableCollectionSubject
                 .switchMap(optional -> {
                     final ObservableCollection<TItem> collection = optional.get();
@@ -119,6 +100,26 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                     final int size = collection.size();
                     return ((LoadingMoreList) collection).loadRange(size, size + PRE_LOADING_COUNT);
                 });
+    }
+
+    private void onApplyChanges(@NonNull final ObservableCollection.CollectionChange<TItem> changes) {
+        anyChangeApplied = true;
+        for (final Change<TItem> change : changes.getChanges()) {
+            switch (change.getType()) {
+                case INSERTED:
+                    innerCollection.addAll(change.getStart(), change.getChangedItems());
+                    break;
+                case CHANGED:
+                    innerCollection.update(change.getStart(), change.getChangedItems());
+                    break;
+                case REMOVED:
+                    innerCollection.remove(change.getStart(), change.getCount());
+                    break;
+                default:
+                    Lc.assertion("Not supported " + change.getType());
+                    break;
+            }
+        }
     }
 
     /**

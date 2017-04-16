@@ -120,7 +120,15 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     private ViewController viewController;
     private Subscription viewControllerSubscription;
     private TState state;
-    private boolean isStarted;
+    private boolean started;
+    private boolean stateCreated;
+
+    private void tryCreateState(@Nullable final Context context) {
+        if (!stateCreated && state != null && context != null) {
+            state.onCreate();
+            stateCreated = true;
+        }
+    }
 
     /**
      * Returns specific {@link AbstractState} which contains state of fragment and it's {@link ViewController}.
@@ -162,7 +170,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
             if (inDebugMode) {
                 state = reserialize(state);
             }
-            state.onCreate();
+            tryCreateState(getContext());
         } else if (isStateRequired()) {
             Lc.assertion("State is required and null");
         }
@@ -219,6 +227,12 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         }
     }
 
+    @Override
+    public void onAttach(@NonNull final Context context) {
+        super.onAttach(context);
+        tryCreateState(context);
+    }
+
     @Deprecated
     @NonNull
     @Override
@@ -247,7 +261,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     @Override
     protected void onStart(@NonNull final View view, @NonNull final TActivity activity) {
         super.onStart(view, activity);
-        isStarted = true;
+        started = true;
         if (viewController != null) {
             viewController.onStart();
         }
@@ -307,7 +321,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         }
         this.viewController = viewController;
         if (this.viewController != null) {
-            if (isStarted) {
+            if (started) {
                 this.viewController.onStart();
             }
             this.viewController.getActivity().reconfigureNavigation();
@@ -341,7 +355,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
 
     @Override
     protected void onStop(@NonNull final View view, @NonNull final TActivity activity) {
-        isStarted = false;
+        started = false;
         if (viewController != null) {
             viewController.onStop();
         }
@@ -390,7 +404,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         }
 
         @Override
-        protected void onDraw(final Canvas canvas) {
+        protected void onDraw(@NonNull final Canvas canvas) {
             super.onDraw(canvas);
             if (inDebugMode && lastMeasureTime > 0) {
                 final long layoutTime = SystemClock.uptimeMillis() - lastMeasureTime;
