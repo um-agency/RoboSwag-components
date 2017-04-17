@@ -27,8 +27,8 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.support.annotation.NonNull;
 
-import rx.Observable;
-import rx.subjects.BehaviorSubject;
+import io.reactivex.Observable;
+import io.reactivex.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 02/11/2015.
@@ -50,12 +50,12 @@ public final class HeadsetStateObserver {
                         isConnectedReceiver.isWirelessConnectedChangedEvent,
                         (isWiredConnected, isWirelessConnected) -> isWiredConnected || isWirelessConnected)
                         .distinctUntilChanged()
-                        .doOnSubscribe(() -> {
+                        .doOnSubscribe(disposable -> {
                             final IntentFilter headsetStateIntentFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
                             headsetStateIntentFilter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
                             context.registerReceiver(isConnectedReceiver, headsetStateIntentFilter);
                         })
-                        .doOnUnsubscribe(() -> context.unregisterReceiver(isConnectedReceiver)))
+                        .doOnDispose(() -> context.unregisterReceiver(isConnectedReceiver)))
                 .replay(1)
                 .refCount();
     }
@@ -90,8 +90,8 @@ public final class HeadsetStateObserver {
         @SuppressWarnings("deprecation")
         public IsConnectedReceiver(@NonNull final AudioManager audioManager) {
             super();
-            isWiredConnectedChangedEvent = BehaviorSubject.create(audioManager.isWiredHeadsetOn());
-            isWirelessConnectedChangedEvent = BehaviorSubject.create(audioManager.isBluetoothA2dpOn());
+            isWiredConnectedChangedEvent = BehaviorSubject.createDefault(audioManager.isWiredHeadsetOn());
+            isWirelessConnectedChangedEvent = BehaviorSubject.createDefault(audioManager.isBluetoothA2dpOn());
         }
 
         @Override

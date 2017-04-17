@@ -27,10 +27,10 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
-import rx.Observable;
-import rx.subjects.PublishSubject;
 
 /**
  * Created by Gavriil Sitnikov on 02/11/2015.
@@ -58,9 +58,9 @@ public final class VolumeController {
                 .switchMap(volumeObserver -> selfVolumeChangedEvent
                         .mergeWith(volumeObserver.systemVolumeChangedEvent
                                 .map(event -> getVolume())
-                                .doOnSubscribe(() -> context.getContentResolver()
+                                .doOnSubscribe(disposable -> context.getContentResolver()
                                         .registerContentObserver(Settings.System.CONTENT_URI, true, volumeObserver))
-                                .doOnUnsubscribe(() -> context.getContentResolver()
+                                .doOnDispose(() -> context.getContentResolver()
                                         .unregisterContentObserver(volumeObserver)))
                         .startWith(getVolume()))
                 .distinctUntilChanged()

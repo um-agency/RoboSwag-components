@@ -21,31 +21,25 @@ package ru.touchin.roboswag.components.utils;
 
 import android.support.annotation.NonNull;
 
-import rx.Completable;
-import rx.CompletableSubscriber;
-import rx.Observable;
-import rx.Single;
-import rx.SingleSubscriber;
-import rx.Subscriber;
-import rx.Subscription;
-import rx.functions.Action0;
-import rx.functions.Action1;
+import io.reactivex.Completable;
+import io.reactivex.CompletableEmitter;
+import io.reactivex.Emitter;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.SingleEmitter;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
 
 /**
  * Created by Gavriil Sitnikov on 15/04/16.
  * Interface that should be implemented by lifecycle-based elements ({@link android.app.Activity}, {@link android.support.v4.app.Fragment} etc.)
  * to not manually manage subscriptions.
- * Use {@link #bind(Observable, Action1)} method to subscribe to observable onStart and unsubscribe onStop automatically.
  * Use {@link #untilStop(Observable)} method to subscribe to observable where you want and unsubscribe onStop.
  * Use {@link #untilDestroy(Observable)} method to subscribe to observable where you want and unsubscribe onDestroy.
  */
 @SuppressWarnings("PMD.TooManyMethods")
 public interface LifecycleBindable {
-
-    @NonNull
-    //do not use this method - it's not obvious method
-    @Deprecated
-    <T> Subscription bind(@NonNull Observable<T> observable, @NonNull Action1<T> onNextAction);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onStop.
@@ -55,10 +49,10 @@ public interface LifecycleBindable {
      *
      * @param observable {@link Observable} to subscribe until onStop;
      * @param <T>        Type of emitted by observable items;
-     * @return {@link Subscription} which will unsubscribes from observable onStop.
+     * @return {@link Disposable} which will unsubscribes from observable onStop.
      */
     @NonNull
-    <T> Subscription untilStop(@NonNull Observable<T> observable);
+    <T> Disposable untilStop(@NonNull Observable<T> observable);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onStop.
@@ -67,12 +61,12 @@ public interface LifecycleBindable {
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable   {@link Observable} to subscribe until onStop;
-     * @param onNextAction Action which will raise on every {@link Subscriber#onNext(Object)} item;
+     * @param onNextAction Action which will raise on every {@link Emitter#onNext(Object)} item;
      * @param <T>          Type of emitted by observable items;
-     * @return {@link Subscription} which will unsubscribes from observable onStop.
+     * @return {@link Disposable} which will unsubscribes from observable onStop.
      */
     @NonNull
-    <T> Subscription untilStop(@NonNull Observable<T> observable, @NonNull Action1<T> onNextAction);
+    <T> Disposable untilStop(@NonNull Observable<T> observable, @NonNull Consumer<T> onNextAction);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onStop.
@@ -81,13 +75,13 @@ public interface LifecycleBindable {
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable    {@link Observable} to subscribe until onStop;
-     * @param onNextAction  Action which will raise on every {@link Subscriber#onNext(Object)} item;
-     * @param onErrorAction Action which will raise on every {@link Subscriber#onError(Throwable)} throwable;
+     * @param onNextAction  Action which will raise on every {@link Emitter#onNext(Object)} item;
+     * @param onErrorAction Action which will raise on every {@link Emitter#onError(Throwable)} throwable;
      * @param <T>           Type of emitted by observable items;
-     * @return {@link Subscription} which will unsubscribes from observable onStop.
+     * @return {@link Disposable} which will unsubscribes from observable onStop.
      */
     @NonNull
-    <T> Subscription untilStop(@NonNull Observable<T> observable, @NonNull Action1<T> onNextAction, @NonNull Action1<Throwable> onErrorAction);
+    <T> Disposable untilStop(@NonNull Observable<T> observable, @NonNull Consumer<T> onNextAction, @NonNull Consumer<Throwable> onErrorAction);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onStop.
@@ -96,15 +90,15 @@ public interface LifecycleBindable {
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable        {@link Observable} to subscribe until onStop;
-     * @param onNextAction      Action which will raise on every {@link Subscriber#onNext(Object)} item;
-     * @param onErrorAction     Action which will raise on every {@link Subscriber#onError(Throwable)} throwable;
-     * @param onCompletedAction Action which will raise at {@link Subscriber#onCompleted()} on completion of observable;
+     * @param onNextAction      Action which will raise on every {@link Emitter#onNext(Object)} item;
+     * @param onErrorAction     Action which will raise on every {@link Emitter#onError(Throwable)} throwable;
+     * @param onCompletedAction Action which will raise at {@link Emitter#onComplete()} on completion of observable;
      * @param <T>               Type of emitted by observable items;
-     * @return {@link Subscription} which is wrapping source observable to unsubscribe from it onStop.
+     * @return {@link Disposable} which is wrapping source observable to unsubscribe from it onStop.
      */
     @NonNull
-    <T> Subscription untilStop(@NonNull Observable<T> observable,
-                               @NonNull Action1<T> onNextAction, @NonNull Action1<Throwable> onErrorAction, @NonNull Action0 onCompletedAction);
+    <T> Disposable untilStop(@NonNull Observable<T> observable,
+                             @NonNull Consumer<T> onNextAction, @NonNull Consumer<Throwable> onErrorAction, @NonNull Action onCompletedAction);
 
     /**
      * Method should be used to guarantee that single won't be subscribed after onStop.
@@ -114,10 +108,10 @@ public interface LifecycleBindable {
      *
      * @param single {@link Single} to subscribe until onStop;
      * @param <T>    Type of emitted by single item;
-     * @return {@link Subscription} which will unsubscribes from single onStop.
+     * @return {@link Disposable} which will unsubscribes from single onStop.
      */
     @NonNull
-    <T> Subscription untilStop(@NonNull Single<T> single);
+    <T> Disposable untilStop(@NonNull Single<T> single);
 
     /**
      * Method should be used to guarantee that single won't be subscribed after onStop.
@@ -126,12 +120,12 @@ public interface LifecycleBindable {
      * Don't forget to process errors if single can emit them.
      *
      * @param single          {@link Single} to subscribe until onStop;
-     * @param onSuccessAction Action which will raise on every {@link SingleSubscriber#onSuccess(Object)} item;
+     * @param onSuccessAction Action which will raise on every {@link SingleEmitter#onSuccess(Object)} item;
      * @param <T>             Type of emitted by single item;
-     * @return {@link Subscription} which will unsubscribes from single onStop.
+     * @return {@link Disposable} which will unsubscribes from single onStop.
      */
     @NonNull
-    <T> Subscription untilStop(@NonNull Single<T> single, @NonNull Action1<T> onSuccessAction);
+    <T> Disposable untilStop(@NonNull Single<T> single, @NonNull Consumer<T> onSuccessAction);
 
     /**
      * Method should be used to guarantee that single won't be subscribed after onStop.
@@ -140,13 +134,13 @@ public interface LifecycleBindable {
      * Don't forget to process errors if single can emit them.
      *
      * @param single          {@link Single} to subscribe until onStop;
-     * @param onSuccessAction Action which will raise on every {@link SingleSubscriber#onSuccess(Object)} item;
-     * @param onErrorAction   Action which will raise on every {@link SingleSubscriber#onError(Throwable)} throwable;
+     * @param onSuccessAction Action which will raise on every {@link SingleEmitter#onSuccess(Object)} item;
+     * @param onErrorAction   Action which will raise on every {@link SingleEmitter#onError(Throwable)} throwable;
      * @param <T>             Type of emitted by observable items;
-     * @return {@link Subscription} which is wrapping source single to unsubscribe from it onStop.
+     * @return {@link Disposable} which is wrapping source single to unsubscribe from it onStop.
      */
     @NonNull
-    <T> Subscription untilStop(@NonNull Single<T> single, @NonNull Action1<T> onSuccessAction, @NonNull Action1<Throwable> onErrorAction);
+    <T> Disposable untilStop(@NonNull Single<T> single, @NonNull Consumer<T> onSuccessAction, @NonNull Consumer<Throwable> onErrorAction);
 
     /**
      * Method should be used to guarantee that completable won't be subscribed after onStop.
@@ -155,10 +149,10 @@ public interface LifecycleBindable {
      * Don't forget to process errors if completable can emit them.
      *
      * @param completable {@link Completable} to subscribe until onStop;
-     * @return {@link Subscription} which will unsubscribes from completable onStop.
+     * @return {@link Disposable} which will unsubscribes from completable onStop.
      */
     @NonNull
-    Subscription untilStop(@NonNull Completable completable);
+    Disposable untilStop(@NonNull Completable completable);
 
     /**
      * Method should be used to guarantee that completable won't be subscribed after onStop.
@@ -167,11 +161,11 @@ public interface LifecycleBindable {
      * Don't forget to process errors if completable can emit them.
      *
      * @param completable       {@link Completable} to subscribe until onStop;
-     * @param onCompletedAction Action which will raise at {@link CompletableSubscriber#onCompleted()} on completion of observable;
-     * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onStop.
+     * @param onCompletedAction Action which will raise at {@link CompletableEmitter#onComplete()} on completion of observable;
+     * @return {@link Disposable} which is wrapping source completable to unsubscribe from it onStop.
      */
     @NonNull
-    Subscription untilStop(@NonNull Completable completable, @NonNull Action0 onCompletedAction);
+    Disposable untilStop(@NonNull Completable completable, @NonNull Action onCompletedAction);
 
     /**
      * Method should be used to guarantee that completable won't be subscribed after onStop.
@@ -180,12 +174,12 @@ public interface LifecycleBindable {
      * Don't forget to process errors if completable can emit them.
      *
      * @param completable       {@link Completable} to subscribe until onStop;
-     * @param onCompletedAction Action which will raise at {@link CompletableSubscriber#onCompleted()} on completion of observable;
-     * @param onErrorAction     Action which will raise on every {@link CompletableSubscriber#onError(Throwable)} throwable;
-     * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onStop.
+     * @param onCompletedAction Action which will raise at {@link CompletableEmitter#onComplete()} on completion of observable;
+     * @param onErrorAction     Action which will raise on every {@link CompletableEmitter#onError(Throwable)} throwable;
+     * @return {@link Disposable} which is wrapping source completable to unsubscribe from it onStop.
      */
     @NonNull
-    Subscription untilStop(@NonNull Completable completable, @NonNull Action0 onCompletedAction, @NonNull Action1<Throwable> onErrorAction);
+    Disposable untilStop(@NonNull Completable completable, @NonNull Action onCompletedAction, @NonNull Consumer<Throwable> onErrorAction);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onDestroy.
@@ -194,10 +188,10 @@ public interface LifecycleBindable {
      *
      * @param observable {@link Observable} to subscribe until onDestroy;
      * @param <T>        Type of emitted by observable items;
-     * @return {@link Subscription} which is wrapping source observable to unsubscribe from it onDestroy.
+     * @return {@link Disposable} which is wrapping source observable to unsubscribe from it onDestroy.
      */
     @NonNull
-    <T> Subscription untilDestroy(@NonNull Observable<T> observable);
+    <T> Disposable untilDestroy(@NonNull Observable<T> observable);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onDestroy.
@@ -205,12 +199,12 @@ public interface LifecycleBindable {
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable   {@link Observable} to subscribe until onDestroy;
-     * @param onNextAction Action which will raise on every {@link Subscriber#onNext(Object)} item;
+     * @param onNextAction Action which will raise on every {@link Emitter#onNext(Object)} item;
      * @param <T>          Type of emitted by observable items;
-     * @return {@link Subscription} which is wrapping source observable to unsubscribe from it onDestroy.
+     * @return {@link Disposable} which is wrapping source observable to unsubscribe from it onDestroy.
      */
     @NonNull
-    <T> Subscription untilDestroy(@NonNull Observable<T> observable, @NonNull Action1<T> onNextAction);
+    <T> Disposable untilDestroy(@NonNull Observable<T> observable, @NonNull Consumer<T> onNextAction);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onDestroy.
@@ -218,13 +212,13 @@ public interface LifecycleBindable {
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable    {@link Observable} to subscribe until onDestroy;
-     * @param onNextAction  Action which will raise on every {@link Subscriber#onNext(Object)} item;
-     * @param onErrorAction Action which will raise on every {@link Subscriber#onError(Throwable)} throwable;
+     * @param onNextAction  Action which will raise on every {@link Emitter#onNext(Object)} item;
+     * @param onErrorAction Action which will raise on every {@link Emitter#onError(Throwable)} throwable;
      * @param <T>           Type of emitted by observable items;
-     * @return {@link Subscription} which is wrapping source observable to unsubscribe from it onDestroy.
+     * @return {@link Disposable} which is wrapping source observable to unsubscribe from it onDestroy.
      */
     @NonNull
-    <T> Subscription untilDestroy(@NonNull Observable<T> observable, @NonNull Action1<T> onNextAction, @NonNull Action1<Throwable> onErrorAction);
+    <T> Disposable untilDestroy(@NonNull Observable<T> observable, @NonNull Consumer<T> onNextAction, @NonNull Consumer<Throwable> onErrorAction);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onDestroy.
@@ -232,15 +226,15 @@ public interface LifecycleBindable {
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable        {@link Observable} to subscribe until onDestroy;
-     * @param onNextAction      Action which will raise on every {@link Subscriber#onNext(Object)} item;
-     * @param onErrorAction     Action which will raise on every {@link Subscriber#onError(Throwable)} throwable;
-     * @param onCompletedAction Action which will raise at {@link Subscriber#onCompleted()} on completion of observable;
+     * @param onNextAction      Action which will raise on every {@link Emitter#onNext(Object)} item;
+     * @param onErrorAction     Action which will raise on every {@link Emitter#onError(Throwable)} throwable;
+     * @param onCompletedAction Action which will raise at {@link Emitter#onComplete()} on completion of observable;
      * @param <T>               Type of emitted by observable items;
-     * @return {@link Subscription} which is wrapping source observable to unsubscribe from it onDestroy.
+     * @return {@link Disposable} which is wrapping source observable to unsubscribe from it onDestroy.
      */
     @NonNull
-    <T> Subscription untilDestroy(@NonNull Observable<T> observable,
-                                  @NonNull Action1<T> onNextAction, @NonNull Action1<Throwable> onErrorAction, @NonNull Action0 onCompletedAction);
+    <T> Disposable untilDestroy(@NonNull Observable<T> observable,
+                                @NonNull Consumer<T> onNextAction, @NonNull Consumer<Throwable> onErrorAction, @NonNull Action onCompletedAction);
 
     /**
      * Method should be used to guarantee that single won't be subscribed after onDestroy.
@@ -249,10 +243,10 @@ public interface LifecycleBindable {
      *
      * @param single {@link Single} to subscribe until onDestroy;
      * @param <T>    Type of emitted by single items;
-     * @return {@link Subscription} which is wrapping source single to unsubscribe from it onDestroy.
+     * @return {@link Disposable} which is wrapping source single to unsubscribe from it onDestroy.
      */
     @NonNull
-    <T> Subscription untilDestroy(@NonNull Single<T> single);
+    <T> Disposable untilDestroy(@NonNull Single<T> single);
 
     /**
      * Method should be used to guarantee that single won't be subscribed after onDestroy.
@@ -260,12 +254,12 @@ public interface LifecycleBindable {
      * Don't forget to process errors if single can emit them.
      *
      * @param single          {@link Single} to subscribe until onDestroy;
-     * @param onSuccessAction Action which will raise on every {@link SingleSubscriber#onSuccess(Object)} item;
+     * @param onSuccessAction Action which will raise on every {@link SingleEmitter#onSuccess(Object)} item;
      * @param <T>             Type of emitted by single items;
-     * @return {@link Subscription} which is wrapping source single to unsubscribe from it onDestroy.
+     * @return {@link Disposable} which is wrapping source single to unsubscribe from it onDestroy.
      */
     @NonNull
-    <T> Subscription untilDestroy(@NonNull Single<T> single, @NonNull Action1<T> onSuccessAction);
+    <T> Disposable untilDestroy(@NonNull Single<T> single, @NonNull Consumer<T> onSuccessAction);
 
     /**
      * Method should be used to guarantee that single won't be subscribed after onDestroy.
@@ -273,13 +267,13 @@ public interface LifecycleBindable {
      * Don't forget to process errors if single can emit them.
      *
      * @param single          {@link Single} to subscribe until onDestroy;
-     * @param onSuccessAction Action which will raise on every {@link SingleSubscriber#onSuccess(Object)} item;
-     * @param onErrorAction   Action which will raise on every {@link SingleSubscriber#onError(Throwable)} throwable;
+     * @param onSuccessAction Action which will raise on every {@link SingleEmitter#onSuccess(Object)} item;
+     * @param onErrorAction   Action which will raise on every {@link SingleEmitter#onError(Throwable)} throwable;
      * @param <T>             Type of emitted by single items;
-     * @return {@link Subscription} which is wrapping source single to unsubscribe from it onDestroy.
+     * @return {@link Disposable} which is wrapping source single to unsubscribe from it onDestroy.
      */
     @NonNull
-    <T> Subscription untilDestroy(@NonNull Single<T> single, @NonNull Action1<T> onSuccessAction, @NonNull Action1<Throwable> onErrorAction);
+    <T> Disposable untilDestroy(@NonNull Single<T> single, @NonNull Consumer<T> onSuccessAction, @NonNull Consumer<Throwable> onErrorAction);
 
     /**
      * Method should be used to guarantee that completable won't be subscribed after onDestroy.
@@ -287,10 +281,10 @@ public interface LifecycleBindable {
      * Don't forget to process errors if completable can emit them.
      *
      * @param completable {@link Completable} to subscribe until onDestroy;
-     * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onDestroy.
+     * @return {@link Disposable} which is wrapping source completable to unsubscribe from it onDestroy.
      */
     @NonNull
-    Subscription untilDestroy(@NonNull Completable completable);
+    Disposable untilDestroy(@NonNull Completable completable);
 
     /**
      * Method should be used to guarantee that completable won't be subscribed after onDestroy.
@@ -298,11 +292,11 @@ public interface LifecycleBindable {
      * Don't forget to process errors if single can emit them.
      *
      * @param completable       {@link Completable} to subscribe until onDestroy;
-     * @param onCompletedAction Action which will raise on every {@link CompletableSubscriber#onCompleted()} item;
-     * @return {@link Subscription} which is wrapping source single to unsubscribe from it onDestroy.
+     * @param onCompletedAction Action which will raise on every {@link CompletableEmitter#onComplete()} item;
+     * @return {@link Disposable} which is wrapping source single to unsubscribe from it onDestroy.
      */
     @NonNull
-    Subscription untilDestroy(@NonNull Completable completable, @NonNull Action0 onCompletedAction);
+    Disposable untilDestroy(@NonNull Completable completable, @NonNull Action onCompletedAction);
 
     /**
      * Method should be used to guarantee that completable won't be subscribed after onDestroy.
@@ -310,11 +304,11 @@ public interface LifecycleBindable {
      * Don't forget to process errors if completable can emit them.
      *
      * @param completable       {@link Completable} to subscribe until onDestroy;
-     * @param onCompletedAction Action which will raise on every {@link CompletableSubscriber#onCompleted()} item;
-     * @param onErrorAction     Action which will raise on every {@link CompletableSubscriber#onError(Throwable)} throwable;
-     * @return {@link Subscription} which is wrapping source completable to unsubscribe from it onDestroy.
+     * @param onCompletedAction Action which will raise on every {@link CompletableEmitter#onComplete()} item;
+     * @param onErrorAction     Action which will raise on every {@link CompletableEmitter#onError(Throwable)} throwable;
+     * @return {@link Disposable} which is wrapping source completable to unsubscribe from it onDestroy.
      */
     @NonNull
-    Subscription untilDestroy(@NonNull Completable completable, @NonNull Action0 onCompletedAction, @NonNull Action1<Throwable> onErrorAction);
+    Disposable untilDestroy(@NonNull Completable completable, @NonNull Action onCompletedAction, @NonNull Consumer<Throwable> onErrorAction);
 
 }

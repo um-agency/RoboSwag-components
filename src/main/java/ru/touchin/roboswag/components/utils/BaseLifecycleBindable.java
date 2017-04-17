@@ -21,18 +21,17 @@ package ru.touchin.roboswag.components.utils;
 
 import android.support.annotation.NonNull;
 
+import io.reactivex.Completable;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
+import io.reactivex.internal.functions.Functions;
+import io.reactivex.subjects.BehaviorSubject;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
-import rx.Completable;
-import rx.Observable;
-import rx.Single;
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.exceptions.OnErrorThrowable;
-import rx.functions.Action0;
-import rx.functions.Action1;
-import rx.functions.Actions;
-import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 18/04/16.
@@ -103,188 +102,181 @@ public class BaseLifecycleBindable implements LifecycleBindable {
 
     @NonNull
     @Override
-    public <T> Subscription bind(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
+    public <T> Disposable untilStop(@NonNull final Observable<T> observable) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return isStartedSubject.switchMap(started -> started ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
-                .takeUntil(isCreatedSubject.filter(created -> !created))
-                .subscribe(onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
+        return untilStop(observable, Functions.emptyConsumer(), getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD), Functions.EMPTY_ACTION);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Observable<T> observable) {
+    public <T> Disposable untilStop(@NonNull final Observable<T> observable, @NonNull final Consumer<T> onNextAction) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilStop(observable, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD), Actions.empty());
+        return untilStop(observable, onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD), Functions.EMPTY_ACTION);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
-        final String codePoint = Lc.getCodePoint(this, 2);
-        return untilStop(observable, onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD), Actions.empty());
+    public <T> Disposable untilStop(@NonNull final Observable<T> observable,
+                                    @NonNull final Consumer<T> onNextAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
+        return untilStop(observable, onNextAction, onErrorAction, Functions.EMPTY_ACTION);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Observable<T> observable,
-                                      @NonNull final Action1<T> onNextAction,
-                                      @NonNull final Action1<Throwable> onErrorAction) {
-        return untilStop(observable, onNextAction, onErrorAction, Actions.empty());
-    }
-
-    @NonNull
-    @Override
-    public <T> Subscription untilStop(@NonNull final Observable<T> observable,
-                                      @NonNull final Action1<T> onNextAction,
-                                      @NonNull final Action1<Throwable> onErrorAction,
-                                      @NonNull final Action0 onCompletedAction) {
+    public <T> Disposable untilStop(@NonNull final Observable<T> observable,
+                                    @NonNull final Consumer<T> onNextAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction,
+                                    @NonNull final Action onCompletedAction) {
         return until(observable, isStartedSubject.map(started -> !started), onNextAction, onErrorAction, onCompletedAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Single<T> single) {
+    public <T> Disposable untilStop(@NonNull final Single<T> single) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilStop(single, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
+        return untilStop(single, Functions.emptyConsumer(), getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Single<T> single, @NonNull final Action1<T> onSuccessAction) {
+    public <T> Disposable untilStop(@NonNull final Single<T> single, @NonNull final Consumer<T> onSuccessAction) {
         final String codePoint = Lc.getCodePoint(this, 2);
         return untilStop(single, onSuccessAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Single<T> single,
-                                      @NonNull final Action1<T> onSuccessAction,
-                                      @NonNull final Action1<Throwable> onErrorAction) {
-        return until(single.toObservable(), isStartedSubject.map(started -> !started), onSuccessAction, onErrorAction, Actions.empty());
+    public <T> Disposable untilStop(@NonNull final Single<T> single,
+                                    @NonNull final Consumer<T> onSuccessAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
+        return until(single.toObservable(), isStartedSubject.map(started -> !started), onSuccessAction, onErrorAction, Functions.EMPTY_ACTION);
     }
 
     @NonNull
     @Override
-    public Subscription untilStop(@NonNull final Completable completable) {
+    public Disposable untilStop(@NonNull final Completable completable) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilStop(completable, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
+        return untilStop(completable, Functions.EMPTY_ACTION, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
     }
 
     @NonNull
     @Override
-    public Subscription untilStop(@NonNull final Completable completable,
-                                  @NonNull final Action0 onCompletedAction) {
+    public Disposable untilStop(@NonNull final Completable completable,
+                                @NonNull final Action onCompletedAction) {
         final String codePoint = Lc.getCodePoint(this, 2);
         return untilStop(completable, onCompletedAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
     }
 
     @NonNull
     @Override
-    public Subscription untilStop(@NonNull final Completable completable,
-                                  @NonNull final Action0 onCompletedAction,
-                                  @NonNull final Action1<Throwable> onErrorAction) {
-        return until(completable.toObservable(), isStartedSubject.map(started -> !started), Actions.empty(), onErrorAction, onCompletedAction);
+    public Disposable untilStop(@NonNull final Completable completable,
+                                @NonNull final Action onCompletedAction,
+                                @NonNull final Consumer<Throwable> onErrorAction) {
+        return until(completable.toObservable(), isStartedSubject.map(started -> !started),
+                Functions.emptyConsumer(), onErrorAction, onCompletedAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable) {
+    public <T> Disposable untilDestroy(@NonNull final Observable<T> observable) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilDestroy(observable, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD), Actions.empty());
+        return untilDestroy(observable, Functions.emptyConsumer(),
+                getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD), Functions.EMPTY_ACTION);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable,
-                                         @NonNull final Action1<T> onNextAction) {
+    public <T> Disposable untilDestroy(@NonNull final Observable<T> observable,
+                                       @NonNull final Consumer<T> onNextAction) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilDestroy(observable, onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD), Actions.empty());
+        return untilDestroy(observable, onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD), Functions.EMPTY_ACTION);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable,
-                                         @NonNull final Action1<T> onNextAction,
-                                         @NonNull final Action1<Throwable> onErrorAction) {
-        return untilDestroy(observable, onNextAction, onErrorAction, Actions.empty());
+    public <T> Disposable untilDestroy(@NonNull final Observable<T> observable,
+                                       @NonNull final Consumer<T> onNextAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
+        return untilDestroy(observable, onNextAction, onErrorAction, Functions.EMPTY_ACTION);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable,
-                                         @NonNull final Action1<T> onNextAction,
-                                         @NonNull final Action1<Throwable> onErrorAction,
-                                         @NonNull final Action0 onCompletedAction) {
+    public <T> Disposable untilDestroy(@NonNull final Observable<T> observable,
+                                       @NonNull final Consumer<T> onNextAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction,
+                                       @NonNull final Action onCompletedAction) {
         return until(observable, isCreatedSubject.map(created -> !created), onNextAction, onErrorAction, onCompletedAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Single<T> single) {
+    public <T> Disposable untilDestroy(@NonNull final Single<T> single) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilDestroy(single, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
+        return untilDestroy(single, Functions.emptyConsumer(), getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Single<T> single, @NonNull final Action1<T> onSuccessAction) {
+    public <T> Disposable untilDestroy(@NonNull final Single<T> single, @NonNull final Consumer<T> onSuccessAction) {
         final String codePoint = Lc.getCodePoint(this, 2);
         return untilDestroy(single, onSuccessAction, getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Single<T> single,
-                                         @NonNull final Action1<T> onSuccessAction,
-                                         @NonNull final Action1<Throwable> onErrorAction) {
-        return until(single.toObservable(), isCreatedSubject.map(created -> !created), onSuccessAction, onErrorAction, Actions.empty());
+    public <T> Disposable untilDestroy(@NonNull final Single<T> single,
+                                       @NonNull final Consumer<T> onSuccessAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
+        return until(single.toObservable(), isCreatedSubject.map(created -> !created), onSuccessAction, onErrorAction, Functions.EMPTY_ACTION);
     }
 
     @NonNull
     @Override
-    public Subscription untilDestroy(@NonNull final Completable completable) {
+    public Disposable untilDestroy(@NonNull final Completable completable) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return untilDestroy(completable, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
+        return untilDestroy(completable, Functions.EMPTY_ACTION, getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
     }
 
     @NonNull
     @Override
-    public Subscription untilDestroy(@NonNull final Completable completable, @NonNull final Action0 onCompletedAction) {
+    public Disposable untilDestroy(@NonNull final Completable completable, @NonNull final Action onCompletedAction) {
         final String codePoint = Lc.getCodePoint(this, 2);
         return untilDestroy(completable, onCompletedAction, getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
     }
 
     @NonNull
     @Override
-    public Subscription untilDestroy(@NonNull final Completable completable,
-                                     @NonNull final Action0 onCompletedAction,
-                                     @NonNull final Action1<Throwable> onErrorAction) {
-        return until(completable.toObservable(), isCreatedSubject.map(created -> !created), Actions.empty(), onErrorAction, onCompletedAction);
+    public Disposable untilDestroy(@NonNull final Completable completable,
+                                   @NonNull final Action onCompletedAction,
+                                   @NonNull final Consumer<Throwable> onErrorAction) {
+        return until(completable.toObservable(), isCreatedSubject.map(created -> !created),
+                Functions.emptyConsumer(), onErrorAction, onCompletedAction);
     }
 
     @NonNull
-    private <T> Subscription until(@NonNull final Observable<T> observable,
-                                   @NonNull final Observable<Boolean> conditionSubject,
-                                   @NonNull final Action1<T> onNextAction,
-                                   @NonNull final Action1<Throwable> onErrorAction,
-                                   @NonNull final Action0 onCompletedAction) {
+    private <T> Disposable until(@NonNull final Observable<T> observable,
+                                 @NonNull final Observable<Boolean> conditionSubject,
+                                 @NonNull final Consumer<T> onNextAction,
+                                 @NonNull final Consumer<Throwable> onErrorAction,
+                                 @NonNull final Action onCompletedAction) {
         final Observable<T> actualObservable;
-        if (onNextAction == Actions.empty() && onErrorAction == (Action1) Actions.empty() && onCompletedAction == Actions.empty()) {
+        if (onNextAction == Functions.emptyConsumer() && onErrorAction == (Consumer) Functions.emptyConsumer()
+                && onCompletedAction == Functions.EMPTY_ACTION) {
             actualObservable = observable;
         } else {
             actualObservable = observable.observeOn(AndroidSchedulers.mainThread())
-                    .doOnCompleted(onCompletedAction)
+                    .doOnComplete(onCompletedAction)
                     .doOnNext(onNextAction)
                     .doOnError(onErrorAction);
         }
 
-        return isCreatedSubject.first()
-                .switchMap(created -> created ? actualObservable : Observable.empty())
+        return isCreatedSubject.firstOrError()
+                .flatMapObservable(created -> created ? actualObservable : Observable.empty())
                 .takeUntil(conditionSubject.filter(condition -> condition))
                 .onErrorResumeNext(throwable -> {
-                    final boolean isRxError = throwable instanceof OnErrorThrowable;
-                    if ((!isRxError && throwable instanceof RuntimeException)
-                            || (isRxError && throwable.getCause() instanceof RuntimeException)) {
+                    if (throwable instanceof RuntimeException) {
                         Lc.assertion(throwable);
                     }
                     return Observable.empty();
@@ -293,7 +285,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     }
 
     @NonNull
-    private Action1<Throwable> getActionThrowableForAssertion(@NonNull final String codePoint, @NonNull final String method) {
+    private Consumer<Throwable> getActionThrowableForAssertion(@NonNull final String codePoint, @NonNull final String method) {
         return throwable -> Lc.assertion(new ShouldNotHappenException("Unexpected error on " + method + " at " + codePoint, throwable));
     }
 

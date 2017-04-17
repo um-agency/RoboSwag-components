@@ -39,6 +39,9 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.subjects.BehaviorSubject;
 import ru.touchin.roboswag.components.navigation.AbstractState;
 import ru.touchin.roboswag.components.navigation.ViewController;
 import ru.touchin.roboswag.components.navigation.activities.ViewControllerActivity;
@@ -47,10 +50,6 @@ import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.Optional;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import ru.touchin.roboswag.core.utils.pairs.NullablePair;
-import rx.Observable;
-import rx.Subscription;
-import rx.exceptions.OnErrorThrowable;
-import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
@@ -118,7 +117,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
     private final BehaviorSubject<NullablePair<PlaceholderView, Bundle>> viewSubject = BehaviorSubject.create();
     @Nullable
     private ViewController viewController;
-    private Subscription viewControllerSubscription;
+    private Disposable viewControllerSubscription;
     private TState state;
     private boolean started;
     private boolean stateCreated;
@@ -187,8 +186,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
                             return newViewController;
                         })
                 .subscribe(this::onViewControllerChanged,
-                        throwable -> Lc.cutAssertion(throwable,
-                                OnErrorThrowable.class, InvocationTargetException.class, InflateException.class));
+                        throwable -> Lc.cutAssertion(throwable, InvocationTargetException.class, InflateException.class));
     }
 
     @NonNull
@@ -196,7 +194,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
                                                 @Nullable final Bundle savedInstanceState) {
 
         if (getViewControllerClass().getConstructors().length != 1) {
-            throw OnErrorThrowable.from(new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass()));
+            throw new ShouldNotHappenException("There should be single constructor for " + getViewControllerClass());
         }
         final Constructor<?> constructor = getViewControllerClass().getConstructors()[0];
         final ViewController.CreationContext creationContext = new ViewController.CreationContext(activity, this, view);
@@ -208,11 +206,10 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
                 case 3:
                     return (ViewController) constructor.newInstance(this, creationContext, savedInstanceState);
                 default:
-                    throw OnErrorThrowable
-                            .from(new ShouldNotHappenException("Wrong constructor parameters count: " + constructor.getParameterTypes().length));
+                    throw new ShouldNotHappenException("Wrong constructor parameters count: " + constructor.getParameterTypes().length);
             }
         } catch (final Exception exception) {
-            throw OnErrorThrowable.from(exception);
+            throw new ShouldNotHappenException(exception);
         } finally {
             checkCreationTime(creationTime);
         }
@@ -376,7 +373,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
 
     @Override
     public void onDestroy() {
-        viewControllerSubscription.unsubscribe();
+        viewControllerSubscription.dispose();
         if (viewController != null && !viewController.isDestroyed()) {
             viewController.onDestroy();
             viewController = null;

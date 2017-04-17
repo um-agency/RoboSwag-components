@@ -30,8 +30,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.view.MenuItem;
 
+import io.reactivex.functions.Function;
 import ru.touchin.roboswag.core.log.Lc;
-import rx.functions.Func1;
 
 /**
  * Created by Gavriil Sitnikov on 07/03/2016.
@@ -44,7 +44,7 @@ import rx.functions.Func1;
  * If {@link #back()} method will be called then stack will go to previous fragment.
  * Usually such logic using to set as top fragments from sidebar and show hamburger when some of them appeared;
  * 4) {@link #pushForResult} means to push fragment with target fragment. It is also adding {@link #WITH_TARGET_FRAGMENT_TAG_MARK} tag.
- * Also if such up/back navigation logic is not OK then {@link #backTo(Func1)} method could be used with any condition to back to.
+ * Also if such up/back navigation logic is not OK then {@link #backTo(Function)} method could be used with any condition to back to.
  * In that case in any stack-change method it is allowed to setup fragment transactions.
  */
 public class FragmentNavigation {
@@ -128,7 +128,7 @@ public class FragmentNavigation {
                               @Nullable final Fragment targetFragment,
                               @Nullable final Bundle args,
                               @Nullable final String backStackTag,
-                              @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                              @Nullable final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
         if (fragmentManager.isDestroyed()) {
             Lc.assertion("FragmentManager is destroyed");
             return;
@@ -150,7 +150,12 @@ public class FragmentNavigation {
             fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         }
         if (transactionSetup != null) {
-            transactionSetup.call(fragmentTransaction).commit();
+            try {
+                transactionSetup.apply(fragmentTransaction).commit();
+            } catch (final Exception exception) {
+                Lc.assertion(exception);
+                fragmentTransaction.commit();
+            }
         } else {
             fragmentTransaction.commit();
         }
@@ -175,15 +180,20 @@ public class FragmentNavigation {
      * @param condition Condition of back stack entry to be satisfied;
      * @return True if it have back to some entry in stack.
      */
-    public boolean backTo(@NonNull final Func1<FragmentManager.BackStackEntry, Boolean> condition) {
+    public boolean backTo(@NonNull final Function<FragmentManager.BackStackEntry, Boolean> condition) {
         final int stackSize = fragmentManager.getBackStackEntryCount();
         Integer id = null;
-        for (int i = stackSize - 2; i >= 0; i--) {
-            final FragmentManager.BackStackEntry backStackEntry = fragmentManager.getBackStackEntryAt(i);
-            id = backStackEntry.getId();
-            if (condition.call(backStackEntry)) {
-                break;
+        try {
+            for (int i = stackSize - 2; i >= 0; i--) {
+                final FragmentManager.BackStackEntry backStackEntry = fragmentManager.getBackStackEntryAt(i);
+                id = backStackEntry.getId();
+                if (condition.apply(backStackEntry)) {
+                    break;
+                }
             }
+        } catch (final Exception exception) {
+            Lc.assertion(exception);
+            return false;
         }
         if (id != null) {
             fragmentManager.popBackStack(id, 0);
@@ -233,7 +243,7 @@ public class FragmentNavigation {
      * @param transactionSetup Function to setup transaction before commit. It is useful to specify transition animations or additional info.
      */
     public void push(@NonNull final Class<? extends Fragment> fragmentClass,
-                     @NonNull final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                     @NonNull final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addToStack(fragmentClass, null, null, null, transactionSetup);
     }
 
@@ -246,7 +256,7 @@ public class FragmentNavigation {
      */
     public void push(@NonNull final Class<? extends Fragment> fragmentClass,
                      @Nullable final Bundle args,
-                     @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                     @Nullable final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addToStack(fragmentClass, null, args, null, transactionSetup);
     }
 
@@ -283,7 +293,7 @@ public class FragmentNavigation {
      */
     public void pushForResult(@NonNull final Class<? extends Fragment> fragmentClass,
                               @NonNull final Fragment targetFragment,
-                              @NonNull final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                              @NonNull final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addToStack(fragmentClass, targetFragment, null, fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
@@ -298,7 +308,7 @@ public class FragmentNavigation {
     public void pushForResult(@NonNull final Class<? extends Fragment> fragmentClass,
                               @NonNull final Fragment targetFragment,
                               @Nullable final Bundle args,
-                              @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                              @Nullable final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addToStack(fragmentClass, targetFragment, args, fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
@@ -330,7 +340,7 @@ public class FragmentNavigation {
      * @param transactionSetup Function to setup transaction before commit. It is useful to specify transition animations or additional info.
      */
     public void setAsTop(@NonNull final Class<? extends Fragment> fragmentClass,
-                         @NonNull final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                         @NonNull final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addToStack(fragmentClass, null, null, fragmentClass.getName() + ';' + TOP_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
@@ -344,7 +354,7 @@ public class FragmentNavigation {
      */
     public void setAsTop(@NonNull final Class<? extends Fragment> fragmentClass,
                          @Nullable final Bundle args,
-                         @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                         @Nullable final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
         addToStack(fragmentClass, null, args, fragmentClass.getName() + ';' + TOP_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
@@ -375,7 +385,7 @@ public class FragmentNavigation {
      * @param transactionSetup Function to setup transaction before commit. It is useful to specify transition animations or additional info.
      */
     public void setInitial(@NonNull final Class<? extends Fragment> fragmentClass,
-                           @NonNull final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                           @NonNull final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
         setInitial(fragmentClass, null, transactionSetup);
     }
 
@@ -388,7 +398,7 @@ public class FragmentNavigation {
      */
     public void setInitial(@NonNull final Class<? extends Fragment> fragmentClass,
                            @Nullable final Bundle args,
-                           @Nullable final Func1<FragmentTransaction, FragmentTransaction> transactionSetup) {
+                           @Nullable final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
         beforeSetInitialActions();
         setAsTop(fragmentClass, args, transactionSetup);
     }

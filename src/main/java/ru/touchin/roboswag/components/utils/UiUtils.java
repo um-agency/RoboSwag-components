@@ -43,9 +43,11 @@ import android.view.ViewGroup;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
 import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
+import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.log.LcGroup;
-import rx.functions.Action0;
 
 /**
  * Created by Gavriil Sitnikov on 13/11/2015.
@@ -100,8 +102,8 @@ public final class UiUtils {
      * @param onClickListener Click listener;
      * @param delay           Delay after which click listener will be called.
      */
-    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Action0 onClickListener, final long delay) {
-        setOnRippleClickListener(targetView, onClickListener != null ? v -> onClickListener.call() : null, delay);
+    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Action onClickListener, final long delay) {
+        setOnRippleClickListener(targetView, onClickListener != null ? view -> onClickListener.run() : null, delay);
     }
 
     /**
@@ -110,8 +112,8 @@ public final class UiUtils {
      * @param targetView      View to set click listener to;
      * @param onClickListener Click listener.
      */
-    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Action0 onClickListener) {
-        setOnRippleClickListener(targetView, onClickListener != null ? v -> onClickListener.call() : null, RIPPLE_EFFECT_DELAY);
+    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Action onClickListener) {
+        setOnRippleClickListener(targetView, onClickListener != null ? view -> onClickListener.run() : null, RIPPLE_EFFECT_DELAY);
     }
 
     /**
@@ -120,7 +122,7 @@ public final class UiUtils {
      * @param targetView      View to set click listener to;
      * @param onClickListener Click listener.
      */
-    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final View.OnClickListener onClickListener) {
+    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Consumer<View> onClickListener) {
         setOnRippleClickListener(targetView, onClickListener, RIPPLE_EFFECT_DELAY);
     }
 
@@ -131,9 +133,7 @@ public final class UiUtils {
      * @param onClickListener Click listener;
      * @param delay           Delay after which click listener will be called.
      */
-    public static void setOnRippleClickListener(@NonNull final View targetView,
-                                                @Nullable final View.OnClickListener onClickListener,
-                                                final long delay) {
+    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Consumer<View> onClickListener, final long delay) {
         if (onClickListener == null) {
             targetView.setOnClickListener(null);
             return;
@@ -145,7 +145,11 @@ public final class UiUtils {
                     || (targetView.getContext() instanceof BaseActivity && !((BaseActivity) targetView.getContext()).isActuallyResumed())) {
                 return;
             }
-            onClickListener.onClick(targetView);
+            try {
+                onClickListener.accept(targetView);
+            } catch (final Exception exception) {
+                Lc.assertion(exception);
+            }
         };
 
         targetView.setOnClickListener(v -> {

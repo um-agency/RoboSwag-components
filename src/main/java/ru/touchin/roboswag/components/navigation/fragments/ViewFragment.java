@@ -29,9 +29,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import io.reactivex.functions.BiConsumer;
 import ru.touchin.roboswag.components.navigation.OnFragmentStartedListener;
 import ru.touchin.roboswag.core.log.Lc;
-import rx.functions.Action2;
 
 /**
  * Created by Gavriil Sitnikov on 21/10/2015.
@@ -111,12 +111,16 @@ public abstract class ViewFragment<TActivity extends AppCompatActivity> extends 
         //do nothing
     }
 
-    private void callMethodAfterInstantiation(@NonNull final Action2<View, TActivity> action) {
+    private void callMethodAfterInstantiation(@NonNull final BiConsumer<View, TActivity> action) {
         if (getView() == null || getBaseActivity() == null) {
             Lc.assertion("View and activity shouldn't be null");
             return;
         }
-        action.call(getView(), getBaseActivity());
+        try {
+            action.accept(getView(), getBaseActivity());
+        } catch (final Exception exception) {
+            Lc.assertion(exception);
+        }
     }
 
     @Deprecated

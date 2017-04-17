@@ -28,7 +28,7 @@ import java.lang.reflect.Type;
 import ru.touchin.roboswag.core.observables.storable.Converter;
 import ru.touchin.roboswag.core.observables.storable.SameTypesConverter;
 import ru.touchin.roboswag.core.observables.storable.Storable;
-import ru.touchin.roboswag.core.observables.storable.concrete.NonNullStorable;
+import ru.touchin.roboswag.core.observables.storable.NonNullStorable;
 
 /**
  * Created by Gavriil Sitnikov on 01/09/2016.

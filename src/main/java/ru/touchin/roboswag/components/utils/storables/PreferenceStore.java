@@ -28,8 +28,8 @@ import java.lang.reflect.Type;
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.observables.storable.Store;
 import ru.touchin.roboswag.core.utils.Optional;
-import rx.Completable;
-import rx.Single;
+import io.reactivex.Completable;
+import io.reactivex.Single;
 
 
 /**

@@ -32,6 +32,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.subjects.BehaviorSubject;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
 import ru.touchin.roboswag.components.utils.UiUtils;
 import ru.touchin.roboswag.core.log.Lc;
@@ -40,10 +44,6 @@ import ru.touchin.roboswag.core.observables.collections.ObservableCollection;
 import ru.touchin.roboswag.core.observables.collections.ObservableList;
 import ru.touchin.roboswag.core.observables.collections.loadable.LoadingMoreList;
 import ru.touchin.roboswag.core.utils.Optional;
-import rx.Observable;
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 20/11/2015.
@@ -63,7 +63,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
 
     @NonNull
     private final BehaviorSubject<Optional<ObservableCollection<TItem>>> observableCollectionSubject
-            = BehaviorSubject.create(new Optional<>(null));
+            = BehaviorSubject.createDefault(new Optional<>(null));
     @NonNull
     private final LifecycleBindable lifecycleBindable;
     @Nullable
@@ -98,7 +98,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                         return Observable.empty();
                     }
                     final int size = collection.size();
-                    return ((LoadingMoreList) collection).loadRange(size, size + PRE_LOADING_COUNT);
+                    return ((LoadingMoreList) collection).loadRange(size, size + PRE_LOADING_COUNT).toObservable();
                 });
     }
 
@@ -381,7 +381,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         private static final long DELAY_BEFORE_LOADING_HISTORY = TimeUnit.SECONDS.toMillis(1);
 
         @Nullable
-        private Subscription historyPreLoadingSubscription;
+        private Disposable historyPreLoadingSubscription;
         @Nullable
         private ObservableCollectionAdapter adapter;
 
@@ -398,7 +398,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         //unchecked: it's ok, we just need to load something more
         public void bindPosition(final int position) {
             if (historyPreLoadingSubscription != null) {
-                historyPreLoadingSubscription.unsubscribe();
+                historyPreLoadingSubscription.dispose();
                 historyPreLoadingSubscription = null;
             }
             if (adapter != null && position - adapter.getHeadersCount() > adapter.innerCollection.size() - PRE_LOADING_COUNT) {
