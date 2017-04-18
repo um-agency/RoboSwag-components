@@ -22,12 +22,12 @@ package ru.touchin.roboswag.components.adapters;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +40,7 @@ import ru.touchin.roboswag.core.observables.collections.ObservableCollection;
 import ru.touchin.roboswag.core.observables.collections.ObservableList;
 import ru.touchin.roboswag.core.observables.collections.loadable.LoadingMoreList;
 import ru.touchin.roboswag.core.utils.Optional;
+import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
@@ -48,7 +49,8 @@ import rx.subjects.BehaviorSubject;
 /**
  * Created by Gavriil Sitnikov on 20/11/2015.
  * Adapter based on {@link ObservableCollection} and providing some useful features like:
- * - item-based binding by {@link #onBindItemToViewHolder(ViewHolder, int, Object)}} method;
+ * - item-based binding method;
+ * - delegates by {@link AdapterDelegate} over itemViewType logic;
  * - item click listener setup by {@link #setOnItemClickListener(OnItemClickListener)};
  * - allows to inform about footers/headers by overriding base create/bind methods and {@link #getHeadersCount()} plus {@link #getFootersCount()};
  * - by default it is pre-loading items for collections like {@link ru.touchin.roboswag.core.observables.collections.loadable.LoadingMoreList}.
@@ -56,8 +58,11 @@ import rx.subjects.BehaviorSubject;
  * @param <TItem>           Type of items to bind to ViewHolders;
  * @param <TItemViewHolder> Type of ViewHolders to show items.
  */
-public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends ObservableCollectionAdapter.ViewHolder>
+public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends BindableViewHolder>
         extends RecyclerView.Adapter<BindableViewHolder> {
+
+    //it is needed to avoid massive requests on initial view holders attaching (like if we will add 10 items they all will try to load history)
+    private static final long DELAY_BEFORE_LOADING_HISTORY = TimeUnit.SECONDS.toMillis(1);
 
     private static final int PRE_LOADING_COUNT = 10;
 
@@ -70,13 +75,17 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
     private OnItemClickListener<TItem> onItemClickListener;
     private int lastUpdatedChangeNumber = -1;
     @NonNull
-    private final Observable historyPreLoadingObservable;
+    private final Observable<?> historyPreLoadingObservable;
+    @Nullable
+    private Subscription historyPreLoadingSubscription;
 
     @NonNull
     private final ObservableList<TItem> innerCollection = new ObservableList<>();
     private boolean anyChangeApplied;
     @NonNull
     private final List<RecyclerView> attachedRecyclerViews = new LinkedList<>();
+    @NonNull
+    private final List<AdapterDelegate<TItemViewHolder, TItem>> delegates = new ArrayList<>();
 
     public ObservableCollectionAdapter(@NonNull final LifecycleBindable lifecycleBindable) {
         super();
@@ -275,6 +284,53 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         return 0;
     }
 
+    @NonNull
+    public List<AdapterDelegate<TItemViewHolder, TItem>> getDelegates() {
+        return Collections.unmodifiableList(delegates);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void addDelegate(@NonNull final AdapterDelegate<? extends TItemViewHolder, ? extends TItem> delegate) {
+        delegates.add((AdapterDelegate<TItemViewHolder, TItem>) delegate);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void removeDelegate(@NonNull final AdapterDelegate<? extends TItemViewHolder, ? extends TItem> delegate) {
+        delegates.remove((AdapterDelegate<TItemViewHolder, TItem>) delegate);
+    }
+
+    @Override
+    public int getItemViewType(final int adapterPosition) {
+        final int itemCollectionPosition = adapterPosition - getHeadersCount();
+        if (itemCollectionPosition < 0 || itemCollectionPosition >= innerCollection.size()) {
+            return super.getItemViewType(adapterPosition);
+        }
+        final TItem item = innerCollection.get(itemCollectionPosition);
+        for (final AdapterDelegate<?, TItem> delegate : delegates) {
+            if (delegate.isForViewType(item, adapterPosition, itemCollectionPosition)) {
+                return delegate.getItemViewType();
+            }
+        }
+        return super.getItemViewType(adapterPosition);
+    }
+
+    @Override
+    public long getItemId(final int adapterPosition) {
+        final int itemCollectionPosition = adapterPosition - getHeadersCount();
+        if (itemCollectionPosition < 0 || itemCollectionPosition >= innerCollection.size()) {
+            return super.getItemId(adapterPosition);
+        }
+
+        final int itemViewType = getItemViewType(adapterPosition);
+        final TItem item = innerCollection.get(itemCollectionPosition);
+        for (final AdapterDelegate<?, TItem> delegate : delegates) {
+            if (delegate.getItemViewType() == itemViewType) {
+                return delegate.getItemId(item, adapterPosition, itemCollectionPosition);
+            }
+        }
+        return super.getItemId(adapterPosition);
+    }
+
     @Override
     public int getItemCount() {
         return getHeadersCount() + innerCollection.size() + getFootersCount();
@@ -282,18 +338,41 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
 
     @NonNull
     @Override
-    public abstract BindableViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType);
+    public BindableViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType) {
+        for (final AdapterDelegate<?, TItem> delegate : delegates) {
+            if (delegate.getItemViewType() == viewType) {
+                return delegate.onCreateViewHolder(parent);
+            }
+        }
+        throw new ShouldNotHappenException("Add some AdapterDelegate or override this method");
+    }
 
-    @SuppressWarnings({"unchecked", "deprecation"})
     @Override
-    public void onBindViewHolder(@NonNull final BindableViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull final BindableViewHolder holder, final int adapterPosition) {
         lastUpdatedChangeNumber = innerCollection.getChangesCount();
 
-        final int itemPosition = position - getHeadersCount();
-        if (itemPosition < 0 || itemPosition >= innerCollection.size()) {
+        final int itemCollectionPosition = adapterPosition - getHeadersCount();
+        if (itemCollectionPosition < 0 || itemCollectionPosition >= innerCollection.size()) {
             return;
         }
 
+        updateHistoryLoadingSubscription(adapterPosition);
+        bindItemViewHolder(holder, null, adapterPosition, itemCollectionPosition);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull final BindableViewHolder holder, final int adapterPosition, @NonNull final List<Object> payloads) {
+        super.onBindViewHolder(holder, adapterPosition, payloads);
+        final int itemCollectionPosition = adapterPosition - getHeadersCount();
+        if (itemCollectionPosition < 0 || itemCollectionPosition >= innerCollection.size()) {
+            return;
+        }
+        bindItemViewHolder(holder, payloads, adapterPosition, itemCollectionPosition);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void bindItemViewHolder(@NonNull final BindableViewHolder holder, @Nullable final List<Object> payloads,
+                                    final int adapterPosition, final int itemCollectionPosition) {
         final TItemViewHolder itemViewHolder;
         try {
             itemViewHolder = (TItemViewHolder) holder;
@@ -301,13 +380,39 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
             Lc.assertion(exception);
             return;
         }
-        final TItem item = innerCollection.get(itemPosition);
-        itemViewHolder.setAdapter(this);
-        onBindItemToViewHolder(itemViewHolder, position, item);
-        itemViewHolder.bindPosition(position);
+        final TItem item = innerCollection.get(itemCollectionPosition);
+        final int itemViewType = getItemViewType(adapterPosition);
+
         if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
-            UiUtils.setOnRippleClickListener(holder.itemView, () -> onItemClickListener.onItemClicked(item, position), getItemClickDelay());
+            UiUtils.setOnRippleClickListener(holder.itemView, () -> onItemClickListener.onItemClicked(item, adapterPosition), getItemClickDelay());
         }
+
+        for (final AdapterDelegate<TItemViewHolder, TItem> delegate : delegates) {
+            if (itemViewType == delegate.getItemViewType()) {
+                if (payloads == null) {
+                    delegate.onBindViewHolder(itemViewHolder, item, adapterPosition, itemCollectionPosition);
+                } else {
+                    delegate.onBindViewHolder(itemViewHolder, item, payloads, adapterPosition, itemCollectionPosition);
+                }
+                return;
+            }
+        }
+        if (payloads == null) {
+            onBindItemToViewHolder(itemViewHolder, adapterPosition, item);
+        } else {
+            onBindItemToViewHolder(itemViewHolder, adapterPosition, item, payloads);
+        }
+    }
+
+    private void updateHistoryLoadingSubscription(final int position) {
+        if ((historyPreLoadingSubscription != null && !historyPreLoadingSubscription.isUnsubscribed())
+                || position - getHeadersCount() > innerCollection.size() - PRE_LOADING_COUNT) {
+            return;
+        }
+        historyPreLoadingSubscription = lifecycleBindable
+                .untilDestroy(historyPreLoadingObservable
+                        .delaySubscription(DELAY_BEFORE_LOADING_HISTORY, TimeUnit.MILLISECONDS)
+                        .onErrorResumeNext(Observable.empty()));
     }
 
     /**
@@ -319,6 +424,20 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      * @param item     Item returned by position (WITH HEADER OFFSET!).
      */
     protected abstract void onBindItemToViewHolder(@NonNull TItemViewHolder holder, int position, @NonNull TItem item);
+
+    /**
+     * Method to bind item (from {@link #getObservableCollection()}) to item-specific ViewHolder with payloads.
+     * It is not calling for headers and footer which counts are returned by {@link #getHeadersCount()} and @link #getFootersCount()}.
+     *
+     * @param holder   ViewHolder to bind item to;
+     * @param position Position of ViewHolder (NOT item!);
+     * @param item     Item returned by position (WITH HEADER OFFSET!);
+     * @param payloads Payloads;
+     */
+    protected void onBindItemToViewHolder(@NonNull final TItemViewHolder holder, final int position, @NonNull final TItem item,
+                                          @NonNull final List<Object> payloads) {
+        // do nothing by default
+    }
 
     @Nullable
     public TItem getItem(final int position) {
@@ -369,74 +488,6 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
          * @param position Position of clicked item.
          */
         void onItemClicked(@NonNull TItem item, int position);
-
-    }
-
-    /**
-     * Base item ViewHolder that have included pre-loading logic.
-     */
-    public static class ViewHolder extends BindableViewHolder {
-
-        //it is needed to avoid massive requests on initial view holders attaching (like if we will add 10 items they all will try to load history)
-        private static final long DELAY_BEFORE_LOADING_HISTORY = TimeUnit.SECONDS.toMillis(1);
-
-        @Nullable
-        private Subscription historyPreLoadingSubscription;
-        @Nullable
-        private ObservableCollectionAdapter adapter;
-
-        public ViewHolder(@NonNull final LifecycleBindable baseBindable, @NonNull final View itemView) {
-            super(baseBindable, itemView);
-        }
-
-        /**
-         * Bind position to enable pre-loading for connected {@link ObservableCollection}.
-         *
-         * @param position Position of ViewHolder.
-         */
-        @SuppressWarnings("unchecked")
-        //unchecked: it's ok, we just need to load something more
-        public void bindPosition(final int position) {
-            if (historyPreLoadingSubscription != null) {
-                historyPreLoadingSubscription.unsubscribe();
-                historyPreLoadingSubscription = null;
-            }
-            if (adapter != null && position - adapter.getHeadersCount() > adapter.innerCollection.size() - PRE_LOADING_COUNT) {
-                historyPreLoadingSubscription = untilDestroy(adapter.historyPreLoadingObservable
-                        .delaySubscription(DELAY_BEFORE_LOADING_HISTORY, TimeUnit.MILLISECONDS)
-                        .onErrorResumeNext(Observable.empty()));
-            }
-        }
-
-        @SuppressWarnings("PMD.DefaultPackage")
-        //it is for internal use only
-        @Deprecated
-        void setAdapter(@Nullable final ObservableCollectionAdapter adapter) {
-            this.adapter = adapter;
-        }
-
-        /**
-         * Simply get String from resources.
-         *
-         * @param stringRes string resource id;
-         * @return Requested String that matches with provided string resource id.
-         */
-        @NonNull
-        public String getString(@StringRes final int stringRes) {
-            return itemView.getContext().getString(stringRes);
-        }
-
-        /**
-         * Simply get String from resources with arguments.
-         *
-         * @param stringRes  String resource id;
-         * @param formatArgs The format arguments that will be used for substitution;
-         * @return Requested String that matches with provided string resource id.
-         */
-        @NonNull
-        public String getString(@StringRes final int stringRes, @Nullable final Object... formatArgs) {
-            return itemView.getContext().getString(stringRes, formatArgs);
-        }
 
     }
 
