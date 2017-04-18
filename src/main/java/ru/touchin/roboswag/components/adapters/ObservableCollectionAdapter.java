@@ -98,6 +98,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                         innerCollection.clear();
                         return Observable.empty();
                     }
+                    innerCollection.set(collection.getItems());
                     return collection.observeChanges().observeOn(AndroidSchedulers.mainThread());
                 }), this::onApplyChanges);
         historyPreLoadingObservable = observableCollectionSubject
