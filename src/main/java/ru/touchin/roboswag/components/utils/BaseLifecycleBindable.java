@@ -59,7 +59,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
      * Call it on parent's onStart method.
      */
     public void onStart() {
-        if (!isStartedSubject.getValue()) {
+        if (!isStartedSubject.hasValue() || !isStartedSubject.getValue()) {
             isStartedSubject.onNext(true);
         }
     }
@@ -70,7 +70,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
      * In that case onResume will be called after onSaveInstanceState so lifecycle object is becoming started.
      */
     public void onResume() {
-        if (!isStartedSubject.getValue()) {
+        if (!isStartedSubject.hasValue() || !isStartedSubject.getValue()) {
             isStartedSubject.onNext(true);
         }
     }
@@ -79,7 +79,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
      * Call it on parent's onSaveInstanceState method.
      */
     public void onSaveInstanceState() {
-        if (isStartedSubject.getValue()) {
+        if (!isStartedSubject.hasValue() || isStartedSubject.getValue()) {
             isStartedSubject.onNext(false);
         }
     }
@@ -88,7 +88,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
      * Call it on parent's onStop method.
      */
     public void onStop() {
-        if (isStartedSubject.getValue()) {
+        if (!isStartedSubject.hasValue() || isStartedSubject.getValue()) {
             isStartedSubject.onNext(false);
         }
     }
