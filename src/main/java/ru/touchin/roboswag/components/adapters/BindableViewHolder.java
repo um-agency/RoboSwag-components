@@ -124,12 +124,6 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
 
     @NonNull
     @Override
-    public <T> Subscription bind(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
-        return baseLifecycleBindable.bind(observable, onNextAction);
-    }
-
-    @NonNull
-    @Override
     public <T> Subscription untilStop(@NonNull final Observable<T> observable) {
         return baseLifecycleBindable.untilStop(observable);
     }

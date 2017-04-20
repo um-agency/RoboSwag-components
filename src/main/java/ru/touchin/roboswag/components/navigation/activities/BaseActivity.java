@@ -258,12 +258,6 @@ public abstract class BaseActivity extends AppCompatActivity
     //CPD: it is same as in other implementation based on BaseLifecycleBindable
     @NonNull
     @Override
-    public <T> Subscription bind(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
-        return baseLifecycleBindable.bind(observable, onNextAction);
-    }
-
-    @NonNull
-    @Override
     public <T> Subscription untilStop(@NonNull final Observable<T> observable,
                                       @NonNull final Action1<T> onNextAction,
                                       @NonNull final Action1<Throwable> onErrorAction) {

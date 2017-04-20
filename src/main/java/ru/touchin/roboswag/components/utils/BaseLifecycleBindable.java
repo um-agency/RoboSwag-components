@@ -103,15 +103,6 @@ public class BaseLifecycleBindable implements LifecycleBindable {
 
     @NonNull
     @Override
-    public <T> Subscription bind(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
-        final String codePoint = Lc.getCodePoint(this, 2);
-        return isStartedSubject.switchMap(started -> started ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
-                .takeUntil(isCreatedSubject.filter(created -> !created))
-                .subscribe(onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
-    }
-
-    @NonNull
-    @Override
     public <T> Subscription untilStop(@NonNull final Observable<T> observable) {
         final String codePoint = Lc.getCodePoint(this, 2);
         return untilStop(observable, Actions.empty(), getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD), Actions.empty());

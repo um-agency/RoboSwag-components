@@ -35,17 +35,11 @@ import rx.functions.Action1;
  * Created by Gavriil Sitnikov on 15/04/16.
  * Interface that should be implemented by lifecycle-based elements ({@link android.app.Activity}, {@link android.support.v4.app.Fragment} etc.)
  * to not manually manage subscriptions.
- * Use {@link #bind(Observable, Action1)} method to subscribe to observable onStart and unsubscribe onStop automatically.
  * Use {@link #untilStop(Observable)} method to subscribe to observable where you want and unsubscribe onStop.
  * Use {@link #untilDestroy(Observable)} method to subscribe to observable where you want and unsubscribe onDestroy.
  */
 @SuppressWarnings("PMD.TooManyMethods")
 public interface LifecycleBindable {
-
-    @NonNull
-    //do not use this method - it's not obvious method
-    @Deprecated
-    <T> Subscription bind(@NonNull Observable<T> observable, @NonNull Action1<T> onNextAction);
 
     /**
      * Method should be used to guarantee that observable won't be subscribed after onStop.
