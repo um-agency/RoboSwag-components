@@ -5,14 +5,14 @@ import android.view.ViewGroup;
 
 import java.util.List;
 
+import io.reactivex.Completable;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.Consumer;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
 import ru.touchin.roboswag.components.utils.UiUtils;
-import rx.Completable;
-import rx.Observable;
-import rx.Single;
-import rx.Subscription;
-import rx.functions.Action0;
-import rx.functions.Action1;
 
 /**
  * Objects of such class controls creation and binding of specific type of RecyclerView's ViewHolders.
@@ -114,139 +114,139 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder, TI
     //CPD: it is same as in other implementation based on BaseLifecycleBindable
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Observable<T> observable) {
+    public <T> Disposable untilStop(@NonNull final Observable<T> observable) {
         return parentLifecycleBindable.untilStop(observable);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
+    public <T> Disposable untilStop(@NonNull final Observable<T> observable, @NonNull final Consumer<T> onNextAction) {
         return parentLifecycleBindable.untilStop(observable, onNextAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Observable<T> observable,
-                                      @NonNull final Action1<T> onNextAction,
-                                      @NonNull final Action1<Throwable> onErrorAction) {
+    public <T> Disposable untilStop(@NonNull final Observable<T> observable,
+                                    @NonNull final Consumer<T> onNextAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
         return parentLifecycleBindable.untilStop(observable, onNextAction, onErrorAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Observable<T> observable,
-                                      @NonNull final Action1<T> onNextAction,
-                                      @NonNull final Action1<Throwable> onErrorAction,
-                                      @NonNull final Action0 onCompletedAction) {
+    public <T> Disposable untilStop(@NonNull final Observable<T> observable,
+                                    @NonNull final Consumer<T> onNextAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction,
+                                    @NonNull final Action onCompletedAction) {
         return parentLifecycleBindable.untilStop(observable, onNextAction, onErrorAction, onCompletedAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Single<T> single) {
+    public <T> Disposable untilStop(@NonNull final Single<T> single) {
         return parentLifecycleBindable.untilStop(single);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Single<T> single, @NonNull final Action1<T> onSuccessAction) {
+    public <T> Disposable untilStop(@NonNull final Single<T> single, @NonNull final Consumer<T> onSuccessAction) {
         return parentLifecycleBindable.untilStop(single, onSuccessAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilStop(@NonNull final Single<T> single,
-                                      @NonNull final Action1<T> onSuccessAction,
-                                      @NonNull final Action1<Throwable> onErrorAction) {
+    public <T> Disposable untilStop(@NonNull final Single<T> single,
+                                    @NonNull final Consumer<T> onSuccessAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
         return parentLifecycleBindable.untilStop(single, onSuccessAction, onErrorAction);
     }
 
     @NonNull
     @Override
-    public Subscription untilStop(@NonNull final Completable completable) {
+    public Disposable untilStop(@NonNull final Completable completable) {
         return parentLifecycleBindable.untilStop(completable);
     }
 
     @NonNull
     @Override
-    public Subscription untilStop(@NonNull final Completable completable, @NonNull final Action0 onCompletedAction) {
+    public Disposable untilStop(@NonNull final Completable completable, @NonNull final Action onCompletedAction) {
         return parentLifecycleBindable.untilStop(completable, onCompletedAction);
     }
 
     @NonNull
     @Override
-    public Subscription untilStop(@NonNull final Completable completable,
-                                  @NonNull final Action0 onCompletedAction,
-                                  @NonNull final Action1<Throwable> onErrorAction) {
+    public Disposable untilStop(@NonNull final Completable completable,
+                                @NonNull final Action onCompletedAction,
+                                @NonNull final Consumer<Throwable> onErrorAction) {
         return parentLifecycleBindable.untilStop(completable, onCompletedAction, onErrorAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable) {
+    public <T> Disposable untilDestroy(@NonNull final Observable<T> observable) {
         return parentLifecycleBindable.untilDestroy(observable);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
+    public <T> Disposable untilDestroy(@NonNull final Observable<T> observable, @NonNull final Consumer<T> onNextAction) {
         return parentLifecycleBindable.untilDestroy(observable, onNextAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable,
-                                         @NonNull final Action1<T> onNextAction,
-                                         @NonNull final Action1<Throwable> onErrorAction) {
+    public <T> Disposable untilDestroy(@NonNull final Observable<T> observable,
+                                       @NonNull final Consumer<T> onNextAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
         return parentLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Observable<T> observable,
-                                         @NonNull final Action1<T> onNextAction,
-                                         @NonNull final Action1<Throwable> onErrorAction,
-                                         @NonNull final Action0 onCompletedAction) {
+    public <T> Disposable untilDestroy(@NonNull final Observable<T> observable,
+                                       @NonNull final Consumer<T> onNextAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction,
+                                       @NonNull final Action onCompletedAction) {
         return parentLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction, onCompletedAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Single<T> single) {
+    public <T> Disposable untilDestroy(@NonNull final Single<T> single) {
         return parentLifecycleBindable.untilDestroy(single);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Single<T> single, @NonNull final Action1<T> onSuccessAction) {
+    public <T> Disposable untilDestroy(@NonNull final Single<T> single, @NonNull final Consumer<T> onSuccessAction) {
         return parentLifecycleBindable.untilDestroy(single, onSuccessAction);
     }
 
     @NonNull
     @Override
-    public <T> Subscription untilDestroy(@NonNull final Single<T> single,
-                                         @NonNull final Action1<T> onSuccessAction,
-                                         @NonNull final Action1<Throwable> onErrorAction) {
+    public <T> Disposable untilDestroy(@NonNull final Single<T> single,
+                                       @NonNull final Consumer<T> onSuccessAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
         return parentLifecycleBindable.untilDestroy(single, onSuccessAction, onErrorAction);
     }
 
     @NonNull
     @Override
-    public Subscription untilDestroy(@NonNull final Completable completable) {
+    public Disposable untilDestroy(@NonNull final Completable completable) {
         return parentLifecycleBindable.untilDestroy(completable);
     }
 
     @NonNull
     @Override
-    public Subscription untilDestroy(@NonNull final Completable completable, @NonNull final Action0 onCompletedAction) {
+    public Disposable untilDestroy(@NonNull final Completable completable, @NonNull final Action onCompletedAction) {
         return parentLifecycleBindable.untilDestroy(completable, onCompletedAction);
     }
 
     @NonNull
     @Override
-    public Subscription untilDestroy(@NonNull final Completable completable,
-                                     @NonNull final Action0 onCompletedAction,
-                                     @NonNull final Action1<Throwable> onErrorAction) {
+    public Disposable untilDestroy(@NonNull final Completable completable,
+                                   @NonNull final Action onCompletedAction,
+                                   @NonNull final Consumer<Throwable> onErrorAction) {
         return parentLifecycleBindable.untilDestroy(completable, onCompletedAction, onErrorAction);
     }
 

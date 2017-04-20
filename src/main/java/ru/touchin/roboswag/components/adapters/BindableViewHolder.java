@@ -122,6 +122,8 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
         return ContextCompat.getDrawable(itemView.getContext(), resId);
     }
 
+    @SuppressWarnings("CPD-START")
+    //CPD: it's ok as it's LifecycleBindable
     @NonNull
     @Override
     public <T> Disposable untilStop(@NonNull final Observable<T> observable) {
@@ -252,6 +254,7 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
         return baseLifecycleBindable.untilDestroy(completable, onCompletedAction);
     }
 
+    @SuppressWarnings("CPD-END")
     @NonNull
     @Override
     public Disposable untilDestroy(@NonNull final Completable completable,

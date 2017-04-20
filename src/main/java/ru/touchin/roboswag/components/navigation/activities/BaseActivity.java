@@ -254,6 +254,8 @@ public abstract class BaseActivity extends AppCompatActivity
         }
     }
 
+    @SuppressWarnings("CPD-START")
+    //CPD: it's ok as it's LifecycleBindable
     @NonNull
     @Override
     public <T> Disposable untilStop(@NonNull final Observable<T> observable,

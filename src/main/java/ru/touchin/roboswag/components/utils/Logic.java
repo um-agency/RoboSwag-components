@@ -27,8 +27,8 @@ import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.reactivex.Observable;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
-import rx.Observable;
 
 /**
  * Created by Gavriil Sitnikov on 24/03/16.
