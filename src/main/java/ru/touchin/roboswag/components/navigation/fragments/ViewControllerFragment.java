@@ -179,11 +179,11 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
                             final TActivity activity = activityOptional.get();
                             final PlaceholderView container = viewInfo.getFirst();
                             if (activity == null || container == null) {
-                                return null;
+                                return new Optional<ViewController>(null);
                             }
                             final ViewController newViewController = createViewController(activity, container, viewInfo.getSecond());
                             newViewController.onCreate();
-                            return newViewController;
+                            return new Optional<>(newViewController);
                         })
                 .subscribe(this::onViewControllerChanged,
                         throwable -> Lc.cutAssertion(throwable, InvocationTargetException.class, InflateException.class));
@@ -312,11 +312,11 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         return (viewController != null && viewController.onOptionsItemSelected(item)) || super.onOptionsItemSelected(item);
     }
 
-    private void onViewControllerChanged(@Nullable final ViewController viewController) {
+    private void onViewControllerChanged(@NonNull final Optional<ViewController> viewControllerOptional) {
         if (this.viewController != null) {
             this.viewController.onDestroy();
         }
-        this.viewController = viewController;
+        this.viewController = viewControllerOptional.get();
         if (this.viewController != null) {
             if (started) {
                 this.viewController.onStart();
