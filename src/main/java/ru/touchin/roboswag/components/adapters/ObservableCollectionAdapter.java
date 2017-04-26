@@ -460,6 +460,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
     /**
      * Method to bind item (from {@link #getObservableCollection()}) to item-specific ViewHolder.
      * It is not calling for headers and footer which counts are returned by {@link #getHeadersCount()} and @link #getFootersCount()}.
+     * You don't need to override this method if you have delegates for every view type.
      *
      * @param holder            ViewHolder to bind item to;
      * @param positionInAdapter Position of ViewHolder (NOT item!);
@@ -476,9 +477,13 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      * @param item              Item returned by position (WITH HEADER OFFSET!);
      * @param payloads          Payloads.
      */
+<<<<<<< HEAD
     protected void onBindItemToViewHolder(@NonNull final TItemViewHolder holder, final int positionInAdapter, @NonNull final TItem item,
                                           @NonNull final List<Object> payloads) {
         // do nothing by default
+=======
+    protected void onBindItemToViewHolder(@NonNull final TItemViewHolder holder, final int position, @NonNull final TItem item) {
+>>>>>>> master
     }
 
     @Nullable
