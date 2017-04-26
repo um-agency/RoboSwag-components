@@ -464,7 +464,9 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      * @param positionInAdapter Position of ViewHolder (NOT item!);
      * @param item              Item returned by position (WITH HEADER OFFSET!).
      */
-    protected abstract void onBindItemToViewHolder(@NonNull TItemViewHolder holder, int positionInAdapter, @NonNull TItem item);
+    protected void onBindItemToViewHolder(@NonNull final TItemViewHolder holder, final int positionInAdapter, @NonNull final TItem item) {
+        // do nothing by default - let delegates do it
+    }
 
     /**
      * Method to bind item (from {@link #getObservableCollection()}) to item-specific ViewHolder with payloads.
@@ -477,7 +479,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      */
     protected void onBindItemToViewHolder(@NonNull final TItemViewHolder holder, final int positionInAdapter, @NonNull final TItem item,
                                           @NonNull final List<Object> payloads) {
-        // do nothing by default
+        // do nothing by default - let delegates do it
     }
 
     @Nullable
