@@ -209,7 +209,9 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
 
     @Override
     public void onDrawerClosed(@NonNull final View view) {
-        activity.supportInvalidateOptionsMenu();
+        if (isInvalidateOptionsMenuSupported) {
+            activity.supportInvalidateOptionsMenu();
+        }
     }
 
     /**
@@ -229,7 +231,12 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
         }
     }
 
-    public void setInvalidateOptionsMenu(final boolean isInvalidateOptionsMenuSupported) {
+    /**
+     * Set turn on/off invocation of supportInvalidateOptionsMenu
+     *
+     * @param isInvalidateOptionsMenuSupported flag for turning on/off invocation.
+     */
+    public void setInvalidateOptionsMenuSupported(final boolean isInvalidateOptionsMenuSupported) {
         this.isInvalidateOptionsMenuSupported = isInvalidateOptionsMenuSupported;
     }
 
