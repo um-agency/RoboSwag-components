@@ -45,6 +45,8 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
     @NonNull
     private final View sidebar;
 
+    private boolean isInvalidateOptionsMenuSupported = true;
+
     private boolean hamburgerShowed;
     private boolean sidebarDisabled;
 
@@ -222,7 +224,13 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
     @Override
     public void onDrawerOpened(@NonNull final View drawerView) {
         activity.hideSoftInput();
-        activity.supportInvalidateOptionsMenu();
+        if (isInvalidateOptionsMenuSupported) {
+            activity.supportInvalidateOptionsMenu();
+        }
+    }
+
+    public void setInvalidateOptionsMenu(final boolean isInvalidateOptionsMenuSupported) {
+        this.isInvalidateOptionsMenuSupported = isInvalidateOptionsMenuSupported;
     }
 
     @Override
