@@ -311,6 +311,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      * @param item     Item returned by position (WITH HEADER OFFSET!).
      */
     protected void onBindItemToViewHolder(@NonNull final TItemViewHolder holder, final int position, @NonNull final TItem item) {
+        //do nothing by default
     }
 
     @Nullable
