@@ -30,8 +30,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+
+import io.reactivex.functions.BiConsumer;
+import io.reactivex.functions.Consumer;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -423,19 +424,31 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         for (final AdapterDelegate<?> delegate : delegates) {
             if (delegate instanceof ItemAdapterDelegate) {
                 if (positionInCollection >= 0 && viewType == delegate.getItemViewType()) {
-                    itemAdapterDelegateAction.accept((ItemAdapterDelegate) delegate, positionInCollection);
+                    try {
+                        itemAdapterDelegateAction.accept((ItemAdapterDelegate) delegate, positionInCollection);
+                    } catch (final Exception exception) {
+                        Lc.assertion(exception);
+                    }
                     return;
                 }
             } else if (delegate instanceof PositionAdapterDelegate) {
                 if (viewType == delegate.getItemViewType()) {
-                    positionAdapterDelegateAction.accept((PositionAdapterDelegate) delegate);
+                    try {
+                        positionAdapterDelegateAction.accept((PositionAdapterDelegate) delegate);
+                    } catch (final Exception exception) {
+                        Lc.assertion(exception);
+                    }
                     return;
                 }
             } else {
                 Lc.assertion("Delegate of type " + delegate.getClass());
             }
         }
-        defaultAction.accept(positionInCollection);
+        try {
+            defaultAction.accept(positionInCollection);
+        } catch (final Exception exception) {
+            Lc.assertion(exception);
+        }
     }
 
     @Override
