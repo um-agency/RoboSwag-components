@@ -415,6 +415,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         return result.value;
     }
 
+    @SuppressWarnings("PMD.CyclomaticComplexity")
     private void tryDelegateAction(final int positionInAdapter,
                                    @NonNull final BiConsumer<ItemAdapterDelegate, Integer> itemAdapterDelegateAction,
                                    @NonNull final Consumer<PositionAdapterDelegate> positionAdapterDelegateAction,
