@@ -42,9 +42,11 @@ import rx.functions.Action1;
  * Created by Gavriil Sitnikov on 18/05/17.
  * FrameLayout that realizes LifecycleBindable interface.
  */
+@SuppressWarnings({"CPD-START", "PMD.TooManyMethods"})
 public class LifecycleView extends FrameLayout implements LifecycleBindable {
 
-    private BaseLifecycleBindable baseLifecycleBindable;
+    @NonNull
+    private final BaseLifecycleBindable baseLifecycleBindable;
     private boolean created;
     private boolean started;
 
@@ -96,6 +98,7 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
         }
     }
 
+    @NonNull
     @Override
     protected Parcelable onSaveInstanceState() {
         started = false;
