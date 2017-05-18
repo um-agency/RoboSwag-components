@@ -45,6 +45,8 @@ import rx.functions.Action1;
 public class LifecycleView extends FrameLayout implements LifecycleBindable {
 
     private BaseLifecycleBindable baseLifecycleBindable;
+    private boolean created;
+    private boolean started;
 
     public LifecycleView(@NonNull final Context context) {
         super(context);
@@ -64,28 +66,65 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        baseLifecycleBindable.onCreate();
-        if (getWindowSystemUiVisibility() == VISIBLE) {
-            baseLifecycleBindable.onStart();
+        onCreate();
+        if (!started && getWindowSystemUiVisibility() == VISIBLE) {
+            onStart();
         }
+    }
+
+    /**
+     * Calls when view attached to window and ready to use.
+     */
+    protected void onCreate() {
+        created = true;
+        baseLifecycleBindable.onCreate();
+    }
+
+    /**
+     * Calls when view's window showed or state restored.
+     */
+    protected void onStart() {
+        started = true;
+        baseLifecycleBindable.onStart();
     }
 
     @Override
     protected void onRestoreInstanceState(@NonNull final Parcelable state) {
         super.onRestoreInstanceState(state);
-        baseLifecycleBindable.onStart();
+        if (created && !started) {
+            onStart();
+        }
     }
 
     @Override
     protected Parcelable onSaveInstanceState() {
+        started = false;
         baseLifecycleBindable.onSaveInstanceState();
         return super.onSaveInstanceState();
     }
 
+    /**
+     * Calls when view's window hided or state saved.
+     */
+    protected void onStop() {
+        started = false;
+        baseLifecycleBindable.onStop();
+    }
+
+    /**
+     * Calls when view detached from window.
+     */
+    protected void onDestroy() {
+        if (started) {
+            onStop();
+        }
+        created = false;
+        baseLifecycleBindable.onDestroy();
+    }
+
     @Override
     protected void onDetachedFromWindow() {
-        baseLifecycleBindable.onStop();
-        baseLifecycleBindable.onDestroy();
+        onDestroy();
         super.onDetachedFromWindow();
     }
 
@@ -93,8 +132,10 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
     protected void onWindowVisibilityChanged(final int visibility) {
         super.onWindowVisibilityChanged(visibility);
         if (visibility == VISIBLE) {
-            baseLifecycleBindable.onStart();
-        } else {
+            if (created && !started) {
+                baseLifecycleBindable.onStart();
+            }
+        } else if (started) {
             baseLifecycleBindable.onStop();
         }
     }
