@@ -17,13 +17,19 @@
  *
  */
 
-package ru.touchin.roboswag.components.adapters;
+package ru.touchin.roboswag.components.views;
 
+
+import android.content.Context;
+import android.os.Parcelable;
+import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
-import android.view.ViewGroup;
+import android.support.annotation.Nullable;
+import android.util.AttributeSet;
+import android.widget.FrameLayout;
 
+import ru.touchin.roboswag.components.utils.BaseLifecycleBindable;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
-import ru.touchin.roboswag.components.utils.UiUtils;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
@@ -31,65 +37,78 @@ import rx.Subscription;
 import rx.functions.Action0;
 import rx.functions.Action1;
 
+
 /**
- * Objects of such class controls creation and binding of specific type of RecyclerView's ViewHolders.
- * Default {@link #getItemViewType} is generating on construction of object.
- *
- * @param <TViewHolder> Type of {@link BindableViewHolder} of delegate.
+ * Created by Gavriil Sitnikov on 18/05/17.
+ * FrameLayout that realizes LifecycleBindable interface.
  */
-@SuppressWarnings("PMD.TooManyMethods")
-//TooManyMethods: it's ok
-public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> implements LifecycleBindable {
+public class LifecycleView extends FrameLayout implements LifecycleBindable {
 
-    @NonNull
-    private final LifecycleBindable parentLifecycleBindable;
-    private final int defaultItemViewType;
+    private BaseLifecycleBindable baseLifecycleBindable;
 
-    public AdapterDelegate(@NonNull final LifecycleBindable parentLifecycleBindable) {
-        this.parentLifecycleBindable = parentLifecycleBindable;
-        this.defaultItemViewType = UiUtils.OfViews.generateViewId();
+    public LifecycleView(@NonNull final Context context) {
+        super(context);
+        baseLifecycleBindable = new BaseLifecycleBindable();
     }
 
-    /**
-     * Returns parent {@link LifecycleBindable} that this delegate created from (e.g. Activity or ViewController).
-     *
-     * @return Parent {@link LifecycleBindable}.
-     */
-    @NonNull
-    public LifecycleBindable getParentLifecycleBindable() {
-        return parentLifecycleBindable;
+    public LifecycleView(@NonNull final Context context, @Nullable final AttributeSet attrs) {
+        super(context, attrs);
+        baseLifecycleBindable = new BaseLifecycleBindable();
     }
 
-    /**
-     * Unique ID of AdapterDelegate.
-     *
-     * @return Unique ID.
-     */
-    public int getItemViewType() {
-        return defaultItemViewType;
+    public LifecycleView(@NonNull final Context context, @Nullable final AttributeSet attrs, @AttrRes final int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        baseLifecycleBindable = new BaseLifecycleBindable();
     }
 
-    /**
-     * Creates ViewHolder to bind item to it later.
-     *
-     * @param parent Container of ViewHolder's view.
-     * @return New ViewHolder.
-     */
-    @NonNull
-    public abstract TViewHolder onCreateViewHolder(@NonNull final ViewGroup parent);
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        baseLifecycleBindable.onCreate();
+        if (getWindowSystemUiVisibility() == VISIBLE) {
+            baseLifecycleBindable.onStart();
+        }
+    }
 
-    @SuppressWarnings("CPD-START")
-    //CPD: it is same as in other implementation based on BaseLifecycleBindable
+    @Override
+    protected void onRestoreInstanceState(@NonNull final Parcelable state) {
+        super.onRestoreInstanceState(state);
+        baseLifecycleBindable.onStart();
+    }
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        baseLifecycleBindable.onSaveInstanceState();
+        return super.onSaveInstanceState();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        baseLifecycleBindable.onStop();
+        baseLifecycleBindable.onDestroy();
+        super.onDetachedFromWindow();
+    }
+
+    @Override
+    protected void onWindowVisibilityChanged(final int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        if (visibility == VISIBLE) {
+            baseLifecycleBindable.onStart();
+        } else {
+            baseLifecycleBindable.onStop();
+        }
+    }
+
     @NonNull
     @Override
     public <T> Subscription untilStop(@NonNull final Observable<T> observable) {
-        return parentLifecycleBindable.untilStop(observable);
+        return baseLifecycleBindable.untilStop(observable);
     }
 
     @NonNull
     @Override
     public <T> Subscription untilStop(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
-        return parentLifecycleBindable.untilStop(observable, onNextAction);
+        return baseLifecycleBindable.untilStop(observable, onNextAction);
     }
 
     @NonNull
@@ -97,7 +116,7 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> im
     public <T> Subscription untilStop(@NonNull final Observable<T> observable,
                                       @NonNull final Action1<T> onNextAction,
                                       @NonNull final Action1<Throwable> onErrorAction) {
-        return parentLifecycleBindable.untilStop(observable, onNextAction, onErrorAction);
+        return baseLifecycleBindable.untilStop(observable, onNextAction, onErrorAction);
     }
 
     @NonNull
@@ -106,19 +125,19 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> im
                                       @NonNull final Action1<T> onNextAction,
                                       @NonNull final Action1<Throwable> onErrorAction,
                                       @NonNull final Action0 onCompletedAction) {
-        return parentLifecycleBindable.untilStop(observable, onNextAction, onErrorAction, onCompletedAction);
+        return baseLifecycleBindable.untilStop(observable, onNextAction, onErrorAction, onCompletedAction);
     }
 
     @NonNull
     @Override
     public <T> Subscription untilStop(@NonNull final Single<T> single) {
-        return parentLifecycleBindable.untilStop(single);
+        return baseLifecycleBindable.untilStop(single);
     }
 
     @NonNull
     @Override
     public <T> Subscription untilStop(@NonNull final Single<T> single, @NonNull final Action1<T> onSuccessAction) {
-        return parentLifecycleBindable.untilStop(single, onSuccessAction);
+        return baseLifecycleBindable.untilStop(single, onSuccessAction);
     }
 
     @NonNull
@@ -126,19 +145,19 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> im
     public <T> Subscription untilStop(@NonNull final Single<T> single,
                                       @NonNull final Action1<T> onSuccessAction,
                                       @NonNull final Action1<Throwable> onErrorAction) {
-        return parentLifecycleBindable.untilStop(single, onSuccessAction, onErrorAction);
+        return baseLifecycleBindable.untilStop(single, onSuccessAction, onErrorAction);
     }
 
     @NonNull
     @Override
     public Subscription untilStop(@NonNull final Completable completable) {
-        return parentLifecycleBindable.untilStop(completable);
+        return baseLifecycleBindable.untilStop(completable);
     }
 
     @NonNull
     @Override
     public Subscription untilStop(@NonNull final Completable completable, @NonNull final Action0 onCompletedAction) {
-        return parentLifecycleBindable.untilStop(completable, onCompletedAction);
+        return baseLifecycleBindable.untilStop(completable, onCompletedAction);
     }
 
     @NonNull
@@ -146,19 +165,19 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> im
     public Subscription untilStop(@NonNull final Completable completable,
                                   @NonNull final Action0 onCompletedAction,
                                   @NonNull final Action1<Throwable> onErrorAction) {
-        return parentLifecycleBindable.untilStop(completable, onCompletedAction, onErrorAction);
+        return baseLifecycleBindable.untilStop(completable, onCompletedAction, onErrorAction);
     }
 
     @NonNull
     @Override
     public <T> Subscription untilDestroy(@NonNull final Observable<T> observable) {
-        return parentLifecycleBindable.untilDestroy(observable);
+        return baseLifecycleBindable.untilDestroy(observable);
     }
 
     @NonNull
     @Override
     public <T> Subscription untilDestroy(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
-        return parentLifecycleBindable.untilDestroy(observable, onNextAction);
+        return baseLifecycleBindable.untilDestroy(observable, onNextAction);
     }
 
     @NonNull
@@ -166,7 +185,7 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> im
     public <T> Subscription untilDestroy(@NonNull final Observable<T> observable,
                                          @NonNull final Action1<T> onNextAction,
                                          @NonNull final Action1<Throwable> onErrorAction) {
-        return parentLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction);
+        return baseLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction);
     }
 
     @NonNull
@@ -175,19 +194,19 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> im
                                          @NonNull final Action1<T> onNextAction,
                                          @NonNull final Action1<Throwable> onErrorAction,
                                          @NonNull final Action0 onCompletedAction) {
-        return parentLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction, onCompletedAction);
+        return baseLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction, onCompletedAction);
     }
 
     @NonNull
     @Override
     public <T> Subscription untilDestroy(@NonNull final Single<T> single) {
-        return parentLifecycleBindable.untilDestroy(single);
+        return baseLifecycleBindable.untilDestroy(single);
     }
 
     @NonNull
     @Override
     public <T> Subscription untilDestroy(@NonNull final Single<T> single, @NonNull final Action1<T> onSuccessAction) {
-        return parentLifecycleBindable.untilDestroy(single, onSuccessAction);
+        return baseLifecycleBindable.untilDestroy(single, onSuccessAction);
     }
 
     @NonNull
@@ -195,19 +214,19 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> im
     public <T> Subscription untilDestroy(@NonNull final Single<T> single,
                                          @NonNull final Action1<T> onSuccessAction,
                                          @NonNull final Action1<Throwable> onErrorAction) {
-        return parentLifecycleBindable.untilDestroy(single, onSuccessAction, onErrorAction);
+        return baseLifecycleBindable.untilDestroy(single, onSuccessAction, onErrorAction);
     }
 
     @NonNull
     @Override
     public Subscription untilDestroy(@NonNull final Completable completable) {
-        return parentLifecycleBindable.untilDestroy(completable);
+        return baseLifecycleBindable.untilDestroy(completable);
     }
 
     @NonNull
     @Override
     public Subscription untilDestroy(@NonNull final Completable completable, @NonNull final Action0 onCompletedAction) {
-        return parentLifecycleBindable.untilDestroy(completable, onCompletedAction);
+        return baseLifecycleBindable.untilDestroy(completable, onCompletedAction);
     }
 
     @NonNull
@@ -215,7 +234,7 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> im
     public Subscription untilDestroy(@NonNull final Completable completable,
                                      @NonNull final Action0 onCompletedAction,
                                      @NonNull final Action1<Throwable> onErrorAction) {
-        return parentLifecycleBindable.untilDestroy(completable, onCompletedAction, onErrorAction);
+        return baseLifecycleBindable.untilDestroy(completable, onCompletedAction, onErrorAction);
     }
 
 }
