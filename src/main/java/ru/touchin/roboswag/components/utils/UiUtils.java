@@ -200,6 +200,10 @@ public final class UiUtils {
             return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, sizeInDp, getDisplayMetrics(context));
         }
 
+        public static int pixelsToDp(@NonNull final Context context, final int pixels) {
+            return (int) (pixels * getDisplayMetrics(context).density + 0.5f);
+        }
+
         private OfMetrics() {
         }
 
