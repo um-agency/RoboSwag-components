@@ -181,6 +181,8 @@ public class TypefacedTextView extends AppCompatTextView {
                     "remove maxLines and use lineStrategy");
             AttributesUtils.checkAttribute(typedArray, errors, AttributesUtils.getField(androidRes, "TextView_minLines"), false,
                     "remove minLines and use lineStrategy");
+            AttributesUtils.checkAttribute(typedArray, errors, AttributesUtils.getField(androidRes, "TextView_textAllCaps"), false,
+                    "remove textAllCaps and use app:textAllCaps");
         }
     }
 
