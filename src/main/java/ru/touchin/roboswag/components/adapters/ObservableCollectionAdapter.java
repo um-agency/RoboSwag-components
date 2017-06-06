@@ -22,16 +22,14 @@ package ru.touchin.roboswag.components.adapters;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
 import android.support.v7.widget.RecyclerView;
-import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
 import ru.touchin.roboswag.components.utils.UiUtils;
@@ -39,16 +37,21 @@ import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.observables.collections.Change;
 import ru.touchin.roboswag.core.observables.collections.ObservableCollection;
 import ru.touchin.roboswag.core.observables.collections.ObservableList;
+import ru.touchin.roboswag.core.observables.collections.loadable.LoadingMoreList;
+import ru.touchin.roboswag.core.utils.Optional;
+import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Observable;
-import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Actions;
+import rx.functions.Action1;
+import rx.functions.Action2;
+import rx.functions.Action3;
 import rx.subjects.BehaviorSubject;
 
 /**
  * Created by Gavriil Sitnikov on 20/11/2015.
  * Adapter based on {@link ObservableCollection} and providing some useful features like:
- * - item-based binding by {@link #onBindItemToViewHolder(ViewHolder, int, Object)}} method;
+ * - item-based binding method;
+ * - delegates by {@link AdapterDelegate} over itemViewType logic;
  * - item click listener setup by {@link #setOnItemClickListener(OnItemClickListener)};
  * - allows to inform about footers/headers by overriding base create/bind methods and {@link #getHeadersCount()} plus {@link #getFootersCount()};
  * - by default it is pre-loading items for collections like {@link ru.touchin.roboswag.core.observables.collections.loadable.LoadingMoreList}.
@@ -56,66 +59,105 @@ import rx.subjects.BehaviorSubject;
  * @param <TItem>           Type of items to bind to ViewHolders;
  * @param <TItemViewHolder> Type of ViewHolders to show items.
  */
-public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends ObservableCollectionAdapter.ViewHolder>
+@SuppressWarnings({"unchecked", "PMD.TooManyMethods"})
+//TooManyMethods: it's ok
+public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends BindableViewHolder>
         extends RecyclerView.Adapter<BindableViewHolder> {
 
-    private static final int PRE_LOADING_COUNT = 10;
+    private static final int PRE_LOADING_COUNT = 20;
+
+    private static boolean inDebugMode;
+
+    /**
+     * Enables debugging features like checking concurrent delegates.
+     */
+    public static void setInDebugMode() {
+        inDebugMode = true;
+    }
 
     @NonNull
-    private final BehaviorSubject<ObservableCollection<TItem>> observableCollectionSubject
-            = BehaviorSubject.create((ObservableCollection<TItem>) null);
+    private final BehaviorSubject<Optional<ObservableCollection<TItem>>> observableCollectionSubject
+            = BehaviorSubject.create(new Optional<>(null));
+    @NonNull
+    private final BehaviorSubject<Boolean> moreAutoLoadingRequested = BehaviorSubject.create();
     @NonNull
     private final LifecycleBindable lifecycleBindable;
     @Nullable
-    private OnItemClickListener<TItem> onItemClickListener;
+    private Object onItemClickListener;
     private int lastUpdatedChangeNumber = -1;
-    @NonNull
-    private final Observable historyPreLoadingObservable;
 
     @NonNull
     private final ObservableList<TItem> innerCollection = new ObservableList<>();
     private boolean anyChangeApplied;
+    private long itemClickDelayMillis;
     @NonNull
     private final List<RecyclerView> attachedRecyclerViews = new LinkedList<>();
+    @NonNull
+    private final List<AdapterDelegate<? extends BindableViewHolder>> delegates = new ArrayList<>();
 
     public ObservableCollectionAdapter(@NonNull final LifecycleBindable lifecycleBindable) {
         super();
         this.lifecycleBindable = lifecycleBindable;
         innerCollection.observeChanges().subscribe(this::onItemsChanged);
         lifecycleBindable.untilDestroy(observableCollectionSubject
-                        .doOnNext(collection -> innerCollection.set(collection != null ? collection.getItems() : new ArrayList<>()))
-                        .<ObservableCollection.CollectionChange<TItem>>switchMap(observableCollection -> observableCollection != null
-                                ? observableCollection.observeChanges().observeOn(AndroidSchedulers.mainThread())
-                                : Observable.empty()),
-                changes -> {
-                    anyChangeApplied = true;
-                    for (final Change<TItem> change : changes.getChanges()) {
-                        switch (change.getType()) {
-                            case INSERTED:
-                                innerCollection.addAll(change.getStart(), change.getChangedItems());
-                                break;
-                            case CHANGED:
-                                innerCollection.update(change.getStart(), change.getChangedItems());
-                                break;
-                            case REMOVED:
-                                innerCollection.remove(change.getStart(), change.getCount());
-                                break;
-                            default:
-                                Lc.assertion("Not supported " + change.getType());
-                                break;
-                        }
+                .switchMap(optional -> {
+                    final ObservableCollection<TItem> collection = optional.get();
+                    if (collection == null) {
+                        innerCollection.clear();
+                        return Observable.empty();
                     }
+                    innerCollection.set(collection.getItems());
+                    return collection.observeChanges().observeOn(AndroidSchedulers.mainThread());
+                }), this::onApplyChanges);
+        lifecycleBindable.untilDestroy(createMoreAutoLoadingObservable());
+    }
+
+    @NonNull
+    private Observable createMoreAutoLoadingObservable() {
+        return observableCollectionSubject
+                .switchMap(collectionOptional -> {
+                    final ObservableCollection<TItem> collection = collectionOptional.get();
+                    if (!(collection instanceof LoadingMoreList)) {
+                        return Observable.empty();
+                    }
+                    return moreAutoLoadingRequested
+                            .distinctUntilChanged()
+                            .switchMap(requested -> {
+                                if (!requested) {
+                                    return Observable.empty();
+                                }
+                                final int size = collection.size();
+                                return ((LoadingMoreList<?, ?, ?>) collection)
+                                        .loadRange(size, size + PRE_LOADING_COUNT)
+                                        .onErrorResumeNext(Observable.empty())
+                                        .doOnCompleted(() -> moreAutoLoadingRequested.onNext(false));
+                            });
                 });
-        historyPreLoadingObservable = observableCollectionSubject
-                .switchMap(observableCollection -> {
-                    final int size = observableCollection.size();
-                    return observableCollection.loadRange(size, size + PRE_LOADING_COUNT);
-                });
+    }
+
+    private void onApplyChanges(@NonNull final ObservableCollection.CollectionChange<TItem> changes) {
+        anyChangeApplied = true;
+        for (final Change<TItem> change : changes.getChanges()) {
+            switch (change.getType()) {
+                case INSERTED:
+                    innerCollection.addAll(change.getStart(), change.getChangedItems());
+                    break;
+                case CHANGED:
+                    innerCollection.update(change.getStart(), change.getChangedItems());
+                    break;
+                case REMOVED:
+                    innerCollection.remove(change.getStart(), change.getCount());
+                    break;
+                default:
+                    Lc.assertion("Not supported " + change.getType());
+                    break;
+            }
+        }
     }
 
     /**
      * Returns if any change of source collection applied to adapter.
-     * It's important to not show some footers or header before first change have applied.
+     * It's important to not show some footers or headers before first change have applied.
      *
      * @return True id any change applied.
      */
@@ -161,7 +203,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      */
     @Nullable
     public ObservableCollection<TItem> getObservableCollection() {
-        return observableCollectionSubject.getValue();
+        return observableCollectionSubject.getValue().get();
     }
 
     /**
@@ -170,8 +212,8 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      * @return Observable of inner {@link ObservableCollection}.
      */
     @NonNull
-    public Observable<ObservableCollection<TItem>> observeObservableCollection() {
-        return observableCollectionSubject.distinctUntilChanged();
+    public Observable<Optional<ObservableCollection<TItem>>> observeObservableCollection() {
+        return observableCollectionSubject;
     }
 
     /**
@@ -180,7 +222,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      * @param observableCollection Inner {@link ObservableCollection}.
      */
     public void setObservableCollection(@Nullable final ObservableCollection<TItem> observableCollection) {
-        this.observableCollectionSubject.onNext(observableCollection);
+        this.observableCollectionSubject.onNext(new Optional<>(observableCollection));
         refreshUpdate();
     }
 
@@ -266,6 +308,136 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         return 0;
     }
 
+    /**
+     * Returns list of added delegates.
+     *
+     * @return List of {@link AdapterDelegate}.
+     */
+    @NonNull
+    public List<AdapterDelegate<? extends BindableViewHolder>> getDelegates() {
+        return Collections.unmodifiableList(delegates);
+    }
+
+    /**
+     * Adds {@link ItemAdapterDelegate} to adapter.
+     *
+     * @param delegate Delegate to add.
+     */
+    public void addDelegate(@NonNull final ItemAdapterDelegate<? extends TItemViewHolder, ? extends TItem> delegate) {
+        addDelegateInternal(delegate);
+    }
+
+    /**
+     * Adds {@link PositionAdapterDelegate} to adapter.
+     *
+     * @param delegate Delegate to add.
+     */
+    public void addDelegate(@NonNull final PositionAdapterDelegate<? extends BindableViewHolder> delegate) {
+        addDelegateInternal(delegate);
+    }
+
+    private void addDelegateInternal(@NonNull final AdapterDelegate<? extends BindableViewHolder> delegate) {
+        if (inDebugMode) {
+            for (final AdapterDelegate addedDelegate : delegates) {
+                if (addedDelegate.getItemViewType() == delegate.getItemViewType()) {
+                    Lc.assertion("AdapterDelegate with viewType=" + delegate.getItemViewType() + " already added");
+                    return;
+                }
+            }
+        }
+        delegates.add(delegate);
+        notifyDataSetChanged();
+    }
+
+    /**
+     * Removes {@link AdapterDelegate} from adapter.
+     *
+     * @param delegate Delegate to remove.
+     */
+    public void removeDelegate(@NonNull final AdapterDelegate<? extends BindableViewHolder> delegate) {
+        delegates.remove(delegate);
+        notifyDataSetChanged();
+    }
+
+    private void checkDelegates(@Nullable final AdapterDelegate alreadyPickedDelegate, @NonNull final AdapterDelegate currentDelegate) {
+        if (alreadyPickedDelegate != null) {
+            throw new ShouldNotHappenException("Concurrent delegates: " + currentDelegate + " and " + alreadyPickedDelegate);
+        }
+    }
+
+    private int getItemPositionInCollection(final int positionInAdapter) {
+        final int shiftedPosition = positionInAdapter - getHeadersCount();
+        return shiftedPosition >= 0 && shiftedPosition < innerCollection.size() ? shiftedPosition : -1;
+    }
+
+    @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.ModifiedCyclomaticComplexity", "PMD.StdCyclomaticComplexity", "PMD.NPathComplexity"})
+    //Complexity: because of debug code
+    @Override
+    public int getItemViewType(final int positionInAdapter) {
+        AdapterDelegate delegateOfViewType = null;
+        final int positionInCollection = getItemPositionInCollection(positionInAdapter);
+        final TItem item = positionInCollection >= 0 ? innerCollection.get(positionInCollection) : null;
+        for (final AdapterDelegate<?> delegate : delegates) {
+            if (delegate instanceof ItemAdapterDelegate) {
+                if (item != null && ((ItemAdapterDelegate) delegate).isForViewType(item, positionInAdapter, positionInCollection)) {
+                    checkDelegates(delegateOfViewType, delegate);
+                    delegateOfViewType = delegate;
+                    if (!inDebugMode) {
+                        break;
+                    }
+                }
+            } else if (delegate instanceof PositionAdapterDelegate) {
+                if (((PositionAdapterDelegate) delegate).isForViewType(positionInAdapter)) {
+                    checkDelegates(delegateOfViewType, delegate);
+                    delegateOfViewType = delegate;
+                    if (!inDebugMode) {
+                        break;
+                    }
+                }
+            } else {
+                Lc.assertion("Delegate of type " + delegate.getClass());
+            }
+        }
+
+        return delegateOfViewType != null ? delegateOfViewType.getItemViewType() : super.getItemViewType(positionInAdapter);
+    }
+
+    @Override
+    public long getItemId(final int positionInAdapter) {
+        final LongContainer result = new LongContainer();
+        tryDelegateAction(positionInAdapter,
+                (itemAdapterDelegate, item, positionInCollection) ->
+                        result.value = itemAdapterDelegate.getItemId(item, positionInAdapter, positionInCollection),
+                positionAdapterDelegate -> result.value = positionAdapterDelegate.getItemId(positionInAdapter),
+                (item, positionInCollection) -> result.value = super.getItemId(positionInAdapter));
+        return result.value;
+    }
+
+    private void tryDelegateAction(final int positionInAdapter,
+                                   @NonNull final Action3<ItemAdapterDelegate, TItem, Integer> itemAdapterDelegateAction,
+                                   @NonNull final Action1<PositionAdapterDelegate> positionAdapterDelegateAction,
+                                   @NonNull final Action2<TItem, Integer> defaultAction) {
+        final int viewType = getItemViewType(positionInAdapter);
+        final int positionInCollection = getItemPositionInCollection(positionInAdapter);
+        final TItem item = positionInCollection >= 0 ? innerCollection.get(positionInCollection) : null;
+        for (final AdapterDelegate<?> delegate : delegates) {
+            if (delegate instanceof ItemAdapterDelegate) {
+                if (item != null && viewType == delegate.getItemViewType()) {
+                    itemAdapterDelegateAction.call((ItemAdapterDelegate) delegate, item, positionInCollection);
+                    return;
+                }
+            } else if (delegate instanceof PositionAdapterDelegate) {
+                if (viewType == delegate.getItemViewType()) {
+                    positionAdapterDelegateAction.call((PositionAdapterDelegate) delegate);
+                    return;
+                }
+            } else {
+                Lc.assertion("Delegate of type " + delegate.getClass());
+            }
+        }
+        defaultAction.call(item, positionInCollection);
+    }
+
     @Override
     public int getItemCount() {
         return getHeadersCount() + innerCollection.size() + getFootersCount();
@@ -273,18 +445,51 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
 
     @NonNull
     @Override
-    public abstract BindableViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType);
+    public BindableViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, final int viewType) {
+        for (final AdapterDelegate<?> delegate : delegates) {
+            if (delegate.getItemViewType() == viewType) {
+                return delegate.onCreateViewHolder(parent);
+            }
+        }
+        throw new ShouldNotHappenException("Add some AdapterDelegate or override this method");
+    }
 
-    @SuppressWarnings({"unchecked", "deprecation"})
     @Override
-    public void onBindViewHolder(@NonNull final BindableViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull final BindableViewHolder holder, final int positionInAdapter) {
         lastUpdatedChangeNumber = innerCollection.getChangesCount();
 
-        final int itemPosition = position - getHeadersCount();
-        if (itemPosition < 0 || itemPosition >= innerCollection.size()) {
-            return;
-        }
+        tryDelegateAction(positionInAdapter,
+                (itemAdapterDelegate, item, positionInCollection) -> {
+                    bindItemViewHolder(itemAdapterDelegate, holder, item, null, positionInAdapter, positionInCollection);
+                    updateMoreAutoLoadingRequest(positionInCollection);
+                },
+                positionAdapterDelegate -> positionAdapterDelegate.onBindViewHolder(holder, positionInAdapter),
+                (item, positionInCollection) -> {
+                    if (item != null) {
+                        bindItemViewHolder(null, holder, item, null, positionInAdapter, positionInCollection);
+                    }
+                });
+    }
 
+    @Override
+    public void onBindViewHolder(@NonNull final BindableViewHolder holder, final int positionInAdapter, @NonNull final List<Object> payloads) {
+        super.onBindViewHolder(holder, positionInAdapter, payloads);
+        tryDelegateAction(positionInAdapter,
+                (itemAdapterDelegate, item, positionInCollection) -> {
+                    bindItemViewHolder(itemAdapterDelegate, holder, item, payloads, positionInAdapter, positionInCollection);
+                    updateMoreAutoLoadingRequest(positionInCollection);
+                },
+                positionAdapterDelegate -> positionAdapterDelegate.onBindViewHolder(holder, positionInAdapter),
+                (item, positionInCollection) -> {
+                    if (item != null) {
+                        bindItemViewHolder(null, holder, item, payloads, positionInAdapter, positionInCollection);
+                    }
+                });
+    }
+
+    private void bindItemViewHolder(@Nullable final ItemAdapterDelegate<TItemViewHolder, TItem> itemAdapterDelegate,
+                                    @NonNull final BindableViewHolder holder, @NonNull final TItem item, @Nullable final List<Object> payloads,
+                                    final int positionInAdapter, final int positionInCollection) {
         final TItemViewHolder itemViewHolder;
         try {
             itemViewHolder = (TItemViewHolder) holder;
@@ -292,13 +497,44 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
             Lc.assertion(exception);
             return;
         }
-        final TItem item = innerCollection.get(itemPosition);
-        itemViewHolder.setAdapter(this);
-        onBindItemToViewHolder(itemViewHolder, position, item);
-        itemViewHolder.bindPosition(position);
-        if (onItemClickListener != null && !isOnClickListenerDisabled(item)) {
-            UiUtils.setOnRippleClickListener(holder.itemView, () -> onItemClickListener.onItemClicked(item, position), getItemClickDelay());
+        updateClickListener(holder, item, positionInAdapter, positionInCollection);
+        if (itemAdapterDelegate != null) {
+            if (payloads == null) {
+                itemAdapterDelegate.onBindViewHolder(itemViewHolder, item, positionInAdapter, positionInCollection);
+            } else {
+                itemAdapterDelegate.onBindViewHolder(itemViewHolder, item, payloads, positionInAdapter, positionInCollection);
+            }
+        } else {
+            if (payloads == null) {
+                onBindItemToViewHolder(itemViewHolder, positionInAdapter, item);
+            } else {
+                onBindItemToViewHolder(itemViewHolder, positionInAdapter, item, payloads);
+            }
         }
+    }
+
+    private void updateClickListener(@NonNull final BindableViewHolder holder, @NonNull final TItem item,
+                                     final int positionInAdapter, final int positionInCollection) {
+        if (onItemClickListener != null && !isOnClickListenerDisabled(item, positionInAdapter, positionInCollection)) {
+            UiUtils.setOnRippleClickListener(holder.itemView,
+                    () -> {
+                        if (onItemClickListener instanceof OnItemClickListener) {
+                            ((OnItemClickListener) onItemClickListener).onItemClicked(item);
+                        } else if (onItemClickListener instanceof OnItemWithPositionClickListener) {
+                            ((OnItemWithPositionClickListener) onItemClickListener).onItemClicked(item, positionInAdapter, positionInCollection);
+                        } else {
+                            Lc.assertion("Unexpected onItemClickListener type " + onItemClickListener);
+                        }
+                    },
+                    itemClickDelayMillis);
+        }
+    }
+
+    private void updateMoreAutoLoadingRequest(final int positionInCollection) {
+        if (positionInCollection > innerCollection.size() - PRE_LOADING_COUNT) {
+            return;
+        }
+        moreAutoLoadingRequested.onNext(true);
     }
 
     /**
@@ -306,18 +542,32 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      * It is not calling for headers and footer which counts are returned by {@link #getHeadersCount()} and @link #getFootersCount()}.
      * You don't need to override this method if you have delegates for every view type.
      *
-     * @param holder   ViewHolder to bind item to;
-     * @param position Position of ViewHolder (NOT item!);
-     * @param item     Item returned by position (WITH HEADER OFFSET!).
+     * @param holder            ViewHolder to bind item to;
+     * @param positionInAdapter Position of ViewHolder (NOT item!);
+     * @param item              Item returned by position (WITH HEADER OFFSET!).
      */
-    protected void onBindItemToViewHolder(@NonNull final TItemViewHolder holder, final int position, @NonNull final TItem item) {
-        //do nothing by default
+    protected void onBindItemToViewHolder(@NonNull final TItemViewHolder holder, final int positionInAdapter, @NonNull final TItem item) {
+        // do nothing by default - let delegates do it
+    }
+
+    /**
+     * Method to bind item (from {@link #getObservableCollection()}) to item-specific ViewHolder with payloads.
+     * It is not calling for headers and footer which counts are returned by {@link #getHeadersCount()} and @link #getFootersCount()}.
+     *
+     * @param holder            ViewHolder to bind item to;
+     * @param positionInAdapter Position of ViewHolder in adapter (NOT item!);
+     * @param item              Item returned by position (WITH HEADER OFFSET!);
+     * @param payloads          Payloads.
+     */
+    protected void onBindItemToViewHolder(@NonNull final TItemViewHolder holder, final int positionInAdapter, @NonNull final TItem item,
+                                          @NonNull final List<Object> payloads) {
+        // do nothing by default - let delegates do it
     }
 
     @Nullable
-    public TItem getItem(final int position) {
-        final int positionInList = position - getHeadersCount();
-        return positionInList < 0 || positionInList >= innerCollection.size() ? null : innerCollection.get(positionInList);
+    public TItem getItem(final int positionInAdapter) {
+        final int positionInCollection = getItemPositionInCollection(positionInAdapter);
+        return positionInCollection >= 0 ? innerCollection.get(positionInCollection) : null;
     }
 
     /**
@@ -326,26 +576,51 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      * @param onItemClickListener Item click listener.
      */
     public void setOnItemClickListener(@Nullable final OnItemClickListener<TItem> onItemClickListener) {
+        this.setOnItemClickListener(onItemClickListener, UiUtils.RIPPLE_EFFECT_DELAY);
+    }
+
+    /**
+     * Sets item click listener.
+     *
+     * @param onItemClickListener  Item click listener;
+     * @param itemClickDelayMillis Delay of calling click listener.
+     */
+    public void setOnItemClickListener(@Nullable final OnItemClickListener<TItem> onItemClickListener, final long itemClickDelayMillis) {
         this.onItemClickListener = onItemClickListener;
+        this.itemClickDelayMillis = itemClickDelayMillis;
         refreshUpdate();
     }
 
     /**
-     * Returns delay of item click. By default returns delay of ripple effect duration.
+     * Sets item click listener.
      *
-     * @return Milliseconds delay of click.
+     * @param onItemClickListener Item click listener.
      */
-    protected long getItemClickDelay() {
-        return UiUtils.RIPPLE_EFFECT_DELAY;
+    public void setOnItemClickListener(@Nullable final OnItemWithPositionClickListener<TItem> onItemClickListener) {
+        this.setOnItemClickListener(onItemClickListener, UiUtils.RIPPLE_EFFECT_DELAY);
+    }
+
+    /**
+     * Sets item click listener.
+     *
+     * @param onItemClickListener  Item click listener;
+     * @param itemClickDelayMillis Delay of calling click listener.
+     */
+    public void setOnItemClickListener(@Nullable final OnItemWithPositionClickListener<TItem> onItemClickListener, final long itemClickDelayMillis) {
+        this.onItemClickListener = onItemClickListener;
+        this.itemClickDelayMillis = itemClickDelayMillis;
+        refreshUpdate();
     }
 
     /**
      * Returns if click listening disabled or not for specific item.
      *
-     * @param item Item to check click availability;
+     * @param item                 Item to check click availability;
+     * @param positionInAdapter    Position of clicked item in adapter (with headers);
+     * @param positionInCollection Position of clicked item in inner collection;
      * @return True if click listener enabled for such item.
      */
-    public boolean isOnClickListenerDisabled(@NonNull final TItem item) {
+    public boolean isOnClickListenerDisabled(@NonNull final TItem item, final int positionInAdapter, final int positionInCollection) {
         return false;
     }
 
@@ -359,78 +634,33 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         /**
          * Calls when item have clicked.
          *
-         * @param item     Clicked item;
-         * @param position Position of clicked item.
+         * @param item Clicked item.
          */
-        void onItemClicked(@NonNull TItem item, int position);
+        void onItemClicked(@NonNull TItem item);
 
     }
 
     /**
-     * Base item ViewHolder that have included pre-loading logic.
+     * Interface to simply add item click listener based on item position in adapter and collection.
+     *
+     * @param <TItem> Type of item
      */
-    public static class ViewHolder extends BindableViewHolder {
-
-        //it is needed to avoid massive requests on initial view holders attaching (like if we will add 10 items they all will try to load history)
-        private static final long DELAY_BEFORE_LOADING_HISTORY = TimeUnit.SECONDS.toMillis(1);
-
-        @Nullable
-        private Subscription historyPreLoadingSubscription;
-        @Nullable
-        private ObservableCollectionAdapter adapter;
-
-        public ViewHolder(@NonNull final LifecycleBindable baseBindable, @NonNull final View itemView) {
-            super(baseBindable, itemView);
-        }
+    public interface OnItemWithPositionClickListener<TItem> {
 
         /**
-         * Bind position to enable pre-loading for connected {@link ObservableCollection}.
+         * Calls when item have clicked.
          *
-         * @param position Position of ViewHolder.
+         * @param item                 Clicked item;
+         * @param positionInAdapter    Position of clicked item in adapter (with headers);
+         * @param positionInCollection Position of clicked item in inner collection.
          */
-        @SuppressWarnings("unchecked")
-        //unchecked: it's ok, we just need to load something more
-        public void bindPosition(final int position) {
-            if (historyPreLoadingSubscription != null) {
-                historyPreLoadingSubscription.unsubscribe();
-                historyPreLoadingSubscription = null;
-            }
-            if (adapter != null && position - adapter.getHeadersCount() > adapter.innerCollection.size() - PRE_LOADING_COUNT) {
-                historyPreLoadingSubscription = untilDestroy(adapter.historyPreLoadingObservable
-                        .delaySubscription(DELAY_BEFORE_LOADING_HISTORY, TimeUnit.MILLISECONDS)
-                        .onErrorResumeNext(Observable.empty()), Actions.empty());
-            }
-        }
+        void onItemClicked(@NonNull TItem item, final int positionInAdapter, final int positionInCollection);
 
-        @SuppressWarnings("PMD.DefaultPackage")
-        @Deprecated
-        //it is for internal use only
-        void setAdapter(@Nullable final ObservableCollectionAdapter adapter) {
-            this.adapter = adapter;
-        }
+    }
 
-        /**
-         * Simply get String from resources.
-         *
-         * @param stringRes string resource id;
-         * @return Requested String that matches with provided string resource id.
-         */
-        @NonNull
-        public String getString(@StringRes final int stringRes) {
-            return itemView.getContext().getString(stringRes);
-        }
+    private class LongContainer {
 
-        /**
-         * Simply get String from resources with arguments.
-         *
-         * @param stringRes  String resource id;
-         * @param formatArgs The format arguments that will be used for substitution;
-         * @return Requested String that matches with provided string resource id.
-         */
-        @NonNull
-        public String getString(@StringRes final int stringRes, @Nullable final Object... formatArgs) {
-            return itemView.getContext().getString(stringRes, formatArgs);
-        }
+        private long value;
 
     }
 

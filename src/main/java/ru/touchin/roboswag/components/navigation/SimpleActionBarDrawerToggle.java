@@ -20,7 +20,6 @@
 package ru.touchin.roboswag.components.navigation;
 
 import android.animation.ValueAnimator;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
@@ -181,7 +180,7 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
     }
 
     private void setHamburgerState(final boolean showHamburger) {
-        if (!firstAnimation && Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+        if (!firstAnimation) {
             cancelAnimation();
             if (showHamburger) {
                 hamburgerAnimator = ValueAnimator.ofFloat(slideOffset, 0f);
@@ -199,9 +198,6 @@ public class SimpleActionBarDrawerToggle extends ActionBarDrawerToggle
     }
 
     private void cancelAnimation() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-            return;
-        }
         if (hamburgerAnimator != null) {
             hamburgerAnimator.cancel();
         }

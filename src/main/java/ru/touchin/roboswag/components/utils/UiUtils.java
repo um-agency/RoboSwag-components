@@ -200,6 +200,10 @@ public final class UiUtils {
             return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, sizeInDp, getDisplayMetrics(context));
         }
 
+        public static int pixelsToDp(@NonNull final Context context, final int pixels) {
+            return (int) (pixels * getDisplayMetrics(context).density + 0.5f);
+        }
+
         private OfMetrics() {
         }
 
@@ -268,12 +272,9 @@ public final class UiUtils {
                         || (realDisplayMetrics.heightPixels - displayMetrics.heightPixels) > 0;
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-                final boolean hasMenuKey = ViewConfiguration.get(activity).hasPermanentMenuKey();
-                final boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
-                return !hasMenuKey && !hasBackKey;
-            }
-            return false;
+            final boolean hasMenuKey = ViewConfiguration.get(activity).hasPermanentMenuKey();
+            final boolean hasBackKey = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
+            return !hasMenuKey && !hasBackKey;
         }
 
         /**

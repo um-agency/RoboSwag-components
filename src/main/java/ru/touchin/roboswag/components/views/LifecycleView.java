@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2015 RoboSwag (Gavriil Sitnikov, Vsevolod Ivanov)
+ *  Copyright (c) 2017 RoboSwag (Gavriil Sitnikov, Vsevolod Ivanov)
  *
  *  This file is part of RoboSwag library.
  *
@@ -17,22 +17,19 @@
  *
  */
 
-package ru.touchin.roboswag.components.adapters;
+package ru.touchin.roboswag.components.views;
 
-import android.graphics.drawable.Drawable;
-import android.support.annotation.ColorInt;
-import android.support.annotation.ColorRes;
-import android.support.annotation.DrawableRes;
-import android.support.annotation.IdRes;
+
+import android.content.Context;
+import android.os.Parcelable;
+import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.RecyclerView;
-import android.view.View;
+import android.util.AttributeSet;
+import android.widget.FrameLayout;
 
+import ru.touchin.roboswag.components.utils.BaseLifecycleBindable;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
-import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
@@ -40,86 +37,110 @@ import rx.Subscription;
 import rx.functions.Action0;
 import rx.functions.Action1;
 
+
 /**
- * Created by Gavriil Sitnikov on 12/8/2016.
- * ViewHolder that implements {@link LifecycleBindable} and uses parent bindable object as bridge (Activity, ViewController etc.).
+ * Created by Gavriil Sitnikov on 18/05/17.
+ * FrameLayout that realizes LifecycleBindable interface.
  */
-@SuppressWarnings("PMD.TooManyMethods")
-public class BindableViewHolder extends RecyclerView.ViewHolder implements LifecycleBindable {
+@SuppressWarnings({"CPD-START", "PMD.TooManyMethods"})
+public class LifecycleView extends FrameLayout implements LifecycleBindable {
 
     @NonNull
-    private final LifecycleBindable baseLifecycleBindable;
+    private final BaseLifecycleBindable baseLifecycleBindable;
+    private boolean created;
+    private boolean started;
 
-    public BindableViewHolder(@NonNull final LifecycleBindable baseLifecycleBindable, @NonNull final View itemView) {
-        super(itemView);
-        this.baseLifecycleBindable = baseLifecycleBindable;
+    public LifecycleView(@NonNull final Context context) {
+        super(context);
+        baseLifecycleBindable = new BaseLifecycleBindable();
     }
 
-    /**
-     * Look for a child view with the given id.  If this view has the given id, return this view.
-     *
-     * @param id The id to search for;
-     * @return The view that has the given id in the hierarchy.
-     */
-    @NonNull
-    @SuppressWarnings("unchecked")
-    public <T extends View> T findViewById(@IdRes final int id) {
-        final T viewById = (T) itemView.findViewById(id);
-        if (viewById == null) {
-            throw new ShouldNotHappenException("No view for id=" + itemView.getResources().getResourceName(id));
+    public LifecycleView(@NonNull final Context context, @Nullable final AttributeSet attrs) {
+        super(context, attrs);
+        baseLifecycleBindable = new BaseLifecycleBindable();
+    }
+
+    public LifecycleView(@NonNull final Context context, @Nullable final AttributeSet attrs, @AttrRes final int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        baseLifecycleBindable = new BaseLifecycleBindable();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        onCreate();
+        if (!started && getWindowSystemUiVisibility() == VISIBLE) {
+            onStart();
         }
-        return viewById;
     }
 
     /**
-     * Return the string value associated with a particular resource ID.  It
-     * will be stripped of any styled text information.
-     *
-     * @param resId The resource id to search for data;
-     * @return String The string data associated with the resource.
+     * Calls when view attached to window and ready to use.
      */
+    protected void onCreate() {
+        created = true;
+        baseLifecycleBindable.onCreate();
+    }
+
+    /**
+     * Calls when view's window showed or state restored.
+     */
+    protected void onStart() {
+        started = true;
+        baseLifecycleBindable.onStart();
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull final Parcelable state) {
+        super.onRestoreInstanceState(state);
+        if (created && !started) {
+            onStart();
+        }
+    }
+
     @NonNull
-    public String getString(@StringRes final int resId) {
-        return itemView.getResources().getString(resId);
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        started = false;
+        baseLifecycleBindable.onSaveInstanceState();
+        return super.onSaveInstanceState();
     }
 
     /**
-     * Return the string value associated with a particular resource ID.  It
-     * will be stripped of any styled text information.
-     *
-     * @param resId      The resource id to search for data;
-     * @param formatArgs The format arguments that will be used for substitution.
-     * @return String The string data associated with the resource.
+     * Calls when view's window hided or state saved.
      */
-    @NonNull
-    public String getString(@StringRes final int resId, @Nullable final Object... formatArgs) {
-        return itemView.getResources().getString(resId, formatArgs);
+    protected void onStop() {
+        started = false;
+        baseLifecycleBindable.onStop();
     }
 
     /**
-     * Return the color value associated with a particular resource ID.
-     * Starting in {@link android.os.Build.VERSION_CODES#M}, the returned
-     * color will be styled for the specified Context's theme.
-     *
-     * @param resId The resource id to search for data;
-     * @return int A single color value in the form 0xAARRGGBB.
+     * Calls when view detached from window.
      */
-    @ColorInt
-    public int getColor(@ColorRes final int resId) {
-        return ContextCompat.getColor(itemView.getContext(), resId);
+    protected void onDestroy() {
+        if (started) {
+            onStop();
+        }
+        created = false;
+        baseLifecycleBindable.onDestroy();
     }
 
-    /**
-     * Returns a drawable object associated with a particular resource ID.
-     * Starting in {@link android.os.Build.VERSION_CODES#LOLLIPOP}, the
-     * returned drawable will be styled for the specified Context's theme.
-     *
-     * @param resId The resource id to search for data;
-     * @return Drawable An object that can be used to draw this resource.
-     */
-    @NonNull
-    public Drawable getDrawable(@DrawableRes final int resId) {
-        return ContextCompat.getDrawable(itemView.getContext(), resId);
+    @Override
+    protected void onDetachedFromWindow() {
+        onDestroy();
+        super.onDetachedFromWindow();
+    }
+
+    @Override
+    protected void onWindowVisibilityChanged(final int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+        if (visibility == VISIBLE) {
+            if (created && !started) {
+                baseLifecycleBindable.onStart();
+            }
+        } else if (started) {
+            baseLifecycleBindable.onStop();
+        }
     }
 
     @NonNull

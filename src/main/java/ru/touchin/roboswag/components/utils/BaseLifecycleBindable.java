@@ -60,14 +60,38 @@ public class BaseLifecycleBindable implements LifecycleBindable {
      * Call it on parent's onStart method.
      */
     public void onStart() {
-        isStartedSubject.onNext(true);
+        if (!isStartedSubject.hasValue() || !isStartedSubject.getValue()) {
+            isStartedSubject.onNext(true);
+        }
+    }
+
+    /**
+     * Call it on parent's onResume method.
+     * It is needed as sometimes onSaveInstanceState() calling after onPause() with no onStop call. So lifecycle object going in stopped state.
+     * In that case onResume will be called after onSaveInstanceState so lifecycle object is becoming started.
+     */
+    public void onResume() {
+        if (!isStartedSubject.hasValue() || !isStartedSubject.getValue()) {
+            isStartedSubject.onNext(true);
+        }
+    }
+
+    /**
+     * Call it on parent's onSaveInstanceState method.
+     */
+    public void onSaveInstanceState() {
+        if (!isStartedSubject.hasValue() || isStartedSubject.getValue()) {
+            isStartedSubject.onNext(false);
+        }
     }
 
     /**
      * Call it on parent's onStop method.
      */
     public void onStop() {
-        isStartedSubject.onNext(false);
+        if (!isStartedSubject.hasValue() || isStartedSubject.getValue()) {
+            isStartedSubject.onNext(false);
+        }
     }
 
     /**
@@ -75,15 +99,6 @@ public class BaseLifecycleBindable implements LifecycleBindable {
      */
     public void onDestroy() {
         isCreatedSubject.onNext(false);
-    }
-
-    @NonNull
-    @Override
-    public <T> Subscription bind(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
-        final String codePoint = Lc.getCodePoint(this, 2);
-        return isStartedSubject.switchMap(started -> started ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
-                .takeUntil(isCreatedSubject.filter(created -> !created))
-                .subscribe(onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
     }
 
     @NonNull

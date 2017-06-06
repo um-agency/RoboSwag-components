@@ -40,24 +40,19 @@ public final class HeadsetStateObserver {
     @NonNull
     private final AudioManager audioManager;
     @NonNull
-    private final Observable<Boolean> isConnectedObservable;
+    private final Observable<Boolean> connectedObservable;
 
     public HeadsetStateObserver(@NonNull final Context context) {
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        isConnectedObservable = Observable
-                .<IsConnectedReceiver>create(subscriber -> {
-                    subscriber.onNext(new IsConnectedReceiver(audioManager));
-                    subscriber.onCompleted();
-                })
+        connectedObservable = Observable
+                .fromCallable(() -> new IsConnectedReceiver(audioManager))
                 .switchMap(isConnectedReceiver -> Observable.combineLatest(isConnectedReceiver.isWiredConnectedChangedEvent,
                         isConnectedReceiver.isWirelessConnectedChangedEvent,
                         (isWiredConnected, isWirelessConnected) -> isWiredConnected || isWirelessConnected)
                         .distinctUntilChanged()
                         .doOnSubscribe(() -> {
                             final IntentFilter headsetStateIntentFilter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
-                                headsetStateIntentFilter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
-                            }
+                            headsetStateIntentFilter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
                             context.registerReceiver(isConnectedReceiver, headsetStateIntentFilter);
                         })
                         .doOnUnsubscribe(() -> context.unregisterReceiver(isConnectedReceiver)))
@@ -82,7 +77,7 @@ public final class HeadsetStateObserver {
      */
     @NonNull
     public Observable<Boolean> observeIsConnected() {
-        return isConnectedObservable;
+        return connectedObservable;
     }
 
     private static class IsConnectedReceiver extends BroadcastReceiver {
@@ -104,8 +99,7 @@ public final class HeadsetStateObserver {
             if (Intent.ACTION_HEADSET_PLUG.equals(intent.getAction()) && !isInitialStickyBroadcast()) {
                 isWiredConnectedChangedEvent.onNext(intent.getIntExtra("state", 0) != 0);
             }
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB
-                    && BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(intent.getAction())) {
+            if (BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(intent.getAction())) {
                 final int bluetoothState = intent.getIntExtra(BluetoothA2dp.EXTRA_STATE, BluetoothA2dp.STATE_DISCONNECTED);
                 switch (bluetoothState) {
                     case BluetoothA2dp.STATE_DISCONNECTED:

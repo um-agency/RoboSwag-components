@@ -63,6 +63,29 @@ public abstract class ViewControllerActivity<TLogic extends Logic> extends BaseA
     }
 
     @Override
+    @Deprecated
+    // use {@link #reconfigureNavigation}
+    public void invalidateOptionsMenu() {
+        super.invalidateOptionsMenu();
+    }
+
+    @Override
+    @Deprecated
+    // use {@link #reconfigureNavigation}
+    public void supportInvalidateOptionsMenu() {
+        super.supportInvalidateOptionsMenu();
+    }
+
+    /**
+     * Invalidates navigation and calls {@link #onConfigureNavigation} for all navigation elements.
+     */
+    public void reconfigureNavigation() {
+        super.supportInvalidateOptionsMenu();
+    }
+
+    @Override
+    @Deprecated
+    // use {@link #onConfigureNavigation}
     public boolean onCreateOptionsMenu(@NonNull final Menu menu) {
         onConfigureNavigation(menu);
         return super.onCreateOptionsMenu(menu);
