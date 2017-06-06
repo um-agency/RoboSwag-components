@@ -147,13 +147,22 @@ public class FragmentNavigation {
                 .replace(containerViewId, fragment, null)
                 .addToBackStack(backStackTag);
         if (fragmentManager.getBackStackEntryCount() != 0) {
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            fragmentTransaction.setTransition(getDefaultTransition());
         }
         if (transactionSetup != null) {
             transactionSetup.call(fragmentTransaction).commit();
         } else {
             fragmentTransaction.commit();
         }
+    }
+
+    /**
+     * Returns default transition animation.
+     *
+     * @return {@link FragmentTransaction#TRANSIT_FRAGMENT_OPEN}.
+     */
+    protected int getDefaultTransition() {
+        return FragmentTransaction.TRANSIT_FRAGMENT_OPEN;
     }
 
     /**
