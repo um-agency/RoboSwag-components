@@ -31,20 +31,21 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import io.reactivex.functions.BiConsumer;
-import io.reactivex.functions.Consumer;
-
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.functions.BiConsumer;
+import io.reactivex.functions.Consumer;
 import io.reactivex.subjects.BehaviorSubject;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
 import ru.touchin.roboswag.components.utils.UiUtils;
 import ru.touchin.roboswag.core.log.Lc;
-import ru.touchin.roboswag.core.observables.collections.Change;
+import ru.touchin.roboswag.core.observables.collections.changes.Change;
 import ru.touchin.roboswag.core.observables.collections.ObservableCollection;
 import ru.touchin.roboswag.core.observables.collections.ObservableList;
+import ru.touchin.roboswag.core.observables.collections.changes.CollectionChange;
 import ru.touchin.roboswag.core.observables.collections.loadable.LoadingMoreList;
 import ru.touchin.roboswag.core.utils.Optional;
+import ru.touchin.roboswag.core.observables.collections.changes.SameItemsPredicate;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 
 /**
@@ -107,8 +108,8 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                         return Observable.empty();
                     }
                     innerCollection.set(collection.getItems());
-                    return collection.observeChanges().observeOn(AndroidSchedulers.mainThread());
-                }), this::onApplyChanges);
+                    return collection.observeItems().observeOn(AndroidSchedulers.mainThread());
+                }), innerCollection::set);
         lifecycleBindable.untilDestroy(createMoreAutoLoadingObservable());
     }
 
@@ -134,26 +135,6 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                                         .doOnComplete(() -> moreAutoLoadingRequested.onNext(false));
                             });
                 });
-    }
-
-    private void onApplyChanges(@NonNull final ObservableCollection.CollectionChange<TItem> changes) {
-        anyChangeApplied = true;
-        for (final Change<TItem> change : changes.getChanges()) {
-            switch (change.getType()) {
-                case INSERTED:
-                    innerCollection.addAll(change.getStart(), change.getChangedItems());
-                    break;
-                case CHANGED:
-                    innerCollection.update(change.getStart(), change.getChangedItems());
-                    break;
-                case REMOVED:
-                    innerCollection.remove(change.getStart(), change.getCount());
-                    break;
-                default:
-                    Lc.assertion("Not supported " + change.getType());
-                    break;
-            }
-        }
     }
 
     /**
@@ -224,7 +205,6 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      */
     public void setObservableCollection(@Nullable final ObservableCollection<TItem> observableCollection) {
         this.observableCollectionSubject.onNext(new Optional<>(observableCollection));
-        refreshUpdate();
     }
 
     /**
@@ -241,7 +221,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      *
      * @param collectionChange Changes of collection.
      */
-    protected void onItemsChanged(@NonNull final ObservableCollection.CollectionChange<TItem> collectionChange) {
+    protected void onItemsChanged(@NonNull final CollectionChange<TItem> collectionChange) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             Lc.assertion("Items changes called on not main thread");
             return;
@@ -267,26 +247,30 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         lastUpdatedChangeNumber = innerCollection.getChangesCount();
     }
 
-    private void notifyAboutChanges(@NonNull final Collection<Change<TItem>> changes) {
+    private void notifyAboutChanges(@NonNull final Collection<Change> changes) {
         for (final Change change : changes) {
-            switch (change.getType()) {
-                case INSERTED:
-                    notifyItemRangeInserted(change.getStart() + getHeadersCount(), change.getCount());
-                    break;
-                case CHANGED:
-                    notifyItemRangeChanged(change.getStart() + getHeadersCount(), change.getCount());
-                    break;
-                case REMOVED:
-                    if (getItemCount() - getHeadersCount() == 0) {
-                        //TODO: bug of recyclerview?
-                        notifyDataSetChanged();
-                    } else {
-                        notifyItemRangeRemoved(change.getStart() + getHeadersCount(), change.getCount());
-                    }
-                    break;
-                default:
-                    Lc.assertion("Not supported " + change.getType());
-                    break;
+            if (change instanceof Change.Inserted) {
+                final Change.Inserted castedChange = (Change.Inserted) change;
+                notifyItemRangeInserted(castedChange.getPosition() + getHeadersCount(), castedChange.getCount());
+            } else if (change instanceof Change.Removed) {
+                if (getItemCount() - getHeadersCount() == 0) {
+                    //TODO: bug of recyclerview?
+                    notifyDataSetChanged();
+                } else {
+                    final Change.Removed castedChange = (Change.Removed) change;
+                    notifyItemRangeRemoved(castedChange.getPosition() + getHeadersCount(), castedChange.getCount());
+                }
+            } else if (change instanceof Change.Moved) {
+                final Change.Moved castedChange = (Change.Moved) change;
+                notifyItemMoved(castedChange.getFromPosition() + getHeadersCount(), castedChange.getToPosition() + getHeadersCount());
+            } else if (change instanceof Change.Changed) {
+                final Change.Changed castedChange = (Change.Changed) change;
+                notifyItemRangeChanged(
+                        castedChange.getPosition() + getHeadersCount(),
+                        castedChange.getCount(),
+                        castedChange.getPayload());
+            } else {
+                Lc.assertion("Not supported " + change);
             }
         }
     }
@@ -639,6 +623,15 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      */
     public boolean isOnClickListenerDisabled(@NonNull final TItem item, final int positionInAdapter, final int positionInCollection) {
         return false;
+    }
+
+    @Nullable
+    public SameItemsPredicate<TItem> getSameItemsPredicate() {
+        return innerCollection.getSameItemsPredicate();
+    }
+
+    public void setSameItemsPredicate(@Nullable final SameItemsPredicate<TItem> sameItemsPredicate) {
+        this.innerCollection.setSameItemsPredicate(sameItemsPredicate);
     }
 
     /**
