@@ -23,6 +23,7 @@ import android.support.annotation.NonNull;
 import android.view.ViewGroup;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
@@ -151,6 +152,26 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> im
 
     @NonNull
     @Override
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe) {
+        return parentLifecycleBindable.untilStop(maybe);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe, @NonNull final Consumer<T> onSuccessAction) {
+        return parentLifecycleBindable.untilStop(maybe, onSuccessAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe,
+                                    @NonNull final Consumer<T> onSuccessAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
+        return parentLifecycleBindable.untilStop(maybe, onSuccessAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
     public <T> Disposable untilDestroy(@NonNull final Observable<T> observable) {
         return parentLifecycleBindable.untilDestroy(observable);
     }
@@ -216,6 +237,26 @@ public abstract class AdapterDelegate<TViewHolder extends BindableViewHolder> im
                                    @NonNull final Action onCompletedAction,
                                    @NonNull final Consumer<Throwable> onErrorAction) {
         return parentLifecycleBindable.untilDestroy(completable, onCompletedAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe) {
+        return parentLifecycleBindable.untilDestroy(maybe);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe, @NonNull final Consumer<T> onSuccessAction) {
+        return parentLifecycleBindable.untilDestroy(maybe, onSuccessAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe,
+                                       @NonNull final Consumer<T> onSuccessAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
+        return parentLifecycleBindable.untilDestroy(maybe, onSuccessAction, onErrorAction);
     }
 
 }

@@ -22,6 +22,7 @@ package ru.touchin.roboswag.components.utils;
 import android.support.annotation.NonNull;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -179,6 +180,28 @@ public class BaseLifecycleBindable implements LifecycleBindable {
 
     @NonNull
     @Override
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilStop(maybe, Functions.emptyConsumer(), getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe, @NonNull final Consumer<T> onSuccessAction) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilStop(maybe, onSuccessAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe,
+                                    @NonNull final Consumer<T> onSuccessAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
+        return until(maybe.toObservable(), isStartedSubject.map(started -> !started), onSuccessAction, onErrorAction, Functions.EMPTY_ACTION);
+    }
+
+    @NonNull
+    @Override
     public <T> Disposable untilDestroy(@NonNull final Observable<T> observable) {
         final String codePoint = Lc.getCodePoint(this, 2);
         return untilDestroy(observable, Functions.emptyConsumer(),
@@ -253,6 +276,28 @@ public class BaseLifecycleBindable implements LifecycleBindable {
                                    @NonNull final Consumer<Throwable> onErrorAction) {
         return until(completable.toObservable(), isCreatedSubject.map(created -> !created),
                 Functions.emptyConsumer(), onErrorAction, onCompletedAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilDestroy(maybe, Functions.emptyConsumer(), getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe, @NonNull final Consumer<T> onSuccessAction) {
+        final String codePoint = Lc.getCodePoint(this, 2);
+        return untilDestroy(maybe, onSuccessAction, getActionThrowableForAssertion(codePoint, UNTIL_DESTROY_METHOD));
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe,
+                                       @NonNull final Consumer<T> onSuccessAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
+        return until(maybe.toObservable(), isCreatedSubject.map(created -> !created), onSuccessAction, onErrorAction, Functions.EMPTY_ACTION);
     }
 
     @NonNull

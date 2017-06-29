@@ -36,6 +36,7 @@ import android.view.inputmethod.InputMethodManager;
 import java.util.ArrayList;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
@@ -258,6 +259,18 @@ public abstract class BaseActivity extends AppCompatActivity
     //CPD: it's ok as it's LifecycleBindable
     @NonNull
     @Override
+    public <T> Disposable untilStop(@NonNull final Observable<T> observable) {
+        return baseLifecycleBindable.untilStop(observable);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilStop(@NonNull final Observable<T> observable, @NonNull final Consumer<T> onNextAction) {
+        return baseLifecycleBindable.untilStop(observable, onNextAction);
+    }
+
+    @NonNull
+    @Override
     public <T> Disposable untilStop(@NonNull final Observable<T> observable,
                                     @NonNull final Consumer<T> onNextAction,
                                     @NonNull final Consumer<Throwable> onErrorAction) {
@@ -315,14 +328,22 @@ public abstract class BaseActivity extends AppCompatActivity
 
     @NonNull
     @Override
-    public <T> Disposable untilStop(@NonNull final Observable<T> observable) {
-        return baseLifecycleBindable.untilStop(observable);
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe) {
+        return baseLifecycleBindable.untilStop(maybe);
     }
 
     @NonNull
     @Override
-    public <T> Disposable untilStop(@NonNull final Observable<T> observable, @NonNull final Consumer<T> onNextAction) {
-        return baseLifecycleBindable.untilStop(observable, onNextAction);
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe, @NonNull final Consumer<T> onSuccessAction) {
+        return baseLifecycleBindable.untilStop(maybe, onSuccessAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe,
+                                    @NonNull final Consumer<T> onSuccessAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
+        return baseLifecycleBindable.untilStop(maybe, onSuccessAction, onErrorAction);
     }
 
     @NonNull
@@ -392,6 +413,26 @@ public abstract class BaseActivity extends AppCompatActivity
                                    @NonNull final Action onCompletedAction,
                                    @NonNull final Consumer<Throwable> onErrorAction) {
         return baseLifecycleBindable.untilDestroy(completable, onCompletedAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe) {
+        return baseLifecycleBindable.untilDestroy(maybe);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe, @NonNull final Consumer<T> onCompletedAction) {
+        return baseLifecycleBindable.untilDestroy(maybe, onCompletedAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe,
+                                       @NonNull final Consumer<T> onCompletedAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
+        return baseLifecycleBindable.untilDestroy(maybe, onCompletedAction, onErrorAction);
     }
 
     @SuppressWarnings("CPD-END")
