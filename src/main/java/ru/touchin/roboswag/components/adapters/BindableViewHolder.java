@@ -275,7 +275,6 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
         return baseLifecycleBindable.untilDestroy(completable, onCompletedAction);
     }
 
-    @SuppressWarnings("CPD-END")
     @NonNull
     @Override
     public Disposable untilDestroy(@NonNull final Completable completable,
@@ -296,6 +295,7 @@ public class BindableViewHolder extends RecyclerView.ViewHolder implements Lifec
         return baseLifecycleBindable.untilDestroy(maybe, onSuccessAction);
     }
 
+    @SuppressWarnings("CPD-END")
     @NonNull
     @Override
     public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe,

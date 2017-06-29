@@ -227,7 +227,9 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
 
     @NonNull
     @Override
-    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe, @NonNull final Consumer<T> onSuccessAction, @NonNull final Consumer<Throwable> onErrorAction) {
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe,
+                                    @NonNull final Consumer<T> onSuccessAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
         return baseLifecycleBindable.untilStop(maybe, onSuccessAction, onErrorAction);
     }
 
@@ -314,7 +316,9 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
 
     @NonNull
     @Override
-    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe, @NonNull final Consumer<T> onSuccessAction, @NonNull final Consumer<Throwable> onErrorAction) {
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe,
+                                       @NonNull final Consumer<T> onSuccessAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
         return baseLifecycleBindable.untilDestroy(maybe, onSuccessAction, onErrorAction);
     }
 
