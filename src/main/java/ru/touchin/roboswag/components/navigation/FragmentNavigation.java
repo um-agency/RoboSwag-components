@@ -118,6 +118,7 @@ public class FragmentNavigation {
      *
      * @param fragmentClass    Class of {@link Fragment} to instantiate;
      * @param targetFragment   Target fragment to be set as {@link Fragment#getTargetFragment()} of instantiated {@link Fragment};
+     * @param addToStack       Flag to add this transaction to the back stack;
      * @param args             Bundle to be set as {@link Fragment#getArguments()} of instantiated {@link Fragment};
      * @param backStackTag     Tag of {@link Fragment} in back stack;
      * @param transactionSetup Function to setup transaction before commit. It is useful to specify transition animations or additional info.
@@ -126,6 +127,7 @@ public class FragmentNavigation {
     //CommitTransaction: it is ok as we could setup transaction before commit
     protected void addToStack(@NonNull final Class<? extends Fragment> fragmentClass,
                               @Nullable final Fragment targetFragment,
+                              final boolean addToStack,
                               @Nullable final Bundle args,
                               @Nullable final String backStackTag,
                               @Nullable final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
@@ -144,8 +146,10 @@ public class FragmentNavigation {
         }
 
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction()
-                .replace(containerViewId, fragment, null)
-                .addToBackStack(backStackTag);
+                .replace(containerViewId, fragment, null);
+        if (addToStack) {
+            fragmentTransaction.addToBackStack(backStackTag);
+        }
         if (fragmentManager.getBackStackEntryCount() != 0) {
             fragmentTransaction.setTransition(getDefaultTransition());
         }
@@ -231,7 +235,7 @@ public class FragmentNavigation {
      * @param fragmentClass Class of {@link Fragment} to instantiate.
      */
     public void push(@NonNull final Class<? extends Fragment> fragmentClass) {
-        addToStack(fragmentClass, null, null, null, null);
+        addToStack(fragmentClass, null, true, null, null, null);
     }
 
     /**
@@ -242,7 +246,7 @@ public class FragmentNavigation {
      */
     public void push(@NonNull final Class<? extends Fragment> fragmentClass,
                      @NonNull final Bundle args) {
-        addToStack(fragmentClass, null, args, null, null);
+        addToStack(fragmentClass, null, true, args, null, null);
     }
 
     /**
@@ -253,7 +257,7 @@ public class FragmentNavigation {
      */
     public void push(@NonNull final Class<? extends Fragment> fragmentClass,
                      @NonNull final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
-        addToStack(fragmentClass, null, null, null, transactionSetup);
+        addToStack(fragmentClass, null, true, null, null, transactionSetup);
     }
 
     /**
@@ -266,7 +270,7 @@ public class FragmentNavigation {
     public void push(@NonNull final Class<? extends Fragment> fragmentClass,
                      @Nullable final Bundle args,
                      @Nullable final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
-        addToStack(fragmentClass, null, args, null, transactionSetup);
+        addToStack(fragmentClass, null, true, args, null, transactionSetup);
     }
 
     /**
@@ -277,7 +281,7 @@ public class FragmentNavigation {
      */
     public void pushForResult(@NonNull final Class<? extends Fragment> fragmentClass,
                               @NonNull final Fragment targetFragment) {
-        addToStack(fragmentClass, targetFragment, null, fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, null);
+        addToStack(fragmentClass, targetFragment, true, null, fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, null);
     }
 
     /**
@@ -290,7 +294,7 @@ public class FragmentNavigation {
     public void pushForResult(@NonNull final Class<? extends Fragment> fragmentClass,
                               @NonNull final Fragment targetFragment,
                               @NonNull final Bundle args) {
-        addToStack(fragmentClass, targetFragment, args, fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, null);
+        addToStack(fragmentClass, targetFragment, true, args, fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, null);
     }
 
     /**
@@ -303,7 +307,7 @@ public class FragmentNavigation {
     public void pushForResult(@NonNull final Class<? extends Fragment> fragmentClass,
                               @NonNull final Fragment targetFragment,
                               @NonNull final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
-        addToStack(fragmentClass, targetFragment, null, fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
+        addToStack(fragmentClass, targetFragment, true, null, fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
     /**
@@ -318,7 +322,7 @@ public class FragmentNavigation {
                               @NonNull final Fragment targetFragment,
                               @Nullable final Bundle args,
                               @Nullable final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
-        addToStack(fragmentClass, targetFragment, args, fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
+        addToStack(fragmentClass, targetFragment, true, args, fragmentClass.getName() + ';' + WITH_TARGET_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
     /**
@@ -327,7 +331,7 @@ public class FragmentNavigation {
      * @param fragmentClass Class of {@link Fragment} to instantiate.
      */
     public void setAsTop(@NonNull final Class<? extends Fragment> fragmentClass) {
-        addToStack(fragmentClass, null, null, fragmentClass.getName() + ';' + TOP_FRAGMENT_TAG_MARK, null);
+        addToStack(fragmentClass, null, true, null, fragmentClass.getName() + ';' + TOP_FRAGMENT_TAG_MARK, null);
     }
 
     /**
@@ -338,7 +342,7 @@ public class FragmentNavigation {
      */
     public void setAsTop(@NonNull final Class<? extends Fragment> fragmentClass,
                          @NonNull final Bundle args) {
-        addToStack(fragmentClass, null, args, fragmentClass.getName() + ';' + TOP_FRAGMENT_TAG_MARK, null);
+        addToStack(fragmentClass, null, true, args, fragmentClass.getName() + ';' + TOP_FRAGMENT_TAG_MARK, null);
     }
 
     /**
@@ -350,7 +354,7 @@ public class FragmentNavigation {
      */
     public void setAsTop(@NonNull final Class<? extends Fragment> fragmentClass,
                          @NonNull final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
-        addToStack(fragmentClass, null, null, fragmentClass.getName() + ';' + TOP_FRAGMENT_TAG_MARK, transactionSetup);
+        addToStack(fragmentClass, null, true, null, fragmentClass.getName() + ';' + TOP_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
     /**
@@ -364,7 +368,7 @@ public class FragmentNavigation {
     public void setAsTop(@NonNull final Class<? extends Fragment> fragmentClass,
                          @Nullable final Bundle args,
                          @Nullable final Function<FragmentTransaction, FragmentTransaction> transactionSetup) {
-        addToStack(fragmentClass, null, args, fragmentClass.getName() + ';' + TOP_FRAGMENT_TAG_MARK, transactionSetup);
+        addToStack(fragmentClass, null, true, args, fragmentClass.getName() + ';' + TOP_FRAGMENT_TAG_MARK, transactionSetup);
     }
 
     /**
