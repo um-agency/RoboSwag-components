@@ -296,6 +296,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     @CallSuper
     public void onSaveInstanceState(@NonNull final Bundle savedInstanceState) {
+        baseLifecycleBindable.onSaveInstanceState();
         UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
     }
 

@@ -149,6 +149,7 @@ public abstract class BaseActivity extends AppCompatActivity
     @Override
     protected void onSaveInstanceState(@NonNull final Bundle stateToSave) {
         super.onSaveInstanceState(stateToSave);
+        baseLifecycleBindable.onSaveInstanceState();
         UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         final HalfNullablePair<Integer, Intent> activityResult = lastActivityResult.getValue().get();
         if (activityResult != null) {

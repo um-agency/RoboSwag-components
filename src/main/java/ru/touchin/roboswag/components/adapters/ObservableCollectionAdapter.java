@@ -40,9 +40,12 @@ import io.reactivex.subjects.BehaviorSubject;
 import ru.touchin.roboswag.components.utils.LifecycleBindable;
 import ru.touchin.roboswag.components.utils.UiUtils;
 import ru.touchin.roboswag.core.log.Lc;
-import ru.touchin.roboswag.core.observables.collections.Change;
 import ru.touchin.roboswag.core.observables.collections.ObservableCollection;
 import ru.touchin.roboswag.core.observables.collections.ObservableList;
+import ru.touchin.roboswag.core.observables.collections.changes.Change;
+import ru.touchin.roboswag.core.observables.collections.changes.ChangePayloadProducer;
+import ru.touchin.roboswag.core.observables.collections.changes.CollectionChanges;
+import ru.touchin.roboswag.core.observables.collections.changes.SameItemsPredicate;
 import ru.touchin.roboswag.core.observables.collections.loadable.LoadingMoreList;
 import ru.touchin.roboswag.core.utils.Optional;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
@@ -98,17 +101,12 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
     public ObservableCollectionAdapter(@NonNull final LifecycleBindable lifecycleBindable) {
         super();
         this.lifecycleBindable = lifecycleBindable;
-        innerCollection.observeChanges().subscribe(this::onItemsChanged);
+        lifecycleBindable.untilDestroy(innerCollection.observeChanges(), this::onItemsChanged);
         lifecycleBindable.untilDestroy(observableCollectionSubject
                 .switchMap(optional -> {
                     final ObservableCollection<TItem> collection = optional.get();
-                    if (collection == null) {
-                        innerCollection.clear();
-                        return Observable.empty();
-                    }
-                    innerCollection.set(collection.getItems());
-                    return collection.observeChanges().observeOn(AndroidSchedulers.mainThread());
-                }), this::onApplyChanges);
+                    return collection != null ? collection.observeItems() : Observable.just(Collections.emptyList());
+                }), innerCollection::set);
         lifecycleBindable.untilDestroy(createMoreAutoLoadingObservable());
     }
 
@@ -134,26 +132,6 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                                         .doOnComplete(() -> moreAutoLoadingRequested.onNext(false));
                             });
                 });
-    }
-
-    private void onApplyChanges(@NonNull final ObservableCollection.CollectionChange<TItem> changes) {
-        anyChangeApplied = true;
-        for (final Change<TItem> change : changes.getChanges()) {
-            switch (change.getType()) {
-                case INSERTED:
-                    innerCollection.addAll(change.getStart(), change.getChangedItems());
-                    break;
-                case CHANGED:
-                    innerCollection.update(change.getStart(), change.getChangedItems());
-                    break;
-                case REMOVED:
-                    innerCollection.remove(change.getStart(), change.getCount());
-                    break;
-                default:
-                    Lc.assertion("Not supported " + change.getType());
-                    break;
-            }
-        }
     }
 
     /**
@@ -224,7 +202,6 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      */
     public void setObservableCollection(@Nullable final ObservableCollection<TItem> observableCollection) {
         this.observableCollectionSubject.onNext(new Optional<>(observableCollection));
-        refreshUpdate();
     }
 
     /**
@@ -239,9 +216,9 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
     /**
      * Calls when collection changes.
      *
-     * @param collectionChange Changes of collection.
+     * @param collectionChanges Changes of collection.
      */
-    protected void onItemsChanged(@NonNull final ObservableCollection.CollectionChange<TItem> collectionChange) {
+    protected void onItemsChanged(@NonNull final CollectionChanges<TItem> collectionChanges) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             Lc.assertion("Items changes called on not main thread");
             return;
@@ -251,14 +228,14 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
             refreshUpdate();
             return;
         }
-        if (collectionChange.getNumber() != innerCollection.getChangesCount()
-                || collectionChange.getNumber() != lastUpdatedChangeNumber + 1) {
-            if (lastUpdatedChangeNumber < collectionChange.getNumber()) {
+        if (collectionChanges.getNumber() != innerCollection.getChangesCount()
+                || collectionChanges.getNumber() != lastUpdatedChangeNumber + 1) {
+            if (lastUpdatedChangeNumber < collectionChanges.getNumber()) {
                 refreshUpdate();
             }
             return;
         }
-        notifyAboutChanges(collectionChange.getChanges());
+        notifyAboutChanges(collectionChanges.getChanges());
         lastUpdatedChangeNumber = innerCollection.getChangesCount();
     }
 
@@ -267,26 +244,30 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
         lastUpdatedChangeNumber = innerCollection.getChangesCount();
     }
 
-    private void notifyAboutChanges(@NonNull final Collection<Change<TItem>> changes) {
+    private void notifyAboutChanges(@NonNull final Collection<Change> changes) {
         for (final Change change : changes) {
-            switch (change.getType()) {
-                case INSERTED:
-                    notifyItemRangeInserted(change.getStart() + getHeadersCount(), change.getCount());
-                    break;
-                case CHANGED:
-                    notifyItemRangeChanged(change.getStart() + getHeadersCount(), change.getCount());
-                    break;
-                case REMOVED:
-                    if (getItemCount() - getHeadersCount() == 0) {
-                        //TODO: bug of recyclerview?
-                        notifyDataSetChanged();
-                    } else {
-                        notifyItemRangeRemoved(change.getStart() + getHeadersCount(), change.getCount());
-                    }
-                    break;
-                default:
-                    Lc.assertion("Not supported " + change.getType());
-                    break;
+            if (change instanceof Change.Inserted) {
+                final Change.Inserted castedChange = (Change.Inserted) change;
+                notifyItemRangeInserted(castedChange.getPosition() + getHeadersCount(), castedChange.getCount());
+            } else if (change instanceof Change.Removed) {
+                if (getItemCount() - getHeadersCount() == 0) {
+                    //TODO: bug of recyclerview?
+                    notifyDataSetChanged();
+                } else {
+                    final Change.Removed castedChange = (Change.Removed) change;
+                    notifyItemRangeRemoved(castedChange.getPosition() + getHeadersCount(), castedChange.getCount());
+                }
+            } else if (change instanceof Change.Moved) {
+                final Change.Moved castedChange = (Change.Moved) change;
+                notifyItemMoved(castedChange.getFromPosition() + getHeadersCount(), castedChange.getToPosition() + getHeadersCount());
+            } else if (change instanceof Change.Changed) {
+                final Change.Changed castedChange = (Change.Changed) change;
+                notifyItemRangeChanged(
+                        castedChange.getPosition() + getHeadersCount(),
+                        castedChange.getCount(),
+                        castedChange.getPayload());
+            } else {
+                Lc.assertion("Not supported " + change);
             }
         }
     }
@@ -639,6 +620,35 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
      */
     public boolean isOnClickListenerDisabled(@NonNull final TItem item, final int positionInAdapter, final int positionInCollection) {
         return false;
+    }
+
+    /**
+     * Enable diff utils algorithm in collection changes.
+     *
+     * @param detectMoves The flag that determines whether the {@link Change.Moved} changes will be generated or not;
+     * @param sameItemsPredicate Predicate for the determination of the same elements;
+     * @param changePayloadProducer Function that calculate change payload when items the same but contents are different.
+     */
+    public void enableDiffUtils(final boolean detectMoves,
+                                @NonNull final SameItemsPredicate<TItem> sameItemsPredicate,
+                                @Nullable final ChangePayloadProducer<TItem> changePayloadProducer) {
+        innerCollection.enableDiffUtils(detectMoves, sameItemsPredicate, changePayloadProducer);
+    }
+
+    /**
+     * Disable diff utils algorithm.
+     */
+    public void disableDiffUtils() {
+        innerCollection.disableDiffUtils();
+    }
+
+    /**
+     * Returns enabled flag of diff utils.
+     *
+     * @return true if diff utils is enabled.
+     */
+    public boolean diffUtilsIsEnabled() {
+        return innerCollection.diffUtilsIsEnabled();
     }
 
     /**
