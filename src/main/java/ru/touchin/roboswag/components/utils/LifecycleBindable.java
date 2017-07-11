@@ -24,6 +24,8 @@ import android.support.annotation.NonNull;
 import io.reactivex.Completable;
 import io.reactivex.CompletableEmitter;
 import io.reactivex.Emitter;
+import io.reactivex.Maybe;
+import io.reactivex.MaybeEmitter;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
@@ -182,13 +184,52 @@ public interface LifecycleBindable {
     Disposable untilStop(@NonNull Completable completable, @NonNull Action onCompletedAction, @NonNull Consumer<Throwable> onErrorAction);
 
     /**
+     * Method should be used to guarantee that maybe won't be subscribed after onStop.
+     * It is automatically subscribing to the maybe.
+     * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
+     * Don't forget to process errors if completable can emit them.
+     *
+     * @param maybe {@link Maybe} to subscribe until onStop;
+     * @return {@link Disposable} which will unsubscribes from completable onStop.
+     */
+    @NonNull
+    <T> Disposable untilStop(@NonNull Maybe<T> maybe);
+
+    /**
+     * Method should be used to guarantee that maybe won't be subscribed after onStop.
+     * It is automatically subscribing to the maybe and calls onCompletedAction on maybe item.
+     * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
+     * Don't forget to process errors if completable can emit them.
+     *
+     * @param maybe           {@link Maybe} to subscribe until onStop;
+     * @param onSuccessAction Action which will raise at {@link MaybeEmitter#onSuccess(Object)} ()} on completion of observable;
+     * @return {@link Disposable} which is wrapping source maybe to unsubscribe from it onStop.
+     */
+    @NonNull
+    <T> Disposable untilStop(@NonNull Maybe<T> maybe, @NonNull Consumer<T> onSuccessAction);
+
+    /**
+     * Method should be used to guarantee that maybe won't be subscribed after onStop.
+     * It is automatically subscribing to the maybe and calls onCompletedAction and onErrorAction on maybe item.
+     * Usually it is using to stop requests/execution while element is off or to not do illegal actions after onStop like fragment's stack changing.
+     * Don't forget to process errors if completable can emit them.
+     *
+     * @param maybe           {@link Maybe} to subscribe until onStop;
+     * @param onSuccessAction Action which will raise at {@link MaybeEmitter#onSuccess(Object)} ()} on completion of observable;
+     * @param onErrorAction   Action which will raise on every {@link MaybeEmitter#onError(Throwable)} throwable;
+     * @return {@link Disposable} which is wrapping source maybe to unsubscribe from it onStop.
+     */
+    @NonNull
+    <T> Disposable untilStop(@NonNull Maybe<T> maybe, @NonNull Consumer<T> onSuccessAction, @NonNull Consumer<Throwable> onErrorAction);
+
+    /**
      * Method should be used to guarantee that observable won't be subscribed after onDestroy.
      * It is automatically subscribing to the observable.
      * Don't forget to process errors if observable can emit them.
      *
      * @param observable {@link Observable} to subscribe until onDestroy;
      * @param <T>        Type of emitted by observable items;
-     * @return {@link Disposable} which is wrapping source observable to unsubscribe from it onDestroy.
+     * @return {@link Disposable} which is wrapping source maybe to unsubscribe from it onDestroy.
      */
     @NonNull
     <T> Disposable untilDestroy(@NonNull Observable<T> observable);
@@ -289,7 +330,7 @@ public interface LifecycleBindable {
     /**
      * Method should be used to guarantee that completable won't be subscribed after onDestroy.
      * It is automatically subscribing to the completable and calls onCompletedAction on completable item.
-     * Don't forget to process errors if single can emit them.
+     * Don't forget to process errors if completable can emit them.
      *
      * @param completable       {@link Completable} to subscribe until onDestroy;
      * @param onCompletedAction Action which will raise on every {@link CompletableEmitter#onComplete()} item;
@@ -310,5 +351,41 @@ public interface LifecycleBindable {
      */
     @NonNull
     Disposable untilDestroy(@NonNull Completable completable, @NonNull Action onCompletedAction, @NonNull Consumer<Throwable> onErrorAction);
+
+    /**
+     * Method should be used to guarantee that maybe won't be subscribed after onDestroy.
+     * It is automatically subscribing to the maybe.
+     * Don't forget to process errors if maybe can emit them.
+     *
+     * @param maybe {@link Maybe} to subscribe until onDestroy;
+     * @return {@link Disposable} which is wrapping source maybe to unsubscribe from it onDestroy.
+     */
+    @NonNull
+    <T> Disposable untilDestroy(@NonNull Maybe<T> maybe);
+
+    /**
+     * Method should be used to guarantee that maybe won't be subscribed after onDestroy.
+     * It is automatically subscribing to the maybe and calls onCompletedAction on maybe item.
+     * Don't forget to process errors if maybe can emit them.
+     *
+     * @param maybe           {@link Maybe} to subscribe until onDestroy;
+     * @param onSuccessAction Action which will raise on every {@link MaybeEmitter#onSuccess(Object)} ()} item;
+     * @return {@link Disposable} which is wrapping source maybe to unsubscribe from it onDestroy.
+     */
+    @NonNull
+    <T> Disposable untilDestroy(@NonNull Maybe<T> maybe, @NonNull Consumer<T> onSuccessAction);
+
+    /**
+     * Method should be used to guarantee that maybe won't be subscribed after onDestroy.
+     * It is automatically subscribing to the maybe and calls onSuccessAction and onErrorAction on maybe events.
+     * Don't forget to process errors if completable can emit them.
+     *
+     * @param maybe           {@link Maybe} to subscribe until onDestroy;
+     * @param onSuccessAction Action which will raise on every {@link MaybeEmitter#onSuccess(Object)} ()} item;
+     * @param onErrorAction   Action which will raise on every {@link MaybeEmitter#onError(Throwable)} throwable;
+     * @return {@link Disposable} which is wrapping source maybe to unsubscribe from it onDestroy.
+     */
+    @NonNull
+    <T> Disposable untilDestroy(@NonNull Maybe<T> maybe, @NonNull Consumer<T> onSuccessAction, @NonNull Consumer<Throwable> onErrorAction);
 
 }

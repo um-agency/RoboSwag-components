@@ -38,6 +38,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
@@ -295,6 +296,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      */
     @CallSuper
     public void onSaveInstanceState(@NonNull final Bundle savedInstanceState) {
+        baseLifecycleBindable.onSaveInstanceState();
         UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
     }
 
@@ -408,6 +410,26 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
 
     @NonNull
     @Override
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe) {
+        return baseLifecycleBindable.untilStop(maybe);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe, @NonNull final Consumer<T> onSuccessAction) {
+        return baseLifecycleBindable.untilStop(maybe, onSuccessAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilStop(@NonNull final Maybe<T> maybe,
+                                    @NonNull final Consumer<T> onSuccessAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
+        return baseLifecycleBindable.untilStop(maybe, onSuccessAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
     public <T> Disposable untilDestroy(@NonNull final Observable<T> observable) {
         return baseLifecycleBindable.untilDestroy(observable);
     }
@@ -473,6 +495,26 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
                                    @NonNull final Action onCompletedAction,
                                    @NonNull final Consumer<Throwable> onErrorAction) {
         return baseLifecycleBindable.untilDestroy(completable, onCompletedAction, onErrorAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe) {
+        return baseLifecycleBindable.untilDestroy(maybe);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe, @NonNull final Consumer<T> onCompletedAction) {
+        return baseLifecycleBindable.untilDestroy(maybe, onCompletedAction);
+    }
+
+    @NonNull
+    @Override
+    public <T> Disposable untilDestroy(@NonNull final Maybe<T> maybe,
+                                       @NonNull final Consumer<T> onCompletedAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
+        return baseLifecycleBindable.untilDestroy(maybe, onCompletedAction, onErrorAction);
     }
 
     @SuppressWarnings("CPD-END")
