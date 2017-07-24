@@ -624,8 +624,8 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
     /**
      * Enable diff utils algorithm in collection changes.
      *
-     * @param detectMoves The flag that determines whether the {@link Change.Moved} changes will be generated or not;
-     * @param sameItemsPredicate Predicate for the determination of the same elements;
+     * @param detectMoves           The flag that determines whether the {@link Change.Moved} changes will be generated or not;
+     * @param sameItemsPredicate    Predicate for the determination of the same elements;
      * @param changePayloadProducer Function that calculate change payload when items the same but contents are different.
      */
     public void enableDiffUtils(final boolean detectMoves,

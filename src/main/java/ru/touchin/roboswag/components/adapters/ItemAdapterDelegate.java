@@ -26,7 +26,7 @@ public abstract class ItemAdapterDelegate<TViewHolder extends BindableViewHolder
      * This item will be casted to {@link TItem} and passes to {@link #onBindViewHolder(TViewHolder, TItem, int, int)}.
      *
      * @param item                   Item to check;
-     * @param positionInAdapter        Position of item in adapter;
+     * @param positionInAdapter      Position of item in adapter;
      * @param itemCollectionPosition Position of item in collection that contains item;
      * @return True if item is processable by this delegate.
      */
@@ -35,8 +35,8 @@ public abstract class ItemAdapterDelegate<TViewHolder extends BindableViewHolder
     /**
      * Returns unique ID of item to support stable ID's logic of RecyclerView's adapter.
      *
-     * @param item                   Item to check;
-     * @param positionInAdapter        Position of item in adapter;
+     * @param item                 Item to check;
+     * @param positionInAdapter    Position of item in adapter;
      * @param positionInCollection Position of item in collection that contains item;
      * @return Unique item ID.
      */
@@ -56,9 +56,9 @@ public abstract class ItemAdapterDelegate<TViewHolder extends BindableViewHolder
     /**
      * Binds item to created by this object ViewHolder.
      *
-     * @param holder                 ViewHolder to bind item to;
-     * @param item                   Item to check;
-     * @param positionInAdapter        Position of item in adapter;
+     * @param holder               ViewHolder to bind item to;
+     * @param item                 Item to check;
+     * @param positionInAdapter    Position of item in adapter;
      * @param positionInCollection Position of item in collection that contains item;
      */
     public abstract void onBindViewHolder(@NonNull final TViewHolder holder, @NonNull final TItem item,
@@ -67,10 +67,10 @@ public abstract class ItemAdapterDelegate<TViewHolder extends BindableViewHolder
     /**
      * Binds item with payloads to created by this object ViewHolder.
      *
-     * @param holder                 ViewHolder to bind item to;
-     * @param item                   Item to check;
-     * @param payloads               Payloads;
-     * @param positionInAdapter        Position of item in adapter;
+     * @param holder               ViewHolder to bind item to;
+     * @param item                 Item to check;
+     * @param payloads             Payloads;
+     * @param positionInAdapter    Position of item in adapter;
      * @param positionInCollection Position of item in collection that contains item;
      */
     public void onBindViewHolder(@NonNull final TViewHolder holder, @NonNull final TItem item, @NonNull final List<Object> payloads,
