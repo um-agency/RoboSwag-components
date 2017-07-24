@@ -159,17 +159,17 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
     @NonNull
     @Override
     public <T> Disposable untilStop(@NonNull final Observable<T> observable,
-                                      @NonNull final Consumer<T> onNextAction,
-                                      @NonNull final Consumer<Throwable> onErrorAction) {
+                                    @NonNull final Consumer<T> onNextAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
         return baseLifecycleBindable.untilStop(observable, onNextAction, onErrorAction);
     }
 
     @NonNull
     @Override
     public <T> Disposable untilStop(@NonNull final Observable<T> observable,
-                                      @NonNull final Consumer<T> onNextAction,
-                                      @NonNull final Consumer<Throwable> onErrorAction,
-                                      @NonNull final Action onCompletedAction) {
+                                    @NonNull final Consumer<T> onNextAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction,
+                                    @NonNull final Action onCompletedAction) {
         return baseLifecycleBindable.untilStop(observable, onNextAction, onErrorAction, onCompletedAction);
     }
 
@@ -188,8 +188,8 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
     @NonNull
     @Override
     public <T> Disposable untilStop(@NonNull final Single<T> single,
-                                      @NonNull final Consumer<T> onSuccessAction,
-                                      @NonNull final Consumer<Throwable> onErrorAction) {
+                                    @NonNull final Consumer<T> onSuccessAction,
+                                    @NonNull final Consumer<Throwable> onErrorAction) {
         return baseLifecycleBindable.untilStop(single, onSuccessAction, onErrorAction);
     }
 
@@ -208,8 +208,8 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
     @NonNull
     @Override
     public Disposable untilStop(@NonNull final Completable completable,
-                                  @NonNull final Action onCompletedAction,
-                                  @NonNull final Consumer<Throwable> onErrorAction) {
+                                @NonNull final Action onCompletedAction,
+                                @NonNull final Consumer<Throwable> onErrorAction) {
         return baseLifecycleBindable.untilStop(completable, onCompletedAction, onErrorAction);
     }
 
@@ -248,17 +248,17 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
     @NonNull
     @Override
     public <T> Disposable untilDestroy(@NonNull final Observable<T> observable,
-                                         @NonNull final Consumer<T> onNextAction,
-                                         @NonNull final Consumer<Throwable> onErrorAction) {
+                                       @NonNull final Consumer<T> onNextAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
         return baseLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction);
     }
 
     @NonNull
     @Override
     public <T> Disposable untilDestroy(@NonNull final Observable<T> observable,
-                                         @NonNull final Consumer<T> onNextAction,
-                                         @NonNull final Consumer<Throwable> onErrorAction,
-                                         @NonNull final Action onCompletedAction) {
+                                       @NonNull final Consumer<T> onNextAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction,
+                                       @NonNull final Action onCompletedAction) {
         return baseLifecycleBindable.untilDestroy(observable, onNextAction, onErrorAction, onCompletedAction);
     }
 
@@ -277,8 +277,8 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
     @NonNull
     @Override
     public <T> Disposable untilDestroy(@NonNull final Single<T> single,
-                                         @NonNull final Consumer<T> onSuccessAction,
-                                         @NonNull final Consumer<Throwable> onErrorAction) {
+                                       @NonNull final Consumer<T> onSuccessAction,
+                                       @NonNull final Consumer<Throwable> onErrorAction) {
         return baseLifecycleBindable.untilDestroy(single, onSuccessAction, onErrorAction);
     }
 
@@ -297,8 +297,8 @@ public class LifecycleView extends FrameLayout implements LifecycleBindable {
     @NonNull
     @Override
     public Disposable untilDestroy(@NonNull final Completable completable,
-                                     @NonNull final Action onCompletedAction,
-                                     @NonNull final Consumer<Throwable> onErrorAction) {
+                                   @NonNull final Action onCompletedAction,
+                                   @NonNull final Consumer<Throwable> onErrorAction) {
         return baseLifecycleBindable.untilDestroy(completable, onCompletedAction, onErrorAction);
     }
 

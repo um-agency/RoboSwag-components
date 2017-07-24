@@ -50,7 +50,7 @@ public abstract class PositionAdapterDelegate<TViewHolder extends BindableViewHo
     /**
      * Binds position to ViewHolder.
      *
-     * @param holder          ViewHolder to bind position to;
+     * @param holder            ViewHolder to bind position to;
      * @param positionInAdapter Position of item in adapter.
      */
     public abstract void onBindViewHolder(@NonNull final TViewHolder holder, final int positionInAdapter);
@@ -58,8 +58,8 @@ public abstract class PositionAdapterDelegate<TViewHolder extends BindableViewHo
     /**
      * Binds position with payloads to ViewHolder.
      *
-     * @param holder          ViewHolder to bind position to;
-     * @param payloads        Payloads;
+     * @param holder            ViewHolder to bind position to;
+     * @param payloads          Payloads;
      * @param positionInAdapter Position of item in adapter.
      */
     public void onBindViewHolder(@NonNull final TViewHolder holder, @NonNull final List<Object> payloads, final int positionInAdapter) {
