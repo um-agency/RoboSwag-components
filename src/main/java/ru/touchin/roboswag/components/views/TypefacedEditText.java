@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.AppCompatEditText;
 import android.text.Editable;
 import android.text.InputType;
@@ -31,6 +32,10 @@ import android.text.TextWatcher;
 import android.text.method.SingleLineTransformationMethod;
 import android.text.method.TransformationMethod;
 import android.util.AttributeSet;
+import android.view.View;
+import android.view.ViewParent;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -105,6 +110,21 @@ public class TypefacedEditText extends AppCompatEditText {
                 checkAttributes(context, attrs);
             }
         }
+    }
+
+    @Nullable
+    public InputConnection onCreateInputConnection(@NonNull final EditorInfo attrs) {
+        final InputConnection inputConnection = super.onCreateInputConnection(attrs);
+        if (inputConnection != null && attrs.hintText == null) {
+            for (ViewParent parent = this.getParent(); parent instanceof View; parent = parent.getParent()) {
+                if (parent instanceof TextInputLayout) {
+                    attrs.hintText = ((TextInputLayout) parent).getHint();
+                    break;
+                }
+            }
+        }
+
+        return inputConnection;
     }
 
     private void checkAttributes(@NonNull final Context context, @NonNull final AttributeSet attrs) {
