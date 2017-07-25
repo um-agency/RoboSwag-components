@@ -116,7 +116,7 @@ public class TypefacedEditText extends AppCompatEditText {
     public InputConnection onCreateInputConnection(@NonNull final EditorInfo attrs) {
         final InputConnection inputConnection = super.onCreateInputConnection(attrs);
         if (inputConnection != null && attrs.hintText == null) {
-            for (ViewParent parent = this.getParent(); parent instanceof View; parent = parent.getParent()) {
+            for (ViewParent parent = getParent(); parent instanceof View; parent = parent.getParent()) {
                 if (parent instanceof TextInputLayout) {
                     attrs.hintText = ((TextInputLayout) parent).getHint();
                     break;
