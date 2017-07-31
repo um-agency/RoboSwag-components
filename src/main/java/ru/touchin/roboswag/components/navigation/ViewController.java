@@ -268,6 +268,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
     @CallSuper
     public void onResume() {
         UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
+        baseLifecycleBindable.onResume();
     }
 
     /**

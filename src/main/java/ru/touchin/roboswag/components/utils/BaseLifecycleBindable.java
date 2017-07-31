@@ -48,6 +48,8 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create();
     @NonNull
     private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
+    @NonNull
+    private final BehaviorSubject<Boolean> isInAfterSaving = BehaviorSubject.create(false);
 
     /**
      * Call it on parent's onCreate method.
@@ -69,18 +71,14 @@ public class BaseLifecycleBindable implements LifecycleBindable {
      * In that case onResume will be called after onSaveInstanceState so lifecycle object is becoming started.
      */
     public void onResume() {
-        if (!isStartedSubject.hasValue() || !isStartedSubject.getValue()) {
-            isStartedSubject.onNext(true);
-        }
+        isInAfterSaving.onNext(false);
     }
 
     /**
      * Call it on parent's onSaveInstanceState method.
      */
     public void onSaveInstanceState() {
-        if (!isStartedSubject.hasValue() || isStartedSubject.getValue()) {
-            isStartedSubject.onNext(false);
-        }
+        isInAfterSaving.onNext(true);
     }
 
     /**
@@ -134,7 +132,9 @@ public class BaseLifecycleBindable implements LifecycleBindable {
                                       @NonNull final Action1<T> onNextAction,
                                       @NonNull final Action1<Throwable> onErrorAction,
                                       @NonNull final Action0 onCompletedAction) {
-        return until(observable, isStartedSubject.map(started -> !started), onNextAction, onErrorAction, onCompletedAction);
+        return until(observable, isStartedSubject.map(started -> !started)
+                        .delay(item -> isInAfterSaving.filter(inAfterSaving -> !inAfterSaving)),
+                onNextAction, onErrorAction, onCompletedAction);
     }
 
     @NonNull
@@ -156,7 +156,9 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public <T> Subscription untilStop(@NonNull final Single<T> single,
                                       @NonNull final Action1<T> onSuccessAction,
                                       @NonNull final Action1<Throwable> onErrorAction) {
-        return until(single.toObservable(), isStartedSubject.map(started -> !started), onSuccessAction, onErrorAction, Actions.empty());
+        return until(single.toObservable(), isStartedSubject.map(started -> !started)
+                        .delay(item -> isInAfterSaving.filter(inAfterSaving -> !inAfterSaving)),
+                onSuccessAction, onErrorAction, Actions.empty());
     }
 
     @NonNull
@@ -179,7 +181,9 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public Subscription untilStop(@NonNull final Completable completable,
                                   @NonNull final Action0 onCompletedAction,
                                   @NonNull final Action1<Throwable> onErrorAction) {
-        return until(completable.toObservable(), isStartedSubject.map(started -> !started), Actions.empty(), onErrorAction, onCompletedAction);
+        return until(completable.toObservable(), isStartedSubject.map(started -> !started)
+                        .delay(item -> isInAfterSaving.filter(inAfterSaving -> !inAfterSaving)),
+                Actions.empty(), onErrorAction, onCompletedAction);
     }
 
     @NonNull
