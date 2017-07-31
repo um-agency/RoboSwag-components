@@ -136,6 +136,7 @@ public abstract class BaseActivity extends AppCompatActivity
         super.onResume();
         UiUtils.UI_LIFECYCLE_LC_GROUP.i(Lc.getCodePoint(this));
         resumed = true;
+        baseLifecycleBindable.onResume();
     }
 
     @Override
