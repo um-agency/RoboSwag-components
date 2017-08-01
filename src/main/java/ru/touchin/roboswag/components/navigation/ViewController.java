@@ -150,7 +150,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      *
      * @param layoutResId Resource ID to be inflated.
      */
-    public void setContentView(@LayoutRes final int layoutResId) {
+    public final void setContentView(@LayoutRes final int layoutResId) {
         if (getContainer().getChildCount() > 0) {
             getContainer().removeAllViews();
         }
@@ -163,7 +163,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      *
      * @param view The desired content to display.
      */
-    public void setContentView(@NonNull final View view) {
+    public final void setContentView(@NonNull final View view) {
         setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
 
@@ -174,7 +174,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      * @param view         The desired content to display;
      * @param layoutParams Layout parameters for the view.
      */
-    public void setContentView(@NonNull final View view, @NonNull final ViewGroup.LayoutParams layoutParams) {
+    public final void setContentView(@NonNull final View view, @NonNull final ViewGroup.LayoutParams layoutParams) {
         if (getContainer().getChildCount() > 0) {
             getContainer().removeAllViews();
         }
