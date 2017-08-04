@@ -26,10 +26,9 @@ import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
 
 /**
  * Created by Ilia Kurtov on 04.08.2015.
- * <p>
  * Class that helps to operate with deep links.
  *
- * @param <TActivity>
+ * @param <TActivity> Type of Activity to process deep links.
  */
 public interface DeepLink<TActivity extends BaseActivity> {
 
