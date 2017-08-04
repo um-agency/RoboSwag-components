@@ -27,7 +27,6 @@ import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
 
 /**
  * Created by Ilia Kurtov on 04.08.2015.
- * <p>
  * Simple DeepLinkController that process deep links as it is. When deep links received it would have been processing and navigating id should.
  */
 public abstract class SimpleActivityDeepLinkController<TActivity extends BaseActivity, TDeepLink extends DeepLink<TActivity>>

@@ -29,9 +29,7 @@ import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
 
 /**
  * Created by Ilia Kurtov on 04.08.2015.
- * <p>
  * Controller for deep links. Its main goal to decide when deep link should be processed.
- * <p>
  * Call methods that starts with 'on' prefix from {@link TActivity} that should process deep links.
  *
  * @param <TActivity> Type of Activity to process deep links.
@@ -60,11 +58,11 @@ public abstract class DeepLinkController<TActivity extends BaseActivity> {
 
     /**
      * Call this method after receiving new deep link {@link Uri} from your activity.
-     * <p>
      * It saves new deepLinkUri and tries to process deep link if possible.
-     * <p>
-     * In most common cases call this method in {@link Activity#onCreate(Bundle)} if bundle == null or if you want to restore deep link
-     * in {@link Activity#onCreate(Bundle)} or in {@link Activity#onRestoreInstanceState(Bundle)} methods.
+     * In most common cases call this method in {@link Activity#onCreate(Bundle)}
+     * if bundle == null or if you want to restore deep link
+     * in {@link Activity#onCreate(Bundle)} or in {@link Activity#onRestoreInstanceState(Bundle)}
+     * methods.
      *
      * @param deepLinkUri - received deep link.
      */
@@ -75,7 +73,6 @@ public abstract class DeepLinkController<TActivity extends BaseActivity> {
 
     /**
      * Call this method when your activity should be ready to process deep link.
-     * <p>
      * In most common cases call this method on {@link Activity#onStart()}
      *
      * @param activity - that should be able to process deep link.
@@ -87,7 +84,6 @@ public abstract class DeepLinkController<TActivity extends BaseActivity> {
 
     /**
      * Call this method when your activity stopped being ready to process deep link.
-     * <p>
      * In most common cases call this method on {@link Activity#onStop()}
      */
     public void onActivityStopBeingReady() {
@@ -95,10 +91,12 @@ public abstract class DeepLinkController<TActivity extends BaseActivity> {
     }
 
     /**
-     * This method should be called when you need to add additional condition for processing deep links. By default {@link #allowDeepLinkToProcess}
+     * This method should be called when you need to add additional condition
+     * for processing deep links. By default {@link #allowDeepLinkToProcess}
      * equals true.
      *
-     * @param allowDeepLinkToProcess - pass true here if you want to allow deep link to process, otherwise - pass false.
+     * @param allowDeepLinkToProcess - pass true here if you want to allow deep
+     *                               link to process, otherwise - pass false.
      */
     public void setAllowDeepLinkToProcess(final boolean allowDeepLinkToProcess) {
         this.allowDeepLinkToProcess = allowDeepLinkToProcess;
@@ -112,9 +110,8 @@ public abstract class DeepLinkController<TActivity extends BaseActivity> {
     }
 
     /**
-     * This method would be called if there are non null {@link TActivity}, non null {@link #deepLinkUri}
-     * and {@link #allowDeepLinkToProcess} equals true.
-     * <p>
+     * This method would be called if there are non null {@link TActivity},
+     * non null {@link #deepLinkUri} and {@link #allowDeepLinkToProcess} equals true.
      * Don't forget to call activity.getIntent().setData(null) after deep link processing
      *
      * @param activity    - that should be able to process deep link.

@@ -28,10 +28,10 @@ import ru.touchin.roboswag.components.navigation.activities.BaseActivity;
 
 
 /**
- * Controller that helps to manage deep links in activity. It helps to save and restore deep link and deletes deep link info from intent.
+ * Controller that helps to manage deep links in activity.
+ * It helps to save and restore deep link and deletes deep link info from intent.
  * As tin he base class - call methods that starts with 'on' prefix from activity.
  *
- * @param <TActivity>
  * @see #onActivityRestoreInstanceState(Bundle)
  * @see #onActivitySavedInstanceState(Bundle)
  */
@@ -40,9 +40,10 @@ public abstract class ActivityDeepLinkController<TActivity extends BaseActivity>
     private static final String DEEP_LINK_EXTRA = "DEEP_LINK_EXTRA";
 
     /**
-     * Call this method on restore instance state - in {@link Activity#onCreate(Bundle)} or in {@link Activity#onRestoreInstanceState(Bundle)}.
+     * Call this method on restore instance state -
+     * in {@link Activity#onCreate(Bundle)} or in {@link Activity#onRestoreInstanceState(Bundle)}.
      *
-     * @param savedInstanceState - activity's savedInstanceState
+     * @param savedInstanceState - activity's savedInstanceState.
      */
     public void onActivityRestoreInstanceState(@NonNull final Bundle savedInstanceState) {
         final String deepLinkUrl = savedInstanceState.getString(DEEP_LINK_EXTRA, null);
@@ -50,9 +51,9 @@ public abstract class ActivityDeepLinkController<TActivity extends BaseActivity>
     }
 
     /**
-     * Call this method while saving stat of activity - in {@link Activity#onSaveInstanceState(Bundle)}
+     * Call this method while saving stat of activity - in {@link Activity#onSaveInstanceState(Bundle)}.
      *
-     * @param stateToSave - activity's stateToSave
+     * @param stateToSave - activity's stateToSave.
      */
     public void onActivitySavedInstanceState(@NonNull final Bundle stateToSave) {
         if (getDeepLinkUri() != null) {
@@ -62,7 +63,6 @@ public abstract class ActivityDeepLinkController<TActivity extends BaseActivity>
 
     /**
      * Helps to delete info about deep link from activity's intent and from this controller.
-     * <p>
      * Call this after successful deep link processing.
      *
      * @param activity - that should delete info about processed deep link.
