@@ -49,7 +49,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     @NonNull
     private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
     @NonNull
-    private final BehaviorSubject<Boolean> isInAfterSaving = BehaviorSubject.create(false);
+    private final BehaviorSubject<Boolean> isInAfterSaving = BehaviorSubject.create();
 
     /**
      * Call it on parent's onCreate method.
@@ -132,8 +132,8 @@ public class BaseLifecycleBindable implements LifecycleBindable {
                                       @NonNull final Action1<T> onNextAction,
                                       @NonNull final Action1<Throwable> onErrorAction,
                                       @NonNull final Action0 onCompletedAction) {
-        return until(observable, isStartedSubject.map(started -> !started)
-                        .delay(item -> isInAfterSaving.filter(inAfterSaving -> !inAfterSaving)),
+        return until(observable.delay(item -> isInAfterSaving.first(inAfterSaving -> !inAfterSaving)),
+                isStartedSubject.map(started -> !started),
                 onNextAction, onErrorAction, onCompletedAction);
     }
 
