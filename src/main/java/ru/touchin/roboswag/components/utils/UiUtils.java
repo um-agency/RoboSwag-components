@@ -112,9 +112,19 @@ public final class UiUtils {
      * @param targetView      View to set click listener to;
      * @param onClickListener Click listener.
      */
-    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Consumer<View> onClickListener) {
-        setOnRippleClickListener(targetView, onClickListener, RIPPLE_EFFECT_DELAY);
+    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Action onClickListener) {
+        setOnRippleClickListener(targetView, onClickListener != null ? view -> onClickListener.run() : null, RIPPLE_EFFECT_DELAY);
     }
+
+//    /**
+//     * Sets click listener to view. On click it will call something with {@link #RIPPLE_EFFECT_DELAY}.
+//     *
+//     * @param targetView      View to set click listener to;
+//     * @param onClickListener Click listener.
+//     */
+//    public static void setOnRippleClickListener(@NonNull final View targetView, @Nullable final Consumer<View> onClickListener) {
+//        setOnRippleClickListener(targetView, onClickListener, RIPPLE_EFFECT_DELAY);
+//    }
 
     /**
      * Sets click listener to view. On click it will call something after delay.
