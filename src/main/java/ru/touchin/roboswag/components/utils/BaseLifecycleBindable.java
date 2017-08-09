@@ -156,9 +156,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public <T> Subscription untilStop(@NonNull final Single<T> single,
                                       @NonNull final Action1<T> onSuccessAction,
                                       @NonNull final Action1<Throwable> onErrorAction) {
-        return until(single.toObservable(), isStartedSubject.map(started -> !started)
-                        .delay(item -> isInAfterSaving.filter(inAfterSaving -> !inAfterSaving)),
-                onSuccessAction, onErrorAction, Actions.empty());
+        return untilStop(single.toObservable(), onSuccessAction, onErrorAction, Actions.empty());
     }
 
     @NonNull
@@ -181,9 +179,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public Subscription untilStop(@NonNull final Completable completable,
                                   @NonNull final Action0 onCompletedAction,
                                   @NonNull final Action1<Throwable> onErrorAction) {
-        return until(completable.toObservable(), isStartedSubject.map(started -> !started)
-                        .delay(item -> isInAfterSaving.filter(inAfterSaving -> !inAfterSaving)),
-                Actions.empty(), onErrorAction, onCompletedAction);
+        return untilStop(completable.toObservable(), Actions.empty(), onErrorAction, onCompletedAction);
     }
 
     @NonNull
