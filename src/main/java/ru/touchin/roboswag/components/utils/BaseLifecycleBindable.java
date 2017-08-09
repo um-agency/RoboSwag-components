@@ -48,6 +48,8 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create();
     @NonNull
     private final BehaviorSubject<Boolean> isStartedSubject = BehaviorSubject.create();
+    @NonNull
+    private final BehaviorSubject<Boolean> isInAfterSaving = BehaviorSubject.createDefault(false);
 
     /**
      * Call it on parent's onCreate method.
@@ -60,9 +62,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
      * Call it on parent's onStart method.
      */
     public void onStart() {
-        if (!isStartedSubject.hasValue() || !isStartedSubject.getValue()) {
-            isStartedSubject.onNext(true);
-        }
+        isStartedSubject.onNext(true);
     }
 
     /**
@@ -71,27 +71,21 @@ public class BaseLifecycleBindable implements LifecycleBindable {
      * In that case onResume will be called after onSaveInstanceState so lifecycle object is becoming started.
      */
     public void onResume() {
-        if (!isStartedSubject.hasValue() || !isStartedSubject.getValue()) {
-            isStartedSubject.onNext(true);
-        }
+        isInAfterSaving.onNext(false);
     }
 
     /**
      * Call it on parent's onSaveInstanceState method.
      */
     public void onSaveInstanceState() {
-        if (!isStartedSubject.hasValue() || isStartedSubject.getValue()) {
-            isStartedSubject.onNext(false);
-        }
+        isInAfterSaving.onNext(true);
     }
 
     /**
      * Call it on parent's onStop method.
      */
     public void onStop() {
-        if (!isStartedSubject.hasValue() || isStartedSubject.getValue()) {
-            isStartedSubject.onNext(false);
-        }
+        isStartedSubject.onNext(false);
     }
 
     /**
@@ -129,7 +123,9 @@ public class BaseLifecycleBindable implements LifecycleBindable {
                                     @NonNull final Consumer<T> onNextAction,
                                     @NonNull final Consumer<Throwable> onErrorAction,
                                     @NonNull final Action onCompletedAction) {
-        return until(observable, isStartedSubject.map(started -> !started), onNextAction, onErrorAction, onCompletedAction);
+        return until(observable, isStartedSubject.map(started -> !started)
+                        .delay(item -> isInAfterSaving.filter(inAfterSaving -> !inAfterSaving)),
+                onNextAction, onErrorAction, onCompletedAction);
     }
 
     @NonNull
@@ -151,7 +147,9 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public <T> Disposable untilStop(@NonNull final Single<T> single,
                                     @NonNull final Consumer<T> onSuccessAction,
                                     @NonNull final Consumer<Throwable> onErrorAction) {
-        return until(single.toObservable(), isStartedSubject.map(started -> !started), onSuccessAction, onErrorAction, Functions.EMPTY_ACTION);
+        return until(single.toObservable(), isStartedSubject.map(started -> !started)
+                        .delay(item -> isInAfterSaving.filter(inAfterSaving -> !inAfterSaving)),
+                onSuccessAction, onErrorAction, Functions.EMPTY_ACTION);
     }
 
     @NonNull
@@ -174,7 +172,8 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     public Disposable untilStop(@NonNull final Completable completable,
                                 @NonNull final Action onCompletedAction,
                                 @NonNull final Consumer<Throwable> onErrorAction) {
-        return until(completable.toObservable(), isStartedSubject.map(started -> !started),
+        return until(completable.toObservable(), isStartedSubject.map(started -> !started)
+                        .delay(item -> isInAfterSaving.filter(inAfterSaving -> !inAfterSaving)),
                 Functions.emptyConsumer(), onErrorAction, onCompletedAction);
     }
 
