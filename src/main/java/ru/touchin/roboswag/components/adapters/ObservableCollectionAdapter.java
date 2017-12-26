@@ -100,6 +100,9 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                             case REMOVED:
                                 innerCollection.remove(change.getStart(), change.getCount());
                                 break;
+                            case MOVED:
+                                innerCollection.swap(change.getStart(), change.getCount());
+                                break;
                             default:
                                 Lc.assertion("Not supported " + change.getType());
                                 break;
@@ -240,6 +243,9 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
                     } else {
                         notifyItemRangeRemoved(change.getStart() + getHeadersCount(), change.getCount());
                     }
+                    break;
+                case MOVED:
+                    notifyItemMoved(change.getStart(), change.getCount());
                     break;
                 default:
                     Lc.assertion("Not supported " + change.getType());
@@ -404,7 +410,7 @@ public abstract class ObservableCollectionAdapter<TItem, TItemViewHolder extends
 
         @SuppressWarnings("PMD.DefaultPackage")
         @Deprecated
-        //it is for internal use only
+            //it is for internal use only
         void setAdapter(@Nullable final ObservableCollectionAdapter adapter) {
             this.adapter = adapter;
         }
