@@ -25,6 +25,7 @@ import android.os.Parcel;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.view.ViewCompat;
 import android.util.Pair;
 import android.view.InflateException;
 import android.view.LayoutInflater;
@@ -368,7 +369,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         super.onDestroy();
     }
 
-    private static class PlaceholderView extends FrameLayout {
+    private static class PlaceholderView extends FrameLayout implements ViewGroup.OnHierarchyChangeListener {
 
         @NonNull
         private final String tagName;
@@ -377,6 +378,7 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
         public PlaceholderView(@NonNull final Context context, @NonNull final String tagName) {
             super(context);
             this.tagName = tagName;
+            setOnHierarchyChangeListener(this);
         }
 
         @Override
@@ -399,6 +401,15 @@ public abstract class ViewControllerFragment<TState extends AbstractState, TActi
             }
         }
 
+        @Override
+        public void onChildViewAdded(@NonNull final View parent, @NonNull final View child) {
+            ViewCompat.requestApplyInsets(this);
+        }
+
+        @Override
+        public void onChildViewRemoved(@NonNull final View parent, @NonNull final View child) {
+            // nothing
+        }
     }
 
 }

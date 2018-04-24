@@ -108,7 +108,7 @@ public class ViewController<TActivity extends ViewControllerActivity<?>,
      * @return Returns view.
      */
     @NonNull
-    public final ViewGroup getContainer() {
+    public ViewGroup getContainer() {
         return container;
     }
 

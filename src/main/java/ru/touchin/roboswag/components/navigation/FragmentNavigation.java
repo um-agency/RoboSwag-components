@@ -145,10 +145,8 @@ public class FragmentNavigation {
 
         final FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction()
                 .replace(containerViewId, fragment, null)
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 .addToBackStack(backStackTag);
-        if (fragmentManager.getBackStackEntryCount() != 0) {
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-        }
         if (transactionSetup != null) {
             transactionSetup.call(fragmentTransaction).commit();
         } else {
