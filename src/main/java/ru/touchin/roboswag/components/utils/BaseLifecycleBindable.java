@@ -23,6 +23,7 @@ import android.support.annotation.NonNull;
 
 import ru.touchin.roboswag.core.log.Lc;
 import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
+import rx.BackpressureOverflow;
 import rx.Completable;
 import rx.Observable;
 import rx.Single;
@@ -43,6 +44,7 @@ public class BaseLifecycleBindable implements LifecycleBindable {
 
     private static final String UNTIL_DESTROY_METHOD = "untilDestroy";
     private static final String UNTIL_STOP_METHOD = "untilStop";
+    private static final int BACKPRESSURE_BUFFER_SIZE = 32;
 
     @NonNull
     private final BehaviorSubject<Boolean> isCreatedSubject = BehaviorSubject.create();
@@ -99,7 +101,11 @@ public class BaseLifecycleBindable implements LifecycleBindable {
     @Override
     public <T> Subscription bind(@NonNull final Observable<T> observable, @NonNull final Action1<T> onNextAction) {
         final String codePoint = Lc.getCodePoint(this, 2);
-        return isStartedSubject.switchMap(started -> started ? observable.observeOn(AndroidSchedulers.mainThread()) : Observable.never())
+        return isStartedSubject.switchMap(started -> started
+                ? observable
+                .onBackpressureBuffer(BACKPRESSURE_BUFFER_SIZE, Actions.empty(), BackpressureOverflow.ON_OVERFLOW_DROP_OLDEST)
+                .observeOn(AndroidSchedulers.mainThread())
+                : Observable.never())
                 .takeUntil(isCreatedSubject.filter(created -> !created))
                 .subscribe(onNextAction, getActionThrowableForAssertion(codePoint, UNTIL_STOP_METHOD));
     }
@@ -268,7 +274,9 @@ public class BaseLifecycleBindable implements LifecycleBindable {
         if (onNextAction == Actions.empty() && onErrorAction == (Action1) Actions.empty() && onCompletedAction == Actions.empty()) {
             actualObservable = observable;
         } else {
-            actualObservable = observable.observeOn(AndroidSchedulers.mainThread())
+            actualObservable = observable
+                    .onBackpressureBuffer(BACKPRESSURE_BUFFER_SIZE, Actions.empty(), BackpressureOverflow.ON_OVERFLOW_DROP_OLDEST)
+                    .observeOn(AndroidSchedulers.mainThread())
                     .doOnCompleted(onCompletedAction)
                     .doOnNext(onNextAction)
                     .doOnError(onErrorAction);
