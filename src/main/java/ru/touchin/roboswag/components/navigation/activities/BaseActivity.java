@@ -235,8 +235,8 @@ public abstract class BaseActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        for (final OnBackPressedListener onBackPressedListener : onBackPressedListeners) {
-            if (onBackPressedListener.onBackPressed()) {
+        for (int i = onBackPressedListeners.size() - 1; i >= 0; i--) {
+            if (onBackPressedListeners.get(i).onBackPressed()) {
                 return;
             }
         }
