@@ -19,13 +19,10 @@
 
 package ru.touchin.roboswag.components.navigation.activities;
 
-import android.support.annotation.IdRes;
 import android.support.annotation.NonNull;
 import android.view.Menu;
-import android.view.View;
 
 import ru.touchin.roboswag.components.utils.Logic;
-import ru.touchin.roboswag.core.utils.ShouldNotHappenException;
 
 /**
  * Created by Gavriil Sitnikov on 07/03/2016.
@@ -77,15 +74,4 @@ public abstract class ViewControllerActivity<TLogic extends Logic> extends BaseA
     public void onConfigureNavigation(@NonNull final Menu menu) {
         // do nothing
     }
-
-    @NonNull
-    @Override
-    public View findViewById(@IdRes final int id) {
-        final View viewById = super.findViewById(id);
-        if (viewById == null) {
-            throw new ShouldNotHappenException("No view for id=" + getResources().getResourceName(id));
-        }
-        return viewById;
-    }
-
 }
