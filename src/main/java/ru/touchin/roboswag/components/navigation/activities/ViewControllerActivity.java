@@ -19,7 +19,7 @@
 
 package ru.touchin.roboswag.components.navigation.activities;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.view.Menu;
 
 import ru.touchin.roboswag.components.utils.Logic;

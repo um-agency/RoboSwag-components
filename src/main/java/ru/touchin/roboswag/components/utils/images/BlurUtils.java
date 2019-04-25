@@ -22,8 +22,8 @@ import android.renderscript.Element;
 import android.renderscript.RSRuntimeException;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public final class BlurUtils {
 

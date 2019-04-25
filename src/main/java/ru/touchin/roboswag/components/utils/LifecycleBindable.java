@@ -19,7 +19,9 @@
 
 package ru.touchin.roboswag.components.utils;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+
+import androidx.fragment.app.Fragment;
 
 import rx.Completable;
 import rx.Observable;
@@ -33,7 +35,7 @@ import rx.functions.Func1;
 
 /**
  * Created by Gavriil Sitnikov on 15/04/16.
- * Interface that should be implemented by lifecycle-based elements ({@link android.app.Activity}, {@link android.support.v4.app.Fragment} etc.)
+ * Interface that should be implemented by lifecycle-based elements ({@link android.app.Activity}, {@link Fragment} etc.)
  * to not manually manage subscriptions.
  * Use {@link #bind(Observable, Action1)} method to subscribe to observable onStart and unsubscribe onStop automatically.
  * Use {@link #untilStop(Observable)} method to subscribe to observable where you want and unsubscribe onStop.

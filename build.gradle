@@ -17,6 +17,6 @@ android {
 dependencies {
     api project(':libraries:core')
 
-    compileOnly "com.android.support:appcompat-v7:$support"
-    compileOnly "com.android.support:recyclerview-v7:$support"
+    compileOnly 'androidx.appcompat:appcompat:1.0.0'
+    compileOnly 'androidx.recyclerview:recyclerview:1.0.0'
 }

@@ -19,8 +19,9 @@
 
 package ru.touchin.roboswag.components.navigation;
 
-import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 /**
  * Created by Gavriil Sitnikov on 08/10/2014.
@@ -30,7 +31,7 @@ import android.support.v4.app.Fragment;
 public interface OnFragmentStartedListener {
 
     /**
-     * Calls by child fragment (added via {@link android.support.v4.app.FragmentManager}) on it'sstart.
+     * Calls by child fragment (added via {@link FragmentManager}) on it'sstart.
      *
      * @param fragment Child fragment which called this method.
      */

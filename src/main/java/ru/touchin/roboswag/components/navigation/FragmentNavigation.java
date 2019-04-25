@@ -22,12 +22,12 @@ package ru.touchin.roboswag.components.navigation;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.IdRes;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
+import androidx.annotation.IdRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import android.view.MenuItem;
 
 import ru.touchin.roboswag.core.log.Lc;
@@ -35,7 +35,7 @@ import rx.functions.Func1;
 
 /**
  * Created by Gavriil Sitnikov on 07/03/2016.
- * Navigation which is controlling fragments on activity using {@link android.support.v4.app.FragmentManager}.
+ * Navigation which is controlling fragments on activity using {@link FragmentManager}.
  * Basically there are 4 main actions to add fragments to activity.
  * 1) {@link #setInitial} means to set fragment on top and remove all previously added fragments from stack;
  * 2) {@link #push} means to simply add fragment on top of the stack;

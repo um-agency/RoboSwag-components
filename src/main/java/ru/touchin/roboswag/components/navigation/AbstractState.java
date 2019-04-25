@@ -20,7 +20,7 @@
 package ru.touchin.roboswag.components.navigation;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 
 import java.io.Serializable;
 

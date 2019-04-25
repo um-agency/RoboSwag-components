@@ -20,7 +20,7 @@
 package ru.touchin.roboswag.components.navigation.fragments;
 
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import ru.touchin.roboswag.components.navigation.AbstractState;
 import ru.touchin.roboswag.components.navigation.ViewController;
